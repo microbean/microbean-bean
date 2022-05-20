@@ -1,0 +1,240 @@
+<?xml version="1.0" encoding="utf-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <groupId>org.microbean</groupId>
+  <artifactId>microbean-bean</artifactId>
+  <version>0.0.1-SNAPSHOT</version>
+
+  <parent>
+    <groupId>org.microbean</groupId>
+    <artifactId>microbean-pluginmanagement-pom</artifactId>
+    <version>18</version>
+    <relativePath />
+  </parent>
+
+  <name>microBean™ Type</name>
+  <description>microBean™ Bean: Utility classes for implementing beans.</description>
+  <inceptionYear>2020</inceptionYear>
+  <url>https://microbean.github.io/microbean-bean</url>
+
+  <scm>
+    <connection>scm:git:git@github.com:microbean/microbean-bean.git</connection>
+    <developerConnection>scm:git:git@github.com:microbean/microbean-bean.git</developerConnection>
+    <url>https://github.com/microbean/microbean-bean/</url>
+    <tag>HEAD</tag>
+  </scm>
+
+  <dependencyManagement>
+    <dependencies>
+
+
+      <!-- Normal dependencies. -->
+
+
+      <dependency>
+        <groupId>org.microbean</groupId>
+        <artifactId>microbean-development-annotations</artifactId>
+        <version>0.2.12</version>
+        <type>jar</type>
+      </dependency>
+
+      <dependency>
+        <groupId>org.microbean</groupId>
+        <artifactId>microbean-interceptor</artifactId>
+        <version>0.0.2</version>
+        <type>jar</type>
+      </dependency>
+
+      <dependency>
+        <groupId>org.microbean</groupId>
+        <artifactId>microbean-invoke</artifactId>
+        <version>0.0.14-SNAPSHOT</version>
+        <type>jar</type>
+      </dependency>
+      
+      <dependency>
+        <groupId>org.microbean</groupId>
+        <artifactId>microbean-qualifier</artifactId>
+        <version>0.1.2-SNAPSHOT</version>
+        <type>jar</type>
+      </dependency>
+
+      <dependency>
+        <groupId>org.microbean</groupId>
+        <artifactId>microbean-scope</artifactId>
+        <version>0.0.1-SNAPSHOT</version>
+        <type>jar</type>
+      </dependency>
+
+      <dependency>
+        <groupId>org.microbean</groupId>
+        <artifactId>microbean-type</artifactId>
+        <version>0.3.1</version>
+        <type>jar</type>
+      </dependency>
+
+
+    </dependencies>
+  </dependencyManagement>
+
+  <dependencies>
+
+
+    <!-- Compile-scoped dependencies. -->
+
+
+    <dependency>
+      <groupId>org.microbean</groupId>
+      <artifactId>microbean-development-annotations</artifactId>
+      <type>jar</type>
+      <scope>compile</scope>
+    </dependency>
+
+    <dependency>
+      <groupId>org.microbean</groupId>
+      <artifactId>microbean-invoke</artifactId>
+      <type>jar</type>
+      <scope>compile</scope>
+    </dependency>
+
+    <dependency>
+      <groupId>org.microbean</groupId>
+      <artifactId>microbean-interceptor</artifactId>
+      <type>jar</type>
+      <scope>compile</scope>
+    </dependency>
+    
+    <dependency>
+      <groupId>org.microbean</groupId>
+      <artifactId>microbean-qualifier</artifactId>
+      <type>jar</type>
+      <scope>compile</scope>
+    </dependency>
+    
+    <dependency>
+      <groupId>org.microbean</groupId>
+      <artifactId>microbean-scope</artifactId>
+      <type>jar</type>
+      <scope>compile</scope>
+    </dependency>
+
+    <dependency>
+      <groupId>org.microbean</groupId>
+      <artifactId>microbean-type</artifactId>
+      <type>jar</type>
+      <scope>compile</scope>
+    </dependency>
+
+
+    <!-- Test-scoped dependencies. -->
+
+
+    <dependency>
+      <groupId>org.junit.jupiter</groupId>
+      <artifactId>junit-jupiter-api</artifactId>
+      <type>jar</type>
+      <scope>test</scope>
+    </dependency>
+
+    <dependency>
+      <groupId>org.junit.jupiter</groupId>
+      <artifactId>junit-jupiter-engine</artifactId>
+      <type>jar</type>
+      <scope>test</scope>
+    </dependency>
+
+
+  </dependencies>
+
+  <build>
+    <pluginManagement>
+      <plugins>
+
+        <plugin>
+          <artifactId>maven-compiler-plugin</artifactId>
+          <configuration>
+            <compilerArgs>
+              <arg>-Xlint:all</arg>
+              <arg>-Xlint:-preview</arg>
+              <arg>-Xpkginfo:always</arg>
+            </compilerArgs>
+          </configuration>
+        </plugin>
+        <plugin>
+          <artifactId>maven-javadoc-plugin</artifactId>
+          <configuration>
+            <additionalOptions>
+              <additionalOption>--add-stylesheet</additionalOption>
+              <additionalOption>${project.basedir}/src/main/javadoc/css/fonts.css</additionalOption>
+            </additionalOptions>
+            <docfilessubdirs>true</docfilessubdirs>
+          </configuration>
+        </plugin>
+        <plugin>
+          <artifactId>maven-scm-publish-plugin</artifactId>
+          <version>3.1.0</version>
+        </plugin>
+        <plugin>
+          <artifactId>maven-surefire-plugin</artifactId>
+          <configuration>
+            <argLine>--add-opens=org.microbean.bean/org.microbean.bean=ALL-UNNAMED</argLine>
+            <!-- See https://junit.org/junit5/docs/snapshot/user-guide/#running-tests-build-maven-config-params -->
+            <!-- See https://github.com/apache/maven-surefire/blob/eb48f1b59ca5ccf6954ef33ecab03dbaf93214cd/surefire-providers/surefire-junit-platform/src/main/java/org/apache/maven/surefire/junitplatform/JUnitPlatformProvider.java#L242-L262 -->
+            <properties>
+              <configurationParameters>
+                junit.jupiter.execution.parallel.enabled=true
+                junit.jupiter.execution.parallel.mode.default=concurrent
+              </configurationParameters>
+            </properties>
+            <systemPropertyVariables>
+              <project.build.directory>${project.build.directory}</project.build.directory>
+              <project.build.testOutputDirectory>${project.build.testOutputDirectory}</project.build.testOutputDirectory>
+            </systemPropertyVariables>
+          </configuration>
+        </plugin>
+
+      </plugins>
+    </pluginManagement>
+  </build>
+
+  <properties>
+
+    <jdkToolchainVendor>openjdk</jdkToolchainVendor>
+
+    <!-- maven-compiler-plugin properties -->
+    <maven.compiler.release>17</maven.compiler.release>
+    <maven.compiler.source>17</maven.compiler.source>
+    <maven.compiler.target>17</maven.compiler.target>
+
+    <!-- maven-javadoc-plugin properties -->
+    <detectJavaApiLink>false</detectJavaApiLink>
+    <links>https://docs.oracle.com/en/java/javase/17/docs/api,https://microbean.github.io/microbean-development-annotations/apidocs/</links>
+
+    <!-- maven-release-plugin properties; see http://maven.apache.org/maven-release/maven-release-plugin/ -->
+    <goals>deploy,post-site,scm-publish:publish-scm</goals>
+
+    <!-- maven-scm-publish-plugin properties;
+         see https://maven.apache.org/plugins/maven-scm-publish-plugin/publish-scm-mojo.html -->
+    <scmpublish.content>${project.reporting.outputDirectory}</scmpublish.content>
+    <scmpublish.pubScmUrl>${project.scm.developerConnection}</scmpublish.pubScmUrl>
+    <scmpublish.scm.branch>gh-pages</scmpublish.scm.branch>
+
+  </properties>
+
+  <reporting>
+    <plugins>
+      <plugin>
+        <artifactId>maven-javadoc-plugin</artifactId>
+        <reportSets>
+          <reportSet>
+            <reports>
+              <report>javadoc-no-fork</report>
+            </reports>
+          </reportSet>
+        </reportSets>
+      </plugin>
+    </plugins>
+  </reporting>
+
+</project>
