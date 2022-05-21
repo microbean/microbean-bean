@@ -18,13 +18,8 @@ package org.microbean.bean;
 
 import java.util.List;
 
-public interface BeanSource extends Singleton<Bean<?>> {
+public interface BeanSource<I> {
 
-  public Bean<?> bean();
+  public Bean<I> bean();
 
-  @Override // Singleton<Bean<?>>
-  public default Bean<?> singleton() {
-    return this.bean();
-  }
-  
 }

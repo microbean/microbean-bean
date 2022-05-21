@@ -51,11 +51,12 @@ import static org.microbean.interceptor.ConstantDescs.CD_InterceptorBindings;
 import static org.microbean.qualifier.ConstantDescs.CD_Qualified;
 import static org.microbean.qualifier.ConstantDescs.CD_Qualifier;
 
-public final record Id(Selector selector, Qualifier<?, ?> governingScopeId, int priority)
-  implements Alternate, Constable, Qualified<String, Object, Type<?>>, ScopeMember {
+public final record Id(Selector selector, Qualifier<?> governingScopeId, int priority)
+  implements Alternate, Constable, ScopeMember {
 
   public Id {
     Objects.requireNonNull(selector, "selector");
+    Objects.requireNonNull(governingScopeId, "governingScopeId");
   }
 
   public final Id with(final Selector selector) {
@@ -64,34 +65,7 @@ public final record Id(Selector selector, Qualifier<?, ?> governingScopeId, int 
   
   @Override // Alternate
   public final boolean alternate() {
-    return Alternate.super.alternate() && !this.interceptor();
-  }
-
-  @Convenience
-  public final boolean interceptor() {
-    return !this.selector().interceptorBindings().isEmpty();
-  }
-
-  @Convenience
-  public final InterceptorBindings<String, Object> interceptorBindings() {
-    return this.selector().interceptorBindings();
-  }
-
-  @Convenience
-  @Override // Qualified<String, Object, Type<?>>
-  public final Qualifiers<String, Object> qualifiers() {
-    return this.selector().qualifiedType().qualifiers();
-  }
-
-  @Convenience
-  @Override // Qualified<String, Object, Type<?>>
-  public final Type<?> qualified() {
-    return this.selector().qualifiedType().qualified();
-  }
-
-  @Convenience
-  public final Qualified<String, Object, Type<?>> qualifiedType() {
-    return this.selector().qualifiedType();
+    return Alternate.super.alternate() && !this.selector().interceptorBindings().isEmpty();
   }
 
   @Override // Constable
@@ -118,13 +92,13 @@ public final record Id(Selector selector, Qualifier<?, ?> governingScopeId, int 
   }
 
   public static final Id of(final Selector selector,
-                            final Qualifier<?, ?> scopeId) {
+                            final Qualifier<?> scopeId) {
     return of(selector, scopeId, Prioritized.DEFAULT_PRIORITY);
   }
   
   // This method is referenced by describeConstable().
   public static final Id of(final Selector selector,
-                            final Qualifier<?, ?> scopeId,
+                            final Qualifier<?> scopeId,
                             final int priority) {
     return new Id(selector, scopeId, priority);
   }

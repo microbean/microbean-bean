@@ -77,7 +77,7 @@ public final class Beans implements AutoCloseable {
     super();
     this.cache = new ConcurrentHashMap<>();
     this.resolver = resolver == null ? new Resolver() : resolver;
-    final Bean<?> resolverBean = this.resolver instanceof BeanSource bs ? bs.bean() : Bean.of(this.resolver);
+    final Bean<?> resolverBean = this.resolver instanceof BeanSource<?> bs ? bs.bean() : Bean.of(this.resolver);
     if (beans == null || beans.isEmpty()) {
       this.beans = List.of(Bean.of(this), resolverBean);
     } else {

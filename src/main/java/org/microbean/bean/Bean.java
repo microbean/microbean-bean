@@ -37,10 +37,23 @@ import static org.microbean.scope.Scope.SINGLETON;
 
 public final record Bean<I>(Factory<I> factory, Id id) implements Alternate, Constable {
 
+
+  /*
+   * Constructors.
+   */
+
+
+  @Deprecated
   public Bean {
     Objects.requireNonNull(factory, "factory");
     Objects.requireNonNull(id, "id");
   }
+
+
+  /*
+   * Instance methods.
+   */
+
 
   @Override // Alternate
   public final boolean alternate() {
@@ -75,6 +88,12 @@ public final record Bean<I>(Factory<I> factory, Id id) implements Alternate, Con
     }
     return Optional.empty();
   }
+
+
+  /*
+   * Static methods.
+   */
+
 
   public static final <I> Bean<I> of(final I singleton) {
     return of(Value.of(singleton), Id.of(Selector.ofAnyAndDefault(singleton.getClass()), SINGLETON.id()));

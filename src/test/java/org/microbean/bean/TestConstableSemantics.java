@@ -36,8 +36,8 @@ final class TestConstableSemantics {
 
   @Test
   final void testConstableSemantics() throws ReflectiveOperationException {
-    final Qualifier<?, ?> scopeId = Qualifier.of("a.b.c");
-    final Qualifier<?, ?> governingScopeId = Qualifier.of("d.e.f");
+    final Qualifier<?> scopeId = Qualifier.of("a.b.c");
+    final Qualifier<?> governingScopeId = Qualifier.of("d.e.f");
     Scope scope = Scope.of(scopeId, true, governingScopeId);
     assertEquals(scope, scope.describeConstable().orElseThrow().resolveConstantDesc(MethodHandles.publicLookup().in(Scope.class)));
   }

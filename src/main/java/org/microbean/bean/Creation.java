@@ -19,6 +19,8 @@ package org.microbean.bean;
 public interface Creation<I> extends Cloneable, ReferencesProvider {
 
   public Creation<I> clone();
+
+  public Destruction destruction();
   
   @SuppressWarnings("unchecked")
   public default <J> Creation<J> cast() {

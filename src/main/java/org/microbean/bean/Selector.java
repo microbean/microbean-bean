@@ -53,26 +53,37 @@ import static org.microbean.interceptor.ConstantDescs.CD_InterceptorBindings;
 
 import static org.microbean.qualifier.ConstantDescs.CD_Qualified;
 
-public final record Selector(Qualified<String, Object, Type<?>> qualifiedType,
-                             InterceptorBindings<String, Object> interceptorBindings) // null is significant
-  implements Constable, Qualified<String, Object, Type<?>> {
+public final record Selector(Qualified<?, ? extends Type<?>> qualifiedType, InterceptorBindings<?> interceptorBindings)
+  implements Constable {
 
-  public static final InterceptorBinding<String, Object> ANY_INTERCEPTOR_BINDING = InterceptorBinding.of("ANY");
-  
-  public static final InterceptorBindings<String, Object> ANY_INTERCEPTOR_BINDINGS = InterceptorBindings.of(ANY_INTERCEPTOR_BINDING);
-  
-  public static final Qualifier<String, Object> ANY_QUALIFIER = Qualifier.of("ANY");
 
-  public static final Qualifiers<String, Object> ANY_QUALIFIERS = Qualifiers.of(ANY_QUALIFIER);
+  /*
+   * Static fields.
+   */
 
-  public static final Qualifier<String, Object> DEFAULT_QUALIFIER = Qualifier.of("DEFAULT");
 
-  public static final Qualifiers<String, Object> DEFAULT_QUALIFIERS = Qualifiers.of(DEFAULT_QUALIFIER);
-  
-  public static final Qualifiers<String, Object> ANY_AND_DEFAULT_QUALIFIERS = Qualifiers.of(List.of(ANY_QUALIFIER, DEFAULT_QUALIFIER));
+  public static final InterceptorBinding<?> ANY_INTERCEPTOR_BINDING = InterceptorBinding.of("ANY");
+
+  public static final InterceptorBindings<?> ANY_INTERCEPTOR_BINDINGS = InterceptorBindings.of(ANY_INTERCEPTOR_BINDING);
+
+  public static final Qualifier<?> ANY_QUALIFIER = Qualifier.of("ANY");
+
+  public static final Qualifiers<?> ANY_QUALIFIERS = Qualifiers.of(ANY_QUALIFIER);
+
+  public static final Qualifier<?> DEFAULT_QUALIFIER = Qualifier.of("DEFAULT");
+
+  public static final Qualifiers<?> DEFAULT_QUALIFIERS = Qualifiers.of(DEFAULT_QUALIFIER);
+
+  public static final Qualifiers<?> ANY_AND_DEFAULT_QUALIFIERS = Qualifiers.ofDisparate(List.of(ANY_QUALIFIER, DEFAULT_QUALIFIER));
+
+
+  /*
+   * Constructors.
+   */
+
 
   @Deprecated
-  public Selector(final Qualified<String, Object, Type<?>> qualifiedType) {
+  public Selector(final Qualified<?, ? extends Type<?>> qualifiedType) {
     this(qualifiedType, null);
   }
 
@@ -81,39 +92,38 @@ public final record Selector(Qualified<String, Object, Type<?>> qualifiedType,
     Objects.requireNonNull(qualifiedType, "qualifiedType");
   }
 
+
+  /*
+   * Instance methods.
+   */
+
+
   public final boolean selects(final Bean<?> bean) {
     return bean != null && this.selects(bean.id().selector());
   }
 
-  public final boolean selects(final Qualified<?, ?, ? extends Type<?>> qualified) {
-    if (qualified == null) {
-      return false;
-    } else if (qualified instanceof Id i) {
-      return this.selects(i.selector());
-    } else if (qualified instanceof Selector s) {
-      return this.selects(s);
-    } else {
-      return
-        this.selects(qualified.qualifiers()) &&
-        this.selects(qualified.qualified()) &&
-        this.selects((InterceptorBindings<?, ?>)null);
-    }
+  public final boolean selects(final Qualified<?, ? extends Type<?>> qualified) {
+    return
+      qualified != null &&
+      this.selects(qualified.qualifiers()) &&
+      this.selects(qualified.qualified()) &&
+      this.selects((InterceptorBindings<?>)null);
   }
 
   public final boolean selects(final Id id) {
     return id != null && this.selects(id.selector());
   }
-  
+
   public final boolean selects(final Selector selector) {
     return
       selector != null &&
-      this.selects(selector.qualifiers()) &&
-      this.selects(selector.qualified()) &&
+      this.selects(selector.qualifiedType().qualifiers()) &&
+      this.selects(selector.qualifiedType().qualified()) &&
       this.selects(selector.interceptorBindings());
   }
 
-  public final boolean selects(final Qualifiers<?, ?> qualifiers) {
-    final Qualifiers<?, ?> myQualifiers = this.qualifiers();
+  public final boolean selects(final Qualifiers<?> qualifiers) {
+    final Qualifiers<?> myQualifiers = this.qualifiedType().qualifiers();
     if (myQualifiers == null || myQualifiers.isEmpty()) {
       return
         qualifiers == null ||
@@ -132,11 +142,11 @@ public final record Selector(Qualified<String, Object, Type<?>> qualifiedType,
   }
 
   public final boolean selects(final Type<?> type) {
-    return type != null && Type.CdiSemantics.INSTANCE.assignable(this.qualified(), type);
+    return type != null && Type.CdiSemantics.INSTANCE.assignable(this.qualifiedType().qualified(), type);
   }
 
-  public final boolean selects(final InterceptorBindings<?, ?> interceptorBindings) {
-    final InterceptorBindings<?, ?> myInterceptorBindings = this.interceptorBindings();
+  public final boolean selects(final InterceptorBindings<?> interceptorBindings) {
+    final InterceptorBindings<?> myInterceptorBindings = this.interceptorBindings();
     if (myInterceptorBindings == null || ANY_INTERCEPTOR_BINDINGS.equals(interceptorBindings)) {
       return true;
     } else if (interceptorBindings == null) {
@@ -145,44 +155,32 @@ public final record Selector(Qualified<String, Object, Type<?>> qualifiedType,
       return myInterceptorBindings.equals(interceptorBindings);
     }
   }
-  
+
   @Convenience
   public final Selector with(final Type<?> type) {
-    return this.with(Qualified.of(this.qualifiers(), type));
+    return this.with(Qualified.of(this.qualifiedType().qualifiers(), type));
   }
 
   @Convenience
-  public final Selector with(final Qualifiers<String, Object> qualifiers) {
-    return this.with(Qualified.of(qualifiers, this.qualified()));
+  public final Selector with(final Qualifiers<?> qualifiers) {
+    return this.with(Qualified.of(qualifiers, this.qualifiedType().qualified()));
   }
 
   @Convenience
-  public final Selector with(final Qualified<String, Object, Type<?>> qualifiedType) {
+  public final Selector with(final Qualified<?, Type<?>> qualifiedType) {
     return of(qualifiedType(), this.interceptorBindings());
   }
 
   @Convenience
-  public final Selector with(final InterceptorBindings<String, Object> interceptorBindings) { // null is significant
+  public final Selector with(final InterceptorBindings<?> interceptorBindings) { // null is significant
     return of(this.qualifiedType(), interceptorBindings);
   }
 
-  @Convenience
-  @Override // Qualified<String, Object, Type<?>>
-  public final Type<?> qualified() {
-    return this.qualifiedType().qualified();
-  }
-
-  @Convenience
-  @Override // Qualified<String, Object, Type<?>>
-  public final Qualifiers<String, Object> qualifiers() {
-    return this.qualifiedType().qualifiers();
-  }
-  
   @Override // Constable
   public final Optional<? extends ConstantDesc> describeConstable() {
     final ConstantDesc qualifiedTypeCd = this.qualifiedType().describeConstable().orElse(null);
     if (qualifiedTypeCd != null) {
-      final InterceptorBindings<?, ?> interceptorBindings = this.interceptorBindings();
+      final InterceptorBindings<?> interceptorBindings = this.interceptorBindings();
       final ConstantDesc interceptorBindingsCd =
         interceptorBindings == null ? NULL : interceptorBindings.describeConstable().orElse(null);
       if (interceptorBindingsCd != null) {
@@ -201,6 +199,12 @@ public final record Selector(Qualified<String, Object, Type<?>> qualifiedType,
     return Optional.empty();
   }
 
+
+  /*
+   * Static methods.
+   */
+
+
   public static final Selector ofAny(final java.lang.reflect.Type type) {
     return of(ANY_QUALIFIERS, type);
   }
@@ -208,11 +212,11 @@ public final record Selector(Qualified<String, Object, Type<?>> qualifiedType,
   public static final Selector ofDefault(final java.lang.reflect.Type type) {
     return of(DEFAULT_QUALIFIERS, type);
   }
-  
+
   public static final Selector ofAnyAndDefault(final java.lang.reflect.Type type) {
     return of(ANY_AND_DEFAULT_QUALIFIERS, type);
   }
-  
+
   public static final Selector ofAny(final Type<?> type) {
     return of(ANY_QUALIFIERS, type);
   }
@@ -220,26 +224,26 @@ public final record Selector(Qualified<String, Object, Type<?>> qualifiedType,
   public static final Selector ofDefault(final Type<?> type) {
     return of(DEFAULT_QUALIFIERS, type);
   }
-  
+
   public static final Selector ofAnyAndDefault(final Type<?> type) {
     return of(ANY_AND_DEFAULT_QUALIFIERS, type);
   }
-  
-  public static final Selector of(final Qualifiers<String, Object> qualifiers, final java.lang.reflect.Type type) {
-    return of(Qualified.of(qualifiers, JavaType.of(type)));
+
+  public static final Selector of(final Qualifiers<?> qualifiers, final java.lang.reflect.Type type) {
+    return of(qualifiers, JavaType.of(type));
   }
-  
-  public static final Selector of(final Qualifiers<String, Object> qualifiers, final Type<?> type) {
+
+  public static final Selector of(final Qualifiers<?> qualifiers, final Type<?> type) {
     return of(Qualified.of(qualifiers, type));
   }
-  
-  public static final Selector of(final Qualified<String, Object, Type<?>> qualifiedType) {
+
+  public static final Selector of(final Qualified<?, ? extends Type<?>> qualifiedType) {
     return of(qualifiedType, null);
   }
-  
+
   // This method is referenced by the describeConstable() method.
-  public static final Selector of(final Qualified<String, Object, Type<?>> qualifiedType,
-                                  final InterceptorBindings<String, Object> interceptorBindings) { // null is significant
+  public static final Selector of(final Qualified<?, ? extends Type<?>> qualifiedType,
+                                  final InterceptorBindings<?> interceptorBindings) { // null is significant
     return new Selector(qualifiedType, interceptorBindings);
   }
 
@@ -256,5 +260,5 @@ public final record Selector(Qualified<String, Object, Type<?>> qualifiedType,
     }
     return true;
   }
-  
+
 }
