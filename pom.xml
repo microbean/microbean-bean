@@ -15,7 +15,7 @@
 
   <name>microBean™ Type</name>
   <description>microBean™ Bean: Utility classes for implementing beans.</description>
-  <inceptionYear>2020</inceptionYear>
+  <inceptionYear>2023</inceptionYear>
   <url>https://microbean.github.io/microbean-bean</url>
 
   <scm>
@@ -34,29 +34,29 @@
 
       <dependency>
         <groupId>org.microbean</groupId>
-        <artifactId>microbean-development-annotations</artifactId>
-        <version>0.2.12</version>
-        <type>jar</type>
-      </dependency>
-
-      <dependency>
-        <groupId>org.microbean</groupId>
         <artifactId>microbean-interceptor</artifactId>
-        <version>0.1.1</version>
+        <version>0.1.2</version>
         <type>jar</type>
       </dependency>
 
       <dependency>
         <groupId>org.microbean</groupId>
         <artifactId>microbean-invoke</artifactId>
-        <version>0.0.14-SNAPSHOT</version>
+        <version>0.0.15</version>
         <type>jar</type>
       </dependency>
+
+      <dependency>
+      <groupId>org.microbean</groupId>
+      <artifactId>microbean-lang</artifactId>
+      <version>0.0.1-SNAPSHOT</version>
+      <type>jar</type>
+    </dependency>
       
       <dependency>
         <groupId>org.microbean</groupId>
         <artifactId>microbean-qualifier</artifactId>
-        <version>0.2.1</version>
+        <version>0.2.2</version>
         <type>jar</type>
       </dependency>
 
@@ -64,13 +64,6 @@
         <groupId>org.microbean</groupId>
         <artifactId>microbean-scope</artifactId>
         <version>0.0.1-SNAPSHOT</version>
-        <type>jar</type>
-      </dependency>
-
-      <dependency>
-        <groupId>org.microbean</groupId>
-        <artifactId>microbean-type</artifactId>
-        <version>0.3.1</version>
         <type>jar</type>
       </dependency>
 
@@ -84,12 +77,7 @@
     <!-- Compile-scoped dependencies. -->
 
 
-    <dependency>
-      <groupId>org.microbean</groupId>
-      <artifactId>microbean-development-annotations</artifactId>
-      <type>jar</type>
-      <scope>compile</scope>
-    </dependency>
+
 
     <dependency>
       <groupId>org.microbean</groupId>
@@ -104,6 +92,13 @@
       <type>jar</type>
       <scope>compile</scope>
     </dependency>
+
+    <dependency>
+      <groupId>org.microbean</groupId>
+      <artifactId>microbean-lang</artifactId>
+      <type>jar</type>
+      <scope>compile</scope>
+    </dependency>
     
     <dependency>
       <groupId>org.microbean</groupId>
@@ -115,13 +110,6 @@
     <dependency>
       <groupId>org.microbean</groupId>
       <artifactId>microbean-scope</artifactId>
-      <type>jar</type>
-      <scope>compile</scope>
-    </dependency>
-
-    <dependency>
-      <groupId>org.microbean</groupId>
-      <artifactId>microbean-type</artifactId>
       <type>jar</type>
       <scope>compile</scope>
     </dependency>
@@ -203,9 +191,9 @@
     <jdkToolchainVendor>openjdk</jdkToolchainVendor>
 
     <!-- maven-compiler-plugin properties -->
-    <maven.compiler.release>17</maven.compiler.release>
-    <maven.compiler.source>17</maven.compiler.source>
-    <maven.compiler.target>17</maven.compiler.target>
+    <maven.compiler.release>20</maven.compiler.release>
+    <maven.compiler.source>20</maven.compiler.source>
+    <maven.compiler.target>20</maven.compiler.target>
 
     <!-- maven-javadoc-plugin properties -->
     <detectJavaApiLink>false</detectJavaApiLink>
