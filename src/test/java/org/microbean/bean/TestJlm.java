@@ -11,20 +11,29 @@
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  See the License for the
  * specific language governing permissions and limitations under the License.
  */
+package org.microbean.bean;
 
-/**
- * Provides packages related to implementing beans.
- *
- * @author <a href="https://about.me/lairdnelson" target="_parent">Laird Nelson</a>
- */
-module org.microbean.bean {
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-  exports org.microbean.bean;
+import org.microbean.lang.JavaLanguageModel;
+
+final class TestJlm {
+
+  private JavaLanguageModel jlm;
   
-  requires transitive java.compiler;
-  requires            org.microbean.constant;
-  requires            org.microbean.lang;
-  requires transitive org.microbean.qualifier;
-  requires transitive org.microbean.scope;
+  private TestJlm() {
+    super();
+  }
+
+  @BeforeEach
+  final void setup() {
+    this.jlm = new JavaLanguageModel();
+  }
+
+  @Test
+  final void testJlm() {
+    jlm.type(Object.class);
+  }
 
 }

@@ -22,11 +22,14 @@ import java.lang.constant.MethodTypeDesc;
 import java.util.Collection;
 import java.util.EnumSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 
 import java.util.function.Function;
 import java.util.function.Predicate;
+
+import javax.lang.model.element.Element;
 
 import javax.lang.model.type.PrimitiveType;
 import javax.lang.model.type.TypeKind;
@@ -34,7 +37,10 @@ import javax.lang.model.type.TypeMirror;
 
 import org.microbean.constant.Constables;
 
+import org.microbean.lang.Equality;
 import org.microbean.lang.Lang;
+
+import org.microbean.lang.type.DelegatingTypeMirror;
 
 import org.microbean.qualifier.AttributeBearing;
 import org.microbean.qualifier.NamedAttributeMap;
@@ -46,7 +52,9 @@ import static java.lang.constant.ConstantDescs.FALSE;
 import static java.lang.constant.ConstantDescs.TRUE;
 import static java.lang.constant.DirectMethodHandleDesc.Kind.STATIC;
 
-public final class Selector<V> implements AttributeBearing<V>, Constable {
+import static org.microbean.bean.ConstantDescs.CD_Selector;
+
+public final record Selector<V>(TypeMirror type, List<NamedAttributeMap<V>> attributes, boolean box) implements AttributeBearing<V>, Constable {
 
 
   /*
@@ -54,33 +62,25 @@ public final class Selector<V> implements AttributeBearing<V>, Constable {
    */
 
 
-  private static final ClassDesc CD_Selector = ClassDesc.of("org.microbean.bean.Selector");
-
   private static final ClassDesc CD_TypeMirror = ClassDesc.of("javax.lang.model.type.TypeMirror");
 
+  private static final Equality EQUALITY_IGNORING_ANNOTATIONS = new Equality(false);
 
-  /*
-   * Instance fields.
-   */
+  private static final Equality SAME_TYPE_EQUALITY = new SameTypeEquality();
 
-
-  private final List<NamedAttributeMap<V>> attributes;
-
-  private final TypeMirror type;
-
-  private final boolean box;
 
   /*
    * Constructors.
    */
 
 
-  public Selector(final Collection<? extends NamedAttributeMap<V>> attributes, final TypeMirror type, final boolean box) {
-    super();
-    this.box = box;
-    this.attributes = List.copyOf(attributes);
-    this.type = validateType(type, box);
+  public Selector(final TypeMirror type, final List<? extends NamedAttributeMap<V>> attributes) {
+    this(type, List.copyOf(attributes), true);
+  }
 
+  public Selector {
+    attributes = List.copyOf(attributes);
+    type = DelegatingTypeMirror.of(validateType(type, box), Selector::elementSource, SAME_TYPE_EQUALITY);
   }
 
 
@@ -89,123 +89,118 @@ public final class Selector<V> implements AttributeBearing<V>, Constable {
    */
 
 
-  @Override // AttributeBearing<V>
-  public final List<NamedAttributeMap<V>> attributes() {
-    return this.attributes;
-  }
-
   public final List<NamedAttributeMap<V>> interceptorBindings() {
-    return this.attributes().stream().filter(AttributeKind.INTERCEPTOR_BINDING::describes).toList();
+    return InterceptorBindings.interceptorBindings(this.attributes());
   }
 
   public final List<NamedAttributeMap<V>> qualifiers() {
-    return this.attributes().stream().filter(AttributeKind.QUALIFIER::describes).toList();
+    return Qualifiers.qualifiers(this.attributes());
   }
 
-  public final TypeMirror type() {
-    return this.type;
+  public final boolean selects(final Id id) {
+    return this.selects(id.attributes(), id.types().types());
+  }
+
+  public final boolean selects(final Bean<?> bean) {
+    return this.selects(bean.id().attributes(), bean.id().types().types());
   }
 
   public final boolean selects(final Selector<?> selector) {
-    return this.selects(selector.attributes(), selector.type());
+    return this.selects(selector.attributes(), List.of(selector.type()));
+  }
+
+  public final boolean selects(final TypeMirror type) {
+    return this.selects(List.of(), List.of(type));
+  }
+
+  public final boolean selects(final Iterable<? extends TypeMirror> types) {
+    return this.selects(List.of(), types);
   }
 
   public final boolean selects(final Collection<? extends NamedAttributeMap<?>> attributes, final TypeMirror type) {
-    return this.selectsQualifiers(attributes) && this.selectsInterceptorBindings(attributes) && this.selectsType(type);
+    return this.selects(attributes, List.of(type));
   }
 
-  private final boolean selectsInterceptorBindings(final Collection<? extends NamedAttributeMap<?>> herBindings) {
-    if (herBindings.size() == 1 && AttributeKind.ANY_INTERCEPTOR_BINDING.describes(herBindings.iterator().next())) {
+  public final boolean selects(final Collection<? extends NamedAttributeMap<?>> attributes,
+                               final Iterable<? extends TypeMirror> types) {
+    System.out.println("*** selects qualifiers? (" + attributes + ") " + this.selectsQualifiers(attributes));
+    System.out.println("*** selects interceptorBindings? (" + attributes + ") " + this.selectsInterceptorBindings(attributes));
+    System.out.println("*** selects types? (" + types + ") " + this.selectsTypeFrom(types));
+    return this.selectsQualifiers(attributes) && this.selectsInterceptorBindings(attributes) && this.selectsTypeFrom(types);
+  }
+
+  private final boolean selectsInterceptorBindings(final Collection<? extends NamedAttributeMap<?>> attributes) {
+    final List<? extends NamedAttributeMap<?>> herBindings =
+      attributes.stream().filter(InterceptorBindings.Kind.INTERCEPTOR_BINDING::describes).toList();
+    if (herBindings.isEmpty()) {
+      return this.interceptorBindings().isEmpty();
+    } else if (herBindings.size() == 1 && InterceptorBindings.Kind.ANY_INTERCEPTOR_BINDING.describes(herBindings.iterator().next())) {
       return true;
     }
-    return this.interceptorBindings().equals(herBindings);
+    final List<NamedAttributeMap<V>> ibs = this.interceptorBindings();
+    return ibs.size() == herBindings.size() && ibs.containsAll(herBindings) && herBindings.containsAll(ibs);
   }
 
   private final boolean selectsQualifiers(final Collection<? extends NamedAttributeMap<?>> attributes) {
     final Collection<? extends NamedAttributeMap<V>> myQualifiers = this.qualifiers();
-    final List<? extends NamedAttributeMap<?>> herQualifiers = attributes.stream().filter(AttributeKind.QUALIFIER::describes).toList();
+    final List<? extends NamedAttributeMap<?>> herQualifiers =
+      attributes.stream().filter(Qualifiers.Kind.QUALIFIER::describes).toList();
     if (myQualifiers.isEmpty()) {
       return herQualifiers.isEmpty();
     } else if (herQualifiers.isEmpty()) {
-      for (final NamedAttributeMap<V> a : myQualifiers) {
-        if (AttributeKind.ANY_QUALIFIER.describes(a) || AttributeKind.DEFAULT_QUALIFIER.describes(a)) {
+      for (final NamedAttributeMap<V> myQualifier : myQualifiers) {
+        if (Qualifiers.Kind.ANY_QUALIFIER.describes(myQualifier) || Qualifiers.Kind.DEFAULT_QUALIFIER.describes(myQualifier)) {
           return true;
         }
       }
       return false;
     } else if (herQualifiers.size() == 1) {
-      return AttributeKind.ANY_QUALIFIER.describes(herQualifiers.get(0));
+      return Qualifiers.Kind.ANY_QUALIFIER.describes(herQualifiers.get(0));
     } else {
       return containsAll(herQualifiers::contains, myQualifiers);
     }
   }
 
-  private final boolean selectsType(TypeMirror type) {
-    final TypeKind k = type.getKind();
-    if (k.isPrimitive()) {
-      if (this.box) {
-        type = Lang.types().boxedClass((PrimitiveType)type).asType();
-        assert type.getKind() == TypeKind.DECLARED;
+  private final boolean selectsTypeFrom(final Iterable<? extends TypeMirror> types) {
+    for (TypeMirror type : types) {
+      type = DelegatingTypeMirror.unwrap(type);
+      final TypeKind k = type.getKind();
+      if (k.isPrimitive()) {
+        if (this.box) {
+          type = Lang.boxedClass((PrimitiveType)type).asType();
+          assert type.getKind() == TypeKind.DECLARED;
+        }
+        assert this.type().getKind() == TypeKind.DECLARED;
+        return Lang.assignable(type, DelegatingTypeMirror.unwrap(this.type()));
       }
-      assert this.type().getKind() == TypeKind.DECLARED;
-      return Lang.types().isAssignable(type, this.type());
+      if (switch (k) {
+          // TODO: this applies Java type semantics; there are additional CDI restrictions that we need to take into account.
+          // The ordering of the arguments to this method is counterintuitive; pay attention.
+        case ARRAY, DECLARED, TYPEVAR, WILDCARD -> Lang.assignable(type, DelegatingTypeMirror.unwrap(this.type()));
+        case ERROR, EXECUTABLE, INTERSECTION, MODULE, NONE, NULL, OTHER, PACKAGE, UNION, VOID -> false;
+        case BOOLEAN, BYTE, CHAR, DOUBLE, FLOAT, INT, LONG, SHORT -> throw new AssertionError("Should have already been handled");
+        }) {
+        return true;
+      }
     }
-    return switch (k) {
-      // TODO: this applies Java type semantics; there are additional CDI restrictions that we need to take into account.
-      // The ordering of the arguments to this method is counterintuitive; pay attention.
-    case ARRAY, BOOLEAN, BYTE, CHAR, DECLARED, DOUBLE, FLOAT, INT, LONG, SHORT, TYPEVAR, WILDCARD -> Lang.types().isAssignable(type, this.type());
-    case ERROR, EXECUTABLE, INTERSECTION, MODULE, NONE, NULL, OTHER, PACKAGE, UNION, VOID -> false;
-    };
+    return false;
   }
 
   @Override // Constable
   public final Optional<DynamicConstantDesc<Selector<V>>> describeConstable() {
     return Constables.describeConstable(this.attributes())
-      .flatMap(attributesDesc -> Constables.describeConstable(this.type())
+      .flatMap(attributesDesc -> Lang.describeConstable(this.type())
                .map(typeDesc -> DynamicConstantDesc.of(BSM_INVOKE,
                                                        MethodHandleDesc.ofMethod(STATIC,
                                                                                  CD_Selector,
                                                                                  "of",
                                                                                  MethodTypeDesc.of(CD_Selector,
-                                                                                                   CD_Collection,
                                                                                                    CD_TypeMirror,
+                                                                                                   CD_Collection,
                                                                                                    CD_boolean)),
-                                                       attributesDesc,
                                                        typeDesc,
+                                                       attributesDesc,
                                                        this.box ? TRUE : FALSE)));
-  }
-
-  @Override // Object
-  public final int hashCode() {
-    int hashCode = 17;
-    hashCode = 31 * hashCode + this.attributes().hashCode();
-    hashCode = 31 * hashCode + this.type().hashCode();
-    return hashCode;
-  }
-
-  @Override // Object
-  public final boolean equals(final Object other) {
-    if (other == this) {
-      return true;
-    } else if (other != null && other.getClass() == this.getClass()) {
-      final Selector<?> her = (Selector<?>)other;
-      return
-        this.attributes().equals(her.attributes()) &&
-        this.type().equals(her.type());
-    } else {
-      return false;
-    }
-  }
-
-  @Override // Object
-  public final String toString() {
-    return new StringBuilder(this.getClass().getSimpleName())
-      .append("[attributes=")
-      .append(this.attributes())
-      .append(", type=")
-      .append(this.type())
-      .append("]")
-      .toString();
   }
 
 
@@ -213,25 +208,25 @@ public final class Selector<V> implements AttributeBearing<V>, Constable {
    * Static methods.
    */
 
+
   private static TypeMirror validateType(final TypeMirror type, final boolean box) {
     TypeKind k = type.getKind();
     if (box && k.isPrimitive()) {
-      return Lang.types().boxedClass((PrimitiveType)type).asType();
+      return Lang.boxedClass((PrimitiveType)type).asType();
     }
     return switch (k) {
     case ARRAY, BOOLEAN, BYTE, CHAR, DECLARED, DOUBLE, FLOAT, INT, LONG, SHORT, TYPEVAR, WILDCARD -> type;
-    case ERROR, EXECUTABLE, INTERSECTION, MODULE, NONE, NULL, OTHER, PACKAGE, UNION, VOID -> throw new IllegalArgumentException("type: " + type);
+    case ERROR, EXECUTABLE, INTERSECTION, MODULE, NONE, NULL, OTHER, PACKAGE, UNION, VOID ->
+      throw new IllegalArgumentException("type: " + type);
     };
   }
 
   private static final boolean containsAll(final Predicate<? super Object> p, final Iterable<?> i) {
-    if (p == null || i == null) {
-      return false;
-    }
     for (final Object o : i) {
-      if (!p.test(o)) {
-        return false;
+      if (p.test(o)) {
+        continue;
       }
+      return false;
     }
     return true;
   }
@@ -240,108 +235,30 @@ public final class Selector<V> implements AttributeBearing<V>, Constable {
   public static final <V> Selector<V> of(final Collection<? extends NamedAttributeMap<V>> attributes,
                                          final TypeMirror type,
                                          final boolean box) {
-    return new Selector<>(attributes, type, box);
+    return new Selector<>(type, List.copyOf(attributes), box);
   }
 
+  private static final Element elementSource(final String moduleName, final String typeName) {
+    return Lang.typeElement(Lang.moduleElement(moduleName), typeName);
+  }
 
-  /*
-   * Inner and nested classes.
-   */
+  private static final class SameTypeEquality extends Equality {
 
-
-  public enum AttributeKind {
-
-    ANY_INTERCEPTOR_BINDING() {
-      @Override
-      public final boolean describes(final NamedAttributeMap<?> a) {
-        if (a == null) {
-          return false;
-        }
-        for (final NamedAttributeMap<?> m : a.metadata()) {
-          if (m.name().equalsIgnoreCase("any") && m.containsKey("interceptorBinding")) {
-            return true;
-          }
-        }
-        return false;
-      }
-    },
-    ANY_QUALIFIER() {
-      @Override
-      public final boolean describes(final NamedAttributeMap<?> a) {
-        if (a == null) {
-          return false;
-        }
-        for (final NamedAttributeMap<?> m : a.metadata()) {
-          if (m.name().equalsIgnoreCase("any") && m.containsKey("qualifier")) {
-            return true;
-          }
-        }
-        return false;
-      }
-    },
-    DEFAULT_QUALIFIER() {
-      @Override
-      public final boolean describes(final NamedAttributeMap<?> a) {
-        if (a == null) {
-          return false;
-        }
-        for (final NamedAttributeMap<?> m : a.metadata()) {
-          if (m.name().equalsIgnoreCase("default") && m.containsKey("qualifier")) {
-            return true;
-          }
-        }
-        return false;
-      }
-    },
-    INTERCEPTOR_BINDING() {
-      @Override
-        public final boolean describes(final NamedAttributeMap<?> a) {
-        if (a == null) {
-          return false;
-        }
-        for (final NamedAttributeMap<?> m : a.metadata()) {
-          if (m.containsKey("interceptorBinding")) {
-            return true;
-          }
-        }
-        return false;
-      }
-    },
-    QUALIFIER() {
-      @Override
-      public final boolean describes(final NamedAttributeMap<?> a) {
-        if (a == null) {
-          return false;
-        }
-        for (final NamedAttributeMap<?> m : a.metadata()) {
-          if (m.containsKey("qualifier")) {
-            return true;
-          }
-        }
-        return false;
-      }
-    },
-    OTHER() {
-      @Override
-      public final boolean describes(final NamedAttributeMap<?> a) {
-        if (a == null) {
-          return false;
-        }
-        for (final AttributeKind k : nonOther) {
-          if (k.describes(a)) {
-            return false;
-          }
-        }
-        return true;
-      }
-    };
-
-    private AttributeKind() {
+    private SameTypeEquality() {
+      super(false);
     }
 
-    public abstract boolean describes(final NamedAttributeMap<?> a);
-
-    private static final EnumSet<AttributeKind> nonOther = EnumSet.complementOf(EnumSet.of(OTHER));
+    @Override
+    public final boolean equals(final Object o1, final Object o2) {
+      if (o1 == o2) {
+        return true;
+      } else if (o1 == null || o2 == null) {
+        return false;
+      } else if (o1 instanceof TypeMirror t1 && o2 instanceof TypeMirror t2) {
+        return Lang.sameType(t1, t2);
+      }
+      return false;
+    }
 
   }
 

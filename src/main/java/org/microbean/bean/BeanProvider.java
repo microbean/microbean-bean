@@ -11,20 +11,12 @@
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  See the License for the
  * specific language governing permissions and limitations under the License.
  */
+package org.microbean.bean;
 
-/**
- * Provides packages related to implementing beans.
- *
- * @author <a href="https://about.me/lairdnelson" target="_parent">Laird Nelson</a>
- */
-module org.microbean.bean {
+import org.microbean.bean.Bean;
 
-  exports org.microbean.bean;
+public interface BeanProvider<T> {
+
+  public Bean<T> bean();
   
-  requires transitive java.compiler;
-  requires            org.microbean.constant;
-  requires            org.microbean.lang;
-  requires transitive org.microbean.qualifier;
-  requires transitive org.microbean.scope;
-
 }
