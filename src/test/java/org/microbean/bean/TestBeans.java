@@ -14,19 +14,29 @@
 package org.microbean.bean;
 
 import java.lang.constant.ClassDesc;
+import java.lang.constant.ConstantDesc;
+import java.lang.constant.DynamicConstantDesc;
+
+import java.lang.invoke.MethodHandles;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 
+import java.util.Collection;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import org.microbean.lang.JavaLanguageModel;
+import org.microbean.constant.Constables;
+
+import org.microbean.lang.Lang;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -38,30 +48,63 @@ import static org.microbean.scope.Scope.SINGLETON_ID;
 
 final class TestBeans {
 
-  private JavaLanguageModel jlm;
+  private static Bean<String> hello;
+  
+  private static Set<Bean<?>> beanSet;  
+
+  private Beans beans;
   
   private TestBeans() {
     super();
   }
 
-  @BeforeEach
-  final void setup() {
-    this.jlm = new JavaLanguageModel();
-  }
-
-  @Test
-  final void testBeans() {
-    Bean<String> hello =
-      new Bean<>(new Id(List.of(jlm.type(String.class), jlm.type(Object.class)),
+  @BeforeAll
+  static final void staticSetup() {
+    hello =
+      new Bean<>(new Id(List.of(Lang.declaredType(String.class), Lang.declaredType(Object.class)),
                         anyAndDefaultQualifiers(),
                         SINGLETON_ID),
-                 c -> "Hello");
-    final Beans beans = new Beans(Set.of(hello));
-    final Set<Bean<?>> set = beans.beans();
-    assertEquals(2, set.size());
-    hello = beans.bean(new Selector<>(jlm.type(String.class), List.of(defaultQualifier()))).cast();
+                 Factory.of("Hello"));
+    assertTrue(hello.factory() instanceof java.lang.constant.Constable);
+    beanSet = Set.of(hello);
+  }
+
+  @BeforeEach
+  final void setup() {
+    this.beans = new Beans(beanSet);
+  }
+  
+  @Test
+  final void testBeans() {
+    final Set<Bean<?>> set = this.beans.beans();
+
+    // 3 == Bean<String>, Bean<Beans>, Bean<Alternate.Resolver>
+    assertEquals(3, set.size());
+    hello = beans.bean(new Selector<>(Lang.declaredType(String.class), List.of(defaultQualifier()))).cast();
     assertSame("Hello", hello.factory().create(null));
-    hello = beans.bean(new Selector<>(jlm.type(Object.class), List.of(defaultQualifier()))).cast();
+    hello = beans.bean(new Selector<>(Lang.declaredType(Object.class), List.of(defaultQualifier()))).cast();
+    assertSame("Hello", hello.factory().create(null));
+  }
+
+  @SuppressWarnings("unchecked")
+  @Test
+  final void testConstableStuff() throws ReflectiveOperationException {
+    assertNotNull(beanSet);
+    final DynamicConstantDesc<Set<Bean<?>>> cd = (DynamicConstantDesc<Set<Bean<?>>>)Constables.describeConstable(beanSet).orElseThrow(AssertionError::new);
+    Set<Bean<?>> set = cd.resolveConstantDesc(MethodHandles.lookup());
+    final class ConstantBeans extends Beans {
+      public ConstantBeans() throws ReflectiveOperationException {
+        super((Collection<Bean<?>>)cd.resolveConstantDesc(java.lang.invoke.MethodHandles.lookup()));
+      }
+    }
+    final Beans beans = new ConstantBeans();
+    final Set<Bean<?>> resolvedSet = beans.beans();
+
+    // 3 == Bean<String>, Bean<Beans>, Bean<Alternate.Resolver>
+    assertEquals(1, set.size());
+    hello = beans.bean(new Selector<>(Lang.declaredType(String.class), List.of(defaultQualifier()))).cast();
+    assertSame("Hello", hello.factory().create(null));
+    hello = beans.bean(new Selector<>(Lang.declaredType(Object.class), List.of(defaultQualifier()))).cast();
     assertSame("Hello", hello.factory().create(null));
   }
 

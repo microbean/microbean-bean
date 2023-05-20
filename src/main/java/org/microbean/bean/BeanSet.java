@@ -18,11 +18,16 @@ import java.util.Set;
 
 import java.util.function.BiFunction;
 
-import org.microbean.bean.Bean;
-import org.microbean.bean.Selector;
+import org.microbean.bean.Alternate.Resolver;
 
 public interface BeanSet {
 
+  // Optional operation
+  public default Resolver<Bean<?>> resolver(final Resolver<Bean<?>> r) {
+    throw new UnsupportedOperationException();
+  }
+
+  // Optional operation
   public Set<Bean<?>> beans();
 
   public Set<Bean<?>> beans(final Selector<?> selector);

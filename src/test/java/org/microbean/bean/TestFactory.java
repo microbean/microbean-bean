@@ -13,17 +13,26 @@
  */
 package org.microbean.bean;
 
-public interface Ranked {
+import java.lang.constant.Constable;
+import java.lang.constant.ConstantDesc;
 
-  public static final int DEFAULT_RANK = 0;
+import org.junit.jupiter.api.Test;
 
-  // Highest rank wins.
-  public default int rank() {
-    return DEFAULT_RANK;
+import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
+final class TestFactory {
+
+  private TestFactory() {
+    super();
   }
 
-  public default boolean outranks(final Ranked other) {
-    return other == null || this.rank() > other.rank();
+  @Test
+  final void testConstableStuff() {
+    final Factory<String> f = Factory.of("Hello");
+    assertTrue(f instanceof Constable);
+    assertSame("Hello", f.singleton());
+    assertTrue(f.singleton() instanceof ConstantDesc);
   }
-
+  
 }

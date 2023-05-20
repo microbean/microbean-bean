@@ -13,6 +13,22 @@
  */
 package org.microbean.bean;
 
+import java.lang.constant.Constable;
+import java.lang.constant.ConstantDesc;
+import java.lang.constant.DynamicConstantDesc;
+import java.lang.constant.MethodHandleDesc;
+import java.lang.constant.MethodTypeDesc;
+
+import java.util.Optional;
+
+import org.microbean.constant.Constables;
+
+import static java.lang.constant.ConstantDescs.BSM_INVOKE;
+import static java.lang.constant.ConstantDescs.CD_Object;
+import static java.lang.constant.DirectMethodHandleDesc.Kind.STATIC;
+
+import static org.microbean.bean.ConstantDescs.CD_Factory;
+
 @FunctionalInterface // see #produce(Creation)
 public interface Factory<I> {
 
@@ -278,6 +294,31 @@ public interface Factory<I> {
         this.destroy(this.preDestroy(i, d.references()));
       }
     }
+  }
+
+  public static <I> Factory<I> of(final I singleton) {
+    final class SingletonFactory implements Constable, Factory<I> {
+      @Override
+      public final Optional<? extends ConstantDesc> describeConstable() {
+        return Constables.describeConstable(singleton)
+          .map(singletonDesc -> DynamicConstantDesc.of(BSM_INVOKE,
+                                                       MethodHandleDesc.ofMethod(STATIC,
+                                                                                 CD_Factory,
+                                                                                 "of",
+                                                                                 MethodTypeDesc.of(CD_Factory,
+                                                                                                   CD_Object)),
+                                                       singletonDesc));
+      }
+      @Override
+      public final I singleton() {
+        return singleton;
+      }
+      @Override
+      public final I produce(final Creation<I> c) {
+        return singleton;
+      }
+    }
+    return new SingletonFactory();
   }
 
 }

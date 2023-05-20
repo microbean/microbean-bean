@@ -21,10 +21,12 @@ import java.lang.reflect.Modifier;
 import java.util.List;
 import java.util.Set;
 
+import javax.lang.model.type.TypeKind;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import org.microbean.lang.JavaLanguageModel;
+import org.microbean.lang.Lang;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -39,21 +41,41 @@ import static org.microbean.scope.Scope.SINGLETON_ID;
 
 final class TestSelector {
 
-  private JavaLanguageModel jlm;
-  
   private TestSelector() {
     super();
   }
 
-  @BeforeEach
-  final void setup() {
-    this.jlm = new JavaLanguageModel();
+  @Test
+  final void testSelectorStringSelectsString() {
+    final Selector<?> s = new Selector<>(Lang.declaredType(String.class), List.of());
+    assertTrue(s.selects(Lang.declaredType(String.class)));
+  }
+  
+  @Test
+  final void testSelectorStringDoesNotSelectObject() {
+    final Selector<?> s = new Selector<>(Lang.declaredType(String.class), List.of());
+    assertFalse(s.selects(Lang.declaredType(Object.class)));
   }
 
   @Test
-  final void testSelector() {
-    final Selector<?> s = new Selector<>(jlm.type(String.class), List.of());
-    assertFalse(s.selects(jlm.type(Object.class)));
+  final void testSelectorIntSelectsInteger() {
+    final Selector<?> s = new Selector<>(Lang.primitiveType(TypeKind.INT), List.of()); // boxing is true by default
+    assertTrue(s.selects(Lang.declaredType(Integer.class)));
+  }
+  
+  @Test
+  final void testSelectorObjectDoesNotSelectString() {
+    final Selector<?> s = new Selector<>(Lang.declaredType(Object.class), List.of());
+    assertFalse(s.selects(Lang.declaredType(String.class)));
+  }
+
+  @Test
+  final void testSelectorListUnknownExtendsStringSelectsListString() {
+    final Selector<?> s =
+      new Selector<>(Lang.declaredType(Lang.typeElement(List.class),
+                                       Lang.wildcardType(Lang.declaredType(String.class), null)),
+                     List.of());
+    assertTrue(s.selects(Lang.declaredType(Lang.typeElement(List.class), Lang.declaredType(String.class))));
   }
 
 }
