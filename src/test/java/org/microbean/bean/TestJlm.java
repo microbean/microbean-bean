@@ -13,27 +13,19 @@
  */
 package org.microbean.bean;
 
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import org.microbean.lang.JavaLanguageModel;
+import org.microbean.lang.Lang;
 
 final class TestJlm {
 
-  private JavaLanguageModel jlm;
-  
   private TestJlm() {
     super();
   }
 
-  @BeforeEach
-  final void setup() {
-    this.jlm = new JavaLanguageModel();
-  }
-
   @Test
   final void testJlm() {
-    jlm.type(Object.class);
+    Lang.type(Object.class);
   }
 
 }

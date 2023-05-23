@@ -40,10 +40,13 @@ import javax.lang.model.type.TypeVariable;
 
 import org.microbean.constant.Constables;
 
+import org.microbean.lang.ElementSource;
 import org.microbean.lang.Equality;
 import org.microbean.lang.Lang;
 
 import org.microbean.lang.type.DelegatingTypeMirror;
+
+import org.microbean.lang.visitor.Visitors;
 
 import static java.lang.constant.ConstantDescs.BSM_INVOKE;
 import static java.lang.constant.ConstantDescs.CD_int;
@@ -53,20 +56,31 @@ import static org.microbean.bean.ConstantDescs.CD_ReferenceTypeList;
 
 public final class ReferenceTypeList implements Constable {
 
+  private static final ClassDesc CD_ElementSource = ClassDesc.of(ElementSource.class.getName());
+
   private static final Equality SAME_TYPE_EQUALITY = new SameTypeEquality();
 
   private final List<TypeMirror> types; // all DelegatingTypeMirrors
 
+  // We shouldn't have to keep this around, but we need to for describeConstable().
+  private final ElementSource elementSource;
+
   private final int interfaceIndex;
 
   public ReferenceTypeList(final Collection<? extends TypeMirror> types) {
-    this(types, ReferenceTypeList::seen, ReferenceTypeList::validateType);
+    this(types, ReferenceTypeList::seen, ReferenceTypeList::validateType, Lang.elementSource());
+  }
+
+  public ReferenceTypeList(final Collection<? extends TypeMirror> types, final ElementSource elementSource) {
+    this(types, ReferenceTypeList::seen, ReferenceTypeList::validateType, elementSource);
   }
 
   public ReferenceTypeList(final Collection<? extends TypeMirror> types,
                            BiPredicate<Iterable<? extends TypeMirror>, TypeMirror> seen,
-                           Predicate<? super TypeMirror> typeFilter) {
+                           Predicate<? super TypeMirror> typeFilter,
+                           final ElementSource elementSource) {
     super();
+    this.elementSource = elementSource == null ? Lang.elementSource() : elementSource;
     if (types.isEmpty()) {
       this.types = List.of();
       this.interfaceIndex = -1;
@@ -79,12 +93,12 @@ public final class ReferenceTypeList implements Constable {
       }
       final List<DelegatingTypeMirror> newTypes = new ArrayList<>(types.size());
       for (final TypeMirror t : types) {
-        final DelegatingTypeMirror dt = DelegatingTypeMirror.of(t, Lang.elementSource(), SAME_TYPE_EQUALITY);
+        final DelegatingTypeMirror dt = DelegatingTypeMirror.of(t, this.elementSource, SAME_TYPE_EQUALITY);
         if (!seen.test(newTypes, dt) && typeFilter.test(dt)) {
           newTypes.add(dt);
         }
       }
-      Collections.sort(newTypes, TypeMirrorComparator.INSTANCE);
+      Collections.sort(newTypes, new TypeMirrorComparator(this.elementSource));
       int interfaceIndex = -1;
       for (int i = 0; i < newTypes.size(); i++) {
         if (isInterface(newTypes.get(i))) {
@@ -100,10 +114,13 @@ public final class ReferenceTypeList implements Constable {
   @Override // Constable
   public final Optional<DynamicConstantDesc<ReferenceTypeList>> describeConstable() {
     return Constables.describeConstable(this.types(), Lang::describeConstable)
-      .map(typesDesc -> DynamicConstantDesc.of(BSM_INVOKE,
-                                               MethodHandleDesc.ofConstructor(CD_ReferenceTypeList,
-                                                                              CD_Collection),
-                                               typesDesc));
+      .flatMap(typesDesc -> Constables.describeConstable(this.elementSource)
+               .map(elementSourceDesc -> DynamicConstantDesc.of(BSM_INVOKE,
+                                                                MethodHandleDesc.ofConstructor(CD_ReferenceTypeList,
+                                                                                               CD_Collection,
+                                                                                               CD_ElementSource),
+                                                                typesDesc,
+                                                                elementSourceDesc)));
   }
 
   public final List<TypeMirror> types() {
@@ -111,11 +128,24 @@ public final class ReferenceTypeList implements Constable {
   }
 
   public final List<TypeMirror> classTypes() {
-    return this.interfaceIndex < 0 ? this.types : this.types.subList(0, this.interfaceIndex);
+    if (this.interfaceIndex < 0) {
+      return this.types;
+    } else if (this.interfaceIndex == 0) {
+      return List.of();
+    } else {
+      final List<TypeMirror> sublist = this.types.subList(0, this.interfaceIndex);
+      final List<TypeMirror> list = new ArrayList<>(sublist.size() + 1);
+      list.addAll(sublist);
+      list.add(this.types.get(this.types.size() - 1)); // Object
+      return Collections.unmodifiableList(list);
+    }               
   }
 
   public final List<TypeMirror> interfaceTypes() {
-    return this.interfaceIndex < 0 ? List.of() : this.types.subList(this.interfaceIndex, this.types.size());
+    return
+      this.interfaceIndex < 0 ? List.of() :
+      this.interfaceIndex == 0 ? this.types :
+      this.types.subList(this.interfaceIndex, this.types.size() - 1); // Object will be last; omit it
   }
 
   @Override // Object
@@ -147,79 +177,39 @@ public final class ReferenceTypeList implements Constable {
    */
 
 
-  private static final ElementKind kind(final Element e) {
-    return Lang.kind(e);
-  }
-
-  private static final TypeKind kind(final TypeMirror t) {
-    // XXX TODO FIXME: OOF. This is a hack indicating a much larger problem. TypeMirrors (Types) in the compiler
-    // representing declared types cause their Symbols to "complete" lazily when you call certain methods, getKind()
-    // among them. Completion can cause ClassFinder and ClassReader to get involved. ClassFinder can "fill in" only
-    // one thing at a time. Once a Symbol has been completed, its completion mechanism is set to a
-    // no-op. Synchronizing on the actual TypeMirror here allows completion to continue serially.  We uncover this
-    // case only because we have JUnit tests running in parallel.
-    //
-    // Completion as remarked fundamentally happens on Symbols (Elements). It can be triggered by an invocation of any
-    // of the following Element or Element-subclass methods:
-    //
-    // getModifiers()
-    // getSuperclass()
-    // getKind()
-    // getAnnotationMirrors()
-    // getEnclosedElements()
-    // getDirectives() // modules
-    // getInterfaces()
-    // getNestingKind()
-    // getParameters()
-    //
-    // On TypeMirrors:
-    //
-    // getKind()
-    // getTypeArguments()
-    //
-    // The larger problem is that types and symbols related to a given type may not yet be completed and this same
-    // synchronization hack may need to be applied to them as well.
-    //
-    // For now we trigger completion inside Lang itself.
-    //
-    // Sample stack trace:
-    /*
-      java.lang.AssertionError: Filling jrt:/java.base/java/io/Serializable.class during DirectoryFileObject[/modules/java.base:java/lang/CharSequence.class]
-      at jdk.compiler/com.sun.tools.javac.util.Assert.error(Assert.java:162)
-      at jdk.compiler/com.sun.tools.javac.code.ClassFinder.fillIn(ClassFinder.java:365)
-      at jdk.compiler/com.sun.tools.javac.code.ClassFinder.complete(ClassFinder.java:301)
-      at jdk.compiler/com.sun.tools.javac.code.Symtab$1.complete(Symtab.java:326)
-      at jdk.compiler/com.sun.tools.javac.code.Symbol.complete(Symbol.java:682)
-      at jdk.compiler/com.sun.tools.javac.code.Symbol$ClassSymbol.complete(Symbol.java:1410)
-      at jdk.compiler/com.sun.tools.javac.code.Symbol.apiComplete(Symbol.java:688)
-      at jdk.compiler/com.sun.tools.javac.code.Type$ClassType.getKind(Type.java:1181)
-      at org.microbean.bean@0.0.1-SNAPSHOT/org.microbean.bean.ReferenceTypeList.specializationDepth(ReferenceTypeList.java:168)
-      at org.microbean.bean@0.0.1-SNAPSHOT/org.microbean.bean.ReferenceTypeList.specializationDepth(ReferenceTypeList.java:181)
-    */
-    return Lang.kind(t);
-  }
-
   public static final ReferenceTypeList closure(final TypeMirror t) {
-    return closure(t, ReferenceTypeList::seen, ReferenceTypeList::validateType);
+    return closure(t, ReferenceTypeList::seen, ReferenceTypeList::validateType, new Visitors(Lang.elementSource()));
+  }
+
+  public static final ReferenceTypeList closure(final TypeMirror t, final Visitors visitors) {
+    return closure(t, ReferenceTypeList::seen, ReferenceTypeList::validateType, visitors);
   }
 
   public static final ReferenceTypeList closure(final TypeMirror t,
                                                 BiPredicate<Iterable<? extends TypeMirror>, TypeMirror> seen,
-                                                Predicate<? super TypeMirror> typeFilter) {
-    final List<TypeMirror> list = new ArrayList<>();
-    list.add(t);
-    list.addAll(Lang.directSupertypes(t));
-    return new ReferenceTypeList(list, seen, typeFilter);
+                                                Predicate<? super TypeMirror> typeFilter,
+                                                final ElementSource elementSource) {
+    return closure(t, seen, typeFilter, new Visitors(elementSource));
   }
 
-  public static final int specializationDepth(final TypeMirror t) {
-    return specializationDepth(DelegatingTypeMirror.of(t, Lang.elementSource(), SAME_TYPE_EQUALITY));
+  public static final ReferenceTypeList closure(final TypeMirror t,
+                                                BiPredicate<Iterable<? extends TypeMirror>, TypeMirror> seen,
+                                                Predicate<? super TypeMirror> typeFilter,
+                                                final Visitors visitors) {
+    return new ReferenceTypeList(visitors.typeClosureVisitor().visit(t).toList(),
+                                 seen,
+                                 typeFilter,
+                                 visitors.elementSource());
+  }
+
+  public static final int specializationDepth(final TypeMirror t, final ElementSource elementSource) {
+    return specializationDepth(DelegatingTypeMirror.of(t, elementSource, SAME_TYPE_EQUALITY), elementSource);
   }
 
   @SuppressWarnings("fallthrough")
-  private static final int specializationDepth(final DelegatingTypeMirror t) {
+  private static final int specializationDepth(final DelegatingTypeMirror t, final ElementSource elementSource) {
 
-    final TypeKind k = kind(t);
+    final TypeKind k = t.getKind();
 
     // See
     // https://github.com/openjdk/jdk/blob/2e340e855b760e381793107f2a4d74095bd40199/src/jdk.compiler/share/classes/com/sun/tools/javac/code/Types.java#L3570-L3615.
@@ -238,18 +228,18 @@ public final class ReferenceTypeList implements Constable {
         // The directSupertypes() call is guaranteed to set up a particular partial order (class types first, interface types
         // second).
 
-        sd = Math.max(sd, specializationDepth(DelegatingTypeMirror.of(s, Lang.elementSource(), SAME_TYPE_EQUALITY))); // RECURSIVE
+        sd = Math.max(sd, specializationDepth(DelegatingTypeMirror.of(s, elementSource, SAME_TYPE_EQUALITY), elementSource)); // RECURSIVE
       }
       return sd + 1;
     case ERROR:
       throw new AssertionError("javac bug; t is reported as having an ERROR kind: " + t);
     default:
-      throw new IllegalArgumentException("t: " + t + "; t.getKind(): " + kind(t));
+      throw new IllegalArgumentException("t: " + t + "; t.getKind(): " + t.getKind());
     }
   }
 
   private static final boolean validateType(final TypeMirror t) {
-    return switch (kind(t)) {
+    return switch (t.getKind()) {
     case ARRAY, DECLARED, TYPEVAR -> true;
     default -> throw new IllegalArgumentException("t is not a reference type: " + t);
     };
@@ -269,14 +259,14 @@ public final class ReferenceTypeList implements Constable {
   }
 
   private static final boolean isInterface(final Element e) {
-    return e != null && kind(e).isInterface();
+    return e != null && e.getKind().isInterface();
   }
 
   private static final Element element(final TypeMirror t) {
     if (t == null) {
       return null;
     }
-    return switch (kind(t)) {
+    return switch (t.getKind()) {
       case DECLARED -> ((DeclaredType)t).asElement();
       case TYPEVAR -> ((TypeVariable)t).asElement();
       default -> null;
@@ -292,15 +282,19 @@ public final class ReferenceTypeList implements Constable {
   // *NOT* consistent with equals().
   private static final class TypeMirrorComparator implements Comparator<DelegatingTypeMirror> {
 
-    private static final TypeMirrorComparator INSTANCE = new TypeMirrorComparator();
+    private final ElementSource elementSource;
 
-    private TypeMirrorComparator() {
+    private TypeMirrorComparator(final ElementSource elementSource) {
       super();
+      this.elementSource = elementSource == null ? Lang.elementSource() : elementSource;
     }
 
     @Override // Comparator<TypeMirror>
     public final int compare(final DelegatingTypeMirror t, final DelegatingTypeMirror s) {
-      return t == null ? s == null ? 0 : 1 : s == null ? -1 : Integer.signum(specializationDepth(s) - specializationDepth(t));
+      return
+        t == null ? s == null ? 0 : 1 :
+        s == null ? -1 :
+        Integer.signum(specializationDepth(s, this.elementSource) - specializationDepth(t, this.elementSource));
     }
 
   }

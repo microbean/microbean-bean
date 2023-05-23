@@ -23,7 +23,7 @@ module org.microbean.bean {
   
   requires transitive java.compiler;
   requires            org.microbean.constant;
-  requires            org.microbean.lang;
+  requires transitive org.microbean.lang;
   requires transitive org.microbean.qualifier;
   requires transitive org.microbean.scope;
 

@@ -24,6 +24,10 @@ public interface Instances {
 
   public <I> I find(final Bean<I> bean);
 
+  public default <I> I supply(final Selector<?> selector) {
+    return this.supply(selector, null);
+  }
+  
   public <I> I supply(final Selector<?> selector, final Bean<I> bean);
 
 }

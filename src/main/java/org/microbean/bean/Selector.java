@@ -316,8 +316,9 @@ public final record Selector<V>(TypeMirror type, List<NamedAttributeMap<V>> attr
    */
 
 
+  @Deprecated
   private static final TypeKind kind(final TypeMirror t) {
-    return Lang.kind(t);
+    return t.getKind();
   }
   
   private static final TypeMirror validateType(final TypeMirror type, final boolean box) {

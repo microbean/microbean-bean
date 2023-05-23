@@ -60,6 +60,14 @@ final class TestSelector {
   @Test
   final void testSelectorIntSelectsInteger() {
     final Selector<?> s = new Selector<>(Lang.primitiveType(TypeKind.INT), List.of()); // boxing is true by default
+    /*
+      java.lang.NullPointerException: Cannot invoke "com.sun.tools.javac.code.Symbol$ClassSymbol.erasure(com.sun.tools.javac.code.Types)" because "sym" is null
+      at jdk.compiler/com.sun.tools.javac.model.JavacTypes.getDeclaredType(JavacTypes.java:237)
+      at jdk.compiler/com.sun.tools.javac.model.JavacTypes.getDeclaredType(JavacTypes.java:249)
+      at org.microbean.lang@0.0.1-SNAPSHOT/org.microbean.lang.Lang.declaredType(Lang.java:664)
+      at org.microbean.lang@0.0.1-SNAPSHOT/org.microbean.lang.Lang.declaredType(Lang.java:611)
+      at org.microbean.bean@0.0.1-SNAPSHOT/org.microbean.bean.TestSelector.testSelectorIntSelectsInteger(TestSelector.java:63)
+    */
     assertTrue(s.selects(Lang.declaredType(Integer.class)));
   }
   
