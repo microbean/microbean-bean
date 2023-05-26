@@ -13,28 +13,25 @@
  */
 package org.microbean.bean;
 
-public interface Creation<I> extends Cloneable, ReferencesProvider {
+public class BeanException extends RuntimeException {
 
-  public Creation<I> clone();
+  private static final long serialVersionUID = 1L;
 
-  public Selector selector();
-
-  public default void creating(final I instance) {
-
+  public BeanException() {
+    super();
   }
 
-  public Destruction destruction();
-
-  @SuppressWarnings("unchecked")
-  public default <J> Creation<J> cast() {
-    return (Creation<J>)this;
+  public BeanException(final String message) {
+    super(message);
   }
 
-  @FunctionalInterface
-  public static interface Factory {
+  public BeanException(final Throwable cause) {
+    super(cause);
+  }
 
-    public Creation<?> creation(final Selector s);
-    
+  public BeanException(final String message,
+                       final Throwable cause) {
+    super(message, cause);
   }
 
 }

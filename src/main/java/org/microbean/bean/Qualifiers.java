@@ -23,8 +23,10 @@ import java.util.Map;
 import org.microbean.qualifier.NamedAttributeMap;
 
 public final class Qualifiers {
-
+  
   private static final List<NamedAttributeMap<?>> ANY_AND_DEFAULT = List.of(Kind.ANY_QUALIFIER.of(), Kind.DEFAULT_QUALIFIER.of());
+
+  private static final List<NamedAttributeMap<?>> DEFAULT = List.of(Kind.DEFAULT_QUALIFIER.of());
   
   private Qualifiers() {
     super();
@@ -37,21 +39,25 @@ public final class Qualifiers {
   public static final NamedAttributeMap<?> defaultQualifier() {
     return Kind.DEFAULT_QUALIFIER.of();
   }
-  
+
   public static final List<NamedAttributeMap<?>> anyAndDefaultQualifiers() {
     return ANY_AND_DEFAULT;
+  }
+
+  public static final List<NamedAttributeMap<?>> defaultQualifiers() {
+    return DEFAULT;
   }
 
   public static final NamedAttributeMap<?> qualifier() {
     return Kind.QUALIFIER.of();
   }
 
-  public static final <V> List<NamedAttributeMap<V>> qualifiers(final Collection<? extends NamedAttributeMap<V>> c) {
+  public static final List<NamedAttributeMap<?>> qualifiers(final Collection<? extends NamedAttributeMap<?>> c) {
     if (c.isEmpty()) {
       return List.of();
     }
-    final ArrayList<NamedAttributeMap<V>> list = new ArrayList<>(c.size());
-    for (final NamedAttributeMap<V> a : c) {
+    final ArrayList<NamedAttributeMap<?>> list = new ArrayList<>(c.size());
+    for (final NamedAttributeMap<?> a : c) {
       if (Kind.QUALIFIER.describes(a)) {
         list.add(a);
       }

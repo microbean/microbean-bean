@@ -51,10 +51,11 @@ import static java.util.function.Predicate.not;
 
 import static java.util.stream.Collectors.toUnmodifiableSet;
 
-import static org.microbean.bean.ConstantDescs.CD_Beans;
+import static org.microbean.bean.ConstantDescs.CD_DefaultBeanSet;
 import static org.microbean.bean.ConstantDescs.CD_Resolver;
 import static org.microbean.bean.Qualifiers.anyAndDefaultQualifiers;
 import static org.microbean.bean.Qualifiers.defaultQualifier;
+import static org.microbean.bean.Qualifiers.defaultQualifiers;
 import static org.microbean.bean.Ranked.DEFAULT_RANK;
 
 import static org.microbean.lang.Lang.declaredType;
@@ -65,7 +66,7 @@ import static org.microbean.scope.Scope.SINGLETON_ID;
 
 // Experimenting with making this non-final so the no-arg constructor can supply its own beans via some other
 // mechanism. Think ldc.
-public class Beans implements BeanProvider<Beans>, BeanSet, Constable {
+public class DefaultBeanSet implements BeanProvider<DefaultBeanSet>, BeanSet, Constable {
 
 
   /*
@@ -77,7 +78,7 @@ public class Beans implements BeanProvider<Beans>, BeanSet, Constable {
 
   static {
     try {
-      RESOLVER = MethodHandles.lookup().findVarHandle(Beans.class, "resolver", Resolver.class);
+      RESOLVER = MethodHandles.lookup().findVarHandle(DefaultBeanSet.class, "resolver", Resolver.class);
     } catch (final IllegalAccessException | NoSuchFieldException e) {
       throw (Error)new ExceptionInInitializerError(e.getMessage()).initCause(e);
     }
@@ -93,10 +94,10 @@ public class Beans implements BeanProvider<Beans>, BeanSet, Constable {
 
   private final Set<Bean<?>> beans;
 
-  private final ConcurrentMap<Selector<?>, Set<Bean<?>>> selectionCache;
+  private final ConcurrentMap<Selector, Set<Bean<?>>> selectionCache;
 
   // Guaranteed to be a submap of selectionCache.
-  private final ConcurrentMap<Selector<?>, Bean<?>> resolutionCache;
+  private final ConcurrentMap<Selector, Bean<?>> resolutionCache;
 
 
   /*
@@ -104,31 +105,31 @@ public class Beans implements BeanProvider<Beans>, BeanSet, Constable {
    */
 
 
-  public Beans(final Collection<? extends Bean<?>> beans) {
+  public DefaultBeanSet(final Collection<? extends Bean<?>> beans) {
     this(beans, Map.of(), StockResolver.INSTANCE);
   }
 
-  public Beans(final Collection<? extends Bean<?>> beans, final Resolver<Bean<?>> resolver) {
+  public DefaultBeanSet(final Collection<? extends Bean<?>> beans, final Resolver<Bean<?>> resolver) {
     this(beans, Map.of(), resolver);
   }
 
-  public Beans(final Collection<? extends Bean<?>> beans,
-               final Map<? extends Selector<?>, ? extends Bean<?>> preCalculatedResolutions) {
+  public DefaultBeanSet(final Collection<? extends Bean<?>> beans,
+                        final Map<? extends Selector, ? extends Bean<?>> preCalculatedResolutions) {
     this(beans, preCalculatedResolutions, StockResolver.INSTANCE);
   }
 
-  public Beans(final Map<? extends Selector<?>, ? extends Bean<?>> preCalculatedResolutions,
-               final Resolver<Bean<?>> resolver) {
+  public DefaultBeanSet(final Map<? extends Selector, ? extends Bean<?>> preCalculatedResolutions,
+                        final Resolver<Bean<?>> resolver) {
     this(Set.of(), preCalculatedResolutions, resolver);
   }
 
-  public Beans(final Map<? extends Selector<?>, ? extends Bean<?>> preCalculatedResolutions) {
+  public DefaultBeanSet(final Map<? extends Selector, ? extends Bean<?>> preCalculatedResolutions) {
     this(Set.of(), preCalculatedResolutions, StockResolver.INSTANCE);
   }
 
-  public Beans(final Collection<? extends Bean<?>> beans,
-               final Map<? extends Selector<?>, ? extends Bean<?>> preCalculatedResolutions,
-               final Resolver<Bean<?>> resolver) {
+  public DefaultBeanSet(final Collection<? extends Bean<?>> beans,
+                        final Map<? extends Selector, ? extends Bean<?>> preCalculatedResolutions,
+                        final Resolver<Bean<?>> resolver) {
     super();
     this.resolver = resolver == null ? StockResolver.INSTANCE : resolver;
     this.resolutionCache = new ConcurrentHashMap<>();
@@ -138,10 +139,10 @@ public class Beans implements BeanProvider<Beans>, BeanSet, Constable {
       final Set<Bean<?>> newBeans = new HashSet<>(beans);
       newBeans.add(this.bean());
       newBeans.add(this.resolverBean());
-      for (final Entry<? extends Selector<?>, ? extends Bean<?>> e : preCalculatedResolutions.entrySet()) {
+      for (final Entry<? extends Selector, ? extends Bean<?>> e : preCalculatedResolutions.entrySet()) {
         final Bean<?> b = e.getValue();
         newBeans.add(b);
-        final Selector<?> s = e.getKey();
+        final Selector s = e.getKey();
         this.beans(s, newBeans); // prime the selection cache
         this.resolutionCache.put(s, b); // prime the resolution cache
       }
@@ -154,12 +155,12 @@ public class Beans implements BeanProvider<Beans>, BeanSet, Constable {
       newBeans.add(this.resolverBean());
       this.beans = unmodifiableSet(newBeans);
     }
-    
+
     // Prime the selection and resolution caches.
-    this.bean(new Selector<>(declaredType(BeanSet.class), List.of(defaultQualifier())), Beans::returnNull);
-    this.bean(new Selector<>(declaredType(typeElement(Resolver.class), declaredType(typeElement(Bean.class), wildcardType())),
-                             List.of(defaultQualifier())),
-              Beans::returnNull);
+    this.bean(new Selector(declaredType(BeanSet.class), defaultQualifiers()), DefaultBeanSet::returnNull);
+    this.bean(new Selector(declaredType(typeElement(Resolver.class), declaredType(typeElement(Bean.class), wildcardType())),
+                           defaultQualifiers()),
+              DefaultBeanSet::returnNull);
 
   }
 
@@ -170,11 +171,11 @@ public class Beans implements BeanProvider<Beans>, BeanSet, Constable {
 
 
   @Override
-  public final Optional<DynamicConstantDesc<Beans>> describeConstable() {
+  public final Optional<DynamicConstantDesc<DefaultBeanSet>> describeConstable() {
     return Constables.describeConstable(this.resolver)
       .flatMap(resolverDesc -> Constables.describeConstable(this.beans)
                .map(beansDesc -> DynamicConstantDesc.of(BSM_INVOKE,
-                                                        MethodHandleDesc.ofConstructor(CD_Beans,
+                                                        MethodHandleDesc.ofConstructor(CD_DefaultBeanSet,
                                                                                        CD_Collection,
                                                                                        CD_Resolver),
                                                         beansDesc,
@@ -186,12 +187,12 @@ public class Beans implements BeanProvider<Beans>, BeanSet, Constable {
     return (Resolver<Bean<?>>)RESOLVER.getAndSet(this, r == null ? StockResolver.INSTANCE : r);
   }
 
-  @Override // BeanProvider<Beans>
-  public final Bean<Beans> bean() {
+  @Override // BeanProvider<DefaultBeanSet>
+  public final Bean<DefaultBeanSet> bean() {
     return
-      new Bean<>(new Id(new ReferenceTypeList(List.of(declaredType(Beans.class),
+      new Bean<>(new Id(new ReferenceTypeList(List.of(declaredType(DefaultBeanSet.class),
                                                       declaredType(BeanSet.class),
-                                                      declaredType(BeanProvider.class, new Class<?>[] { Beans.class }))),
+                                                      declaredType(BeanProvider.class, new Class<?>[] { DefaultBeanSet.class }))),
                         anyAndDefaultQualifiers(),
                         SINGLETON_ID,
                         DEFAULT_RANK - 100),
@@ -199,13 +200,13 @@ public class Beans implements BeanProvider<Beans>, BeanSet, Constable {
   }
 
   @Override // BeanSet
-  public final Bean<?> bean(final Selector<?> selector) {
+  public final Bean<?> bean(final Selector selector) {
     return this.bean(selector, Resolver::fail);
   }
 
   @Override // BeanSet
-  public final Bean<?> bean(final Selector<?> selector,
-                            final BiFunction<? super Selector<?>, ? super Collection<? extends Bean<?>>, ? extends Bean<?>> op) {
+  public final Bean<?> bean(final Selector selector,
+                            final BiFunction<? super Selector, ? super Collection<? extends Bean<?>>, ? extends Bean<?>> op) {
     return this.resolutionCache.computeIfAbsent(selector, s -> this.resolver.resolve(s, this.beans(s), op)); // volatile read
   }
 
@@ -215,7 +216,7 @@ public class Beans implements BeanProvider<Beans>, BeanSet, Constable {
   }
 
   @Override // BeanSet
-  public final Set<Bean<?>> beans(final Selector<?> selector) {
+  public final Set<Bean<?>> beans(final Selector selector) {
     return this.beans(selector, this.beans);
   }
 
@@ -236,15 +237,19 @@ public class Beans implements BeanProvider<Beans>, BeanSet, Constable {
     return this.resolutionCache.values().stream().collect(toUnmodifiableSet());
   }
 
-  public final Set<Selector<?>> selectors() {
+  public final Set<Selector> selectors() {
     return this.selectionCache.keySet();
   }
+
+  /*
+   * Experimental methods.
+   */
 
   /*
    * Private methods.
    */
 
-  private final Set<Bean<?>> beans(final Selector<?> selector, final Set<? extends Bean<?>> beans) {
+  private final Set<Bean<?>> beans(final Selector selector, final Set<? extends Bean<?>> beans) {
     return this.selectionCache.computeIfAbsent(selector, s -> beans.stream().filter(s::selects).collect(toUnmodifiableSet()));
   }
 
@@ -258,7 +263,7 @@ public class Beans implements BeanProvider<Beans>, BeanSet, Constable {
                         anyAndDefaultQualifiers(),
                         SINGLETON_ID,
                         DEFAULT_RANK),
-                 Factory.of(this.resolver)); // volatile read
+                 new SingletonFactory<>(this.resolver)); // volatile read
   }
 
 
@@ -267,7 +272,7 @@ public class Beans implements BeanProvider<Beans>, BeanSet, Constable {
    */
 
 
-  private static Bean<?> returnNull(final Selector<?> x, final Collection<? extends Bean<?>> xx) {
+  private static Bean<?> returnNull(final Selector x, final Collection<? extends Bean<?>> xx) {
     return null;
   }
 

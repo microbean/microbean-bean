@@ -13,21 +13,17 @@
  */
 package org.microbean.bean;
 
-import org.microbean.bean.Bean;
-import org.microbean.bean.Selector;
-
+// Not actually used by the bean package, but common to both instance- and reference-processing.
 public interface Instances {
 
-  public Creation<?> creation(final Selector<?> selector);
+  public BeanSet beanSet();
   
-  public <I> I find(final Selector<?> selector);
-
-  public <I> I find(final Bean<I> bean);
-
-  public default <I> I supply(final Selector<?> selector) {
+  public default <I> I supply(final Selector selector) {
     return this.supply(selector, null);
   }
-  
-  public <I> I supply(final Selector<?> selector, final Bean<I> bean);
+
+  public <I> I supply(final Selector selector, final Bean<I> bean);
+
+  public void remove(final Id id);
 
 }

@@ -46,15 +46,15 @@ import static org.microbean.bean.Qualifiers.defaultQualifier;
 
 import static org.microbean.scope.Scope.SINGLETON_ID;
 
-final class TestBeans {
+final class TestDefaultBeanSet {
 
   private static Bean<String> hello;
   
   private static Set<Bean<?>> beanSet;  
 
-  private Beans beans;
+  private DefaultBeanSet beans;
   
-  private TestBeans() {
+  private TestDefaultBeanSet() {
     super();
   }
 
@@ -71,18 +71,18 @@ final class TestBeans {
 
   @BeforeEach
   final void setup() {
-    this.beans = new Beans(beanSet);
+    this.beans = new DefaultBeanSet(beanSet);
   }
   
   @Test
   final void testBeans() {
     final Set<Bean<?>> set = this.beans.beans();
 
-    // 3 == Bean<String>, Bean<Beans>, Bean<Alternate.Resolver>
+    // 3 == Bean<String>, Bean<DefaultBeanSet>, Bean<Alternate.Resolver>
     assertEquals(3, set.size());
-    hello = beans.bean(new Selector<>(Lang.declaredType(String.class), List.of(defaultQualifier()))).cast();
+    hello = beans.bean(new Selector(Lang.declaredType(String.class), List.of(defaultQualifier()))).cast();
     assertSame("Hello", hello.factory().create(null));
-    hello = beans.bean(new Selector<>(Lang.declaredType(Object.class), List.of(defaultQualifier()))).cast();
+    hello = beans.bean(new Selector(Lang.declaredType(Object.class), List.of(defaultQualifier()))).cast();
     assertSame("Hello", hello.factory().create(null));
   }
 
@@ -92,19 +92,19 @@ final class TestBeans {
     assertNotNull(beanSet);
     final DynamicConstantDesc<Set<Bean<?>>> cd = (DynamicConstantDesc<Set<Bean<?>>>)Constables.describeConstable(beanSet).orElseThrow(AssertionError::new);
     Set<Bean<?>> set = cd.resolveConstantDesc(MethodHandles.lookup());
-    final class ConstantBeans extends Beans {
-      public ConstantBeans() throws ReflectiveOperationException {
+    final class ConstantDefaultBeanSet extends DefaultBeanSet {
+      public ConstantDefaultBeanSet() throws ReflectiveOperationException {
         super((Collection<Bean<?>>)cd.resolveConstantDesc(java.lang.invoke.MethodHandles.lookup()));
       }
     }
-    final Beans beans = new ConstantBeans();
+    final DefaultBeanSet beans = new ConstantDefaultBeanSet();
     final Set<Bean<?>> resolvedSet = beans.beans();
 
-    // 3 == Bean<String>, Bean<Beans>, Bean<Alternate.Resolver>
+    // 3 == Bean<String>, Bean<DefaultBeanSet>, Bean<Alternate.Resolver>
     assertEquals(1, set.size());
-    hello = beans.bean(new Selector<>(Lang.declaredType(String.class), List.of(defaultQualifier()))).cast();
+    hello = beans.bean(new Selector(Lang.declaredType(String.class), List.of(defaultQualifier()))).cast();
     assertSame("Hello", hello.factory().create(null));
-    hello = beans.bean(new Selector<>(Lang.declaredType(Object.class), List.of(defaultQualifier()))).cast();
+    hello = beans.bean(new Selector(Lang.declaredType(Object.class), List.of(defaultQualifier()))).cast();
     assertSame("Hello", hello.factory().create(null));
   }
 

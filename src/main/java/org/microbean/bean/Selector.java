@@ -61,7 +61,6 @@ import org.microbean.lang.visitor.Visitors;
 
 import org.microbean.lang.type.DelegatingTypeMirror;
 
-import org.microbean.qualifier.AttributeBearing;
 import org.microbean.qualifier.NamedAttributeMap;
 
 import static java.lang.constant.ConstantDescs.BSM_INVOKE;
@@ -79,7 +78,7 @@ import static org.microbean.bean.Qualifiers.Kind.ANY_QUALIFIER;
 import static org.microbean.bean.Qualifiers.Kind.DEFAULT_QUALIFIER;
 import static org.microbean.bean.Qualifiers.Kind.QUALIFIER;
 
-public final record Selector<V>(TypeMirror type, List<NamedAttributeMap<V>> attributes, boolean box) implements AttributeBearing<V>, Constable {
+public final record Selector(TypeMirror type, List<NamedAttributeMap<?>> attributes, boolean box) implements Constable {
 
 
   /*
@@ -99,7 +98,7 @@ public final record Selector<V>(TypeMirror type, List<NamedAttributeMap<V>> attr
    */
 
 
-  public Selector(final TypeMirror type, final List<? extends NamedAttributeMap<V>> attributes) {
+  public Selector(final TypeMirror type, final List<? extends NamedAttributeMap<?>> attributes) {
     this(type, List.copyOf(attributes), true);
   }
 
@@ -119,11 +118,11 @@ public final record Selector<V>(TypeMirror type, List<NamedAttributeMap<V>> attr
     return this.type; // TODO: or possibly DelegatingTypeMirror.unwrap(this.type)?
   }
   
-  public final List<NamedAttributeMap<V>> interceptorBindings() {
+  public final List<NamedAttributeMap<?>> interceptorBindings() {
     return InterceptorBindings.interceptorBindings(this.attributes());
   }
 
-  public final List<NamedAttributeMap<V>> qualifiers() {
+  public final List<NamedAttributeMap<?>> qualifiers() {
     return Qualifiers.qualifiers(this.attributes());
   }
 
@@ -135,7 +134,7 @@ public final record Selector<V>(TypeMirror type, List<NamedAttributeMap<V>> attr
     return this.selects(bean.id().types().types(), bean.id().attributes());
   }
 
-  public final boolean selects(final Selector<?> selector) {
+  public final boolean selects(final Selector selector) {
     return this.selects(List.of(selector.type()), selector.attributes());
   }
 
@@ -163,17 +162,17 @@ public final record Selector<V>(TypeMirror type, List<NamedAttributeMap<V>> attr
     } else if (herBindings.size() == 1 && ANY_INTERCEPTOR_BINDING.describes(herBindings.iterator().next())) {
       return true;
     }
-    final List<NamedAttributeMap<V>> ibs = this.interceptorBindings();
+    final List<NamedAttributeMap<?>> ibs = this.interceptorBindings();
     return ibs.size() == herBindings.size() && ibs.containsAll(herBindings) && herBindings.containsAll(ibs);
   }
 
   private final boolean selectsQualifiers(final Collection<? extends NamedAttributeMap<?>> attributes) {
-    final Collection<? extends NamedAttributeMap<V>> myQualifiers = this.qualifiers();
+    final Collection<? extends NamedAttributeMap<?>> myQualifiers = this.qualifiers();
     final List<? extends NamedAttributeMap<?>> herQualifiers = attributes.stream().filter(QUALIFIER::describes).toList();
     if (myQualifiers.isEmpty()) {
       return herQualifiers.isEmpty();
     } else if (herQualifiers.isEmpty()) {
-      for (final NamedAttributeMap<V> myQualifier : myQualifiers) {
+      for (final NamedAttributeMap<?> myQualifier : myQualifiers) {
         if (ANY_QUALIFIER.describes(myQualifier) || DEFAULT_QUALIFIER.describes(myQualifier)) {
           return true;
         }
@@ -294,7 +293,7 @@ public final record Selector<V>(TypeMirror type, List<NamedAttributeMap<V>> attr
   }
 
   @Override // Constable
-  public final Optional<DynamicConstantDesc<Selector<V>>> describeConstable() {
+  public final Optional<DynamicConstantDesc<Selector>> describeConstable() {
     return Constables.describeConstable(this.attributes())
       .flatMap(attributesDesc -> Lang.describeConstable(this.type())
                .map(typeDesc -> DynamicConstantDesc.of(BSM_INVOKE,
@@ -360,10 +359,10 @@ public final record Selector<V>(TypeMirror type, List<NamedAttributeMap<V>> attr
   }
 
   // Called by describeConstable().
-  public static final <V> Selector<V> of(final Collection<? extends NamedAttributeMap<V>> attributes,
-                                         final TypeMirror type,
-                                         final boolean box) {
-    return new Selector<>(type, List.copyOf(attributes), box);
+  public static final Selector of(final Collection<? extends NamedAttributeMap<?>> attributes,
+                                  final TypeMirror type,
+                                  final boolean box) {
+    return new Selector(type, List.copyOf(attributes), box);
   }
 
   private static final Element elementSource(final String moduleName, final String typeName) {

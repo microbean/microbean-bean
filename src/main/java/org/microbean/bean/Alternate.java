@@ -36,98 +36,97 @@ public interface Alternate extends Ranked {
       return this.resolve(null, alternates);
     }
 
-    public default <T extends Alternate> T resolve(final Selector<?> selector, final Set<? extends T> alternates) {
+    public default <T extends Alternate> T resolve(final Selector selector, final Set<? extends T> alternates) {
       return this.resolve(selector, alternates, Resolver::fail);
     }
 
     public default <T extends Alternate> T resolve(final Set<? extends T> alternates,
-                                                   final BiFunction<? super Selector<?>, ? super Collection<? extends T>, ? extends T> failureHandler) {
+                                                   final BiFunction<? super Selector, ? super Collection<? extends T>, ? extends T> failureHandler) {
       return this.resolve(null, alternates, failureHandler);
     }
 
-    public default <T extends Alternate> T resolve(final Selector<?> selector,
+    public default <T extends Alternate> T resolve(final Selector selector,
                                                    final Set<? extends T> alternates,
-                                                   final BiFunction<? super Selector<?>, ? super Collection<? extends T>, ? extends T> failureHandler) {
-      final T returnValue;
+                                                   final BiFunction<? super Selector, ? super Collection<? extends T>, ? extends T> failureHandler) {
       if (alternates == null || alternates.isEmpty()) {
-        returnValue = null;
+        return null;
       } else if (alternates.size() == 1) {
-        returnValue = alternates.iterator().next();
-      } else {
-        T candidate = null;
-        Collection<T> unresolved = null;
-        // Highest rank wins
-        int maxRank = DEFAULT_RANK;
-
-        for (final T alternate : alternates) {
-          if (alternate.alternate()) {
-            final int alternateRank = alternate.rank();
-            if (alternateRank == maxRank) {
-              if (candidate == null || !candidate.alternate()) {
-                // Prefer alternates regardless of ranks.
-                candidate = alternate;
-              } else {
-                assert candidate.rank() == maxRank : "Unexpected rank: " + candidate.rank() + "; was expecting: " + maxRank;
-                // The existing candidate is an alternate and by definition has the highest rank we've seen so far; the
-                // incoming alternate is also an alternate; both have equal ranks: we can't resolve this.
-                if (unresolved == null) {
-                  unresolved = new ArrayList<>(6);
-                }
-                unresolved.add(candidate);
-                unresolved.add(alternate);
-                candidate = null;
-              }
-            } else if (alternateRank > maxRank) {
-              if (candidate == null || !candidate.alternate() || alternateRank > candidate.rank()) {
-                // The existing candidate is either null, not an alternate (and alternates are always preferred), or an
-                // alternate with losing rank, so junk it in favor of the incoming alternate.
-                candidate = alternate;
-                // We have a new maxRank.
-                maxRank = alternateRank;
-              } else if (alternateRank == candidate.rank()) {
-                // The existing candidate is also an alternate and has the same rank.
-                if (unresolved == null) {
-                  unresolved = new ArrayList<>(6);
-                }
-                unresolved.add(candidate);
-                unresolved.add(alternate);
-                candidate = null;
-              } else {
-                assert alternateRank < candidate.rank() : "alternateRank >= candidate.rank(): " + alternateRank + " >= " + candidate.rank();
-                // The existing candidate is also an alternate but has a higher rank than the alternate, so keep it
-                // (do nothing).
-              }
-            } else {
-              // drop alternate by doing nothing
-            }
-          } else if (candidate == null) {
-            // The incoming "alternate" is not an alternate, but that doesn't matter; the candidate is null, so accept
-            // the alternate no matter what.
-            candidate = alternate;
-          } else if (!candidate.alternate()) {
-            // The existing candidate is not an alternate.  The incoming "alternate" is not an alternate.  Ranks in this
-            // case are irrelevant.  We cannot resolve this.
-            if (unresolved == null) {
-              unresolved = new ArrayList<>(6);
-            }
-            unresolved.add(candidate);
-            unresolved.add(alternate);
-            candidate = null;
-          } else {
-            // do nothing
-          }
-        }
-        
-        if (unresolved != null && !unresolved.isEmpty()) {
-          if (candidate != null) {
-            unresolved.add(candidate);
-          }
-          candidate =
-            failureHandler == null ? fail(selector, unmodifiableCollection(unresolved)) : failureHandler.apply(selector, unmodifiableCollection(unresolved));
-        }
-        returnValue = candidate;
+        return alternates.iterator().next();
       }
-      return returnValue;
+
+      T candidate = null;
+      Collection<T> unresolved = null;
+      // Highest rank wins
+      int maxRank = DEFAULT_RANK;
+
+      for (final T alternate : alternates) {
+        if (alternate.alternate()) {
+          final int alternateRank = alternate.rank();
+          if (alternateRank == maxRank) {
+            if (candidate == null || !candidate.alternate()) {
+              // Prefer alternates regardless of ranks.
+              candidate = alternate;
+            } else {
+              assert candidate.rank() == maxRank : "Unexpected rank: " + candidate.rank() + "; was expecting: " + maxRank;
+              // The existing candidate is an alternate and by definition has the highest rank we've seen so far; the
+              // incoming alternate is also an alternate; both have equal ranks: we can't resolve this.
+              if (unresolved == null) {
+                unresolved = new ArrayList<>(6);
+              }
+              unresolved.add(candidate);
+              unresolved.add(alternate);
+              candidate = null;
+            }
+          } else if (alternateRank > maxRank) {
+            if (candidate == null || !candidate.alternate() || alternateRank > candidate.rank()) {
+              // The existing candidate is either null, not an alternate (and alternates are always preferred), or an
+              // alternate with losing rank, so junk it in favor of the incoming alternate.
+              candidate = alternate;
+              // We have a new maxRank.
+              maxRank = alternateRank;
+            } else if (alternateRank == candidate.rank()) {
+              // The existing candidate is also an alternate and has the same rank.
+              if (unresolved == null) {
+                unresolved = new ArrayList<>(6);
+              }
+              unresolved.add(candidate);
+              unresolved.add(alternate);
+              candidate = null;
+            } else {
+              assert alternateRank < candidate.rank() : "alternateRank >= candidate.rank(): " + alternateRank + " >= " + candidate.rank();
+              // The existing candidate is also an alternate but has a higher rank than the alternate, so keep it
+              // (do nothing).
+            }
+          } else {
+            // drop alternate by doing nothing
+          }
+        } else if (candidate == null) {
+          // The incoming "alternate" is not an alternate, but that doesn't matter; the candidate is null, so accept
+          // the alternate no matter what.
+          candidate = alternate;
+        } else if (!candidate.alternate()) {
+          // The existing candidate is not an alternate.  The incoming "alternate" is not an alternate.  Ranks in this
+          // case are irrelevant.  We cannot resolve this.
+          if (unresolved == null) {
+            unresolved = new ArrayList<>(6);
+          }
+          unresolved.add(candidate);
+          unresolved.add(alternate);
+          candidate = null;
+        } else {
+          // do nothing
+        }
+      }
+
+      if (unresolved != null && !unresolved.isEmpty()) {
+        if (candidate != null) {
+          unresolved.add(candidate);
+        }
+        candidate =
+          failureHandler == null ? fail(selector, unmodifiableCollection(unresolved)) : failureHandler.apply(selector, unmodifiableCollection(unresolved));
+      }
+
+      return candidate;
     }
 
     // Preconditions:
@@ -137,7 +136,7 @@ public interface Alternate extends Ranked {
     //   the same value from rank() OR
     // * every Alternate in the Collection returns false from isAlternate()
     // No other state of affairs will hold.
-    static <T extends Alternate> T fail(final Selector<?> selector, final Collection<? extends T> alternates) {
+    public static <T extends Alternate> T fail(final Selector selector, final Collection<? extends T> alternates) {
       assert assertPreconditions(alternates);
       throw new AmbiguousResolutionException(selector, alternates, "TODO: this message needs to be better; can't resolve these alternates: " + alternates);
     }

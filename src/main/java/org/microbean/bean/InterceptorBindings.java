@@ -28,12 +28,12 @@ public final class InterceptorBindings {
     super();
   }
 
-  public static final <V> List<NamedAttributeMap<V>> interceptorBindings(final Collection<? extends NamedAttributeMap<V>> c) {
+  public static final List<NamedAttributeMap<?>> interceptorBindings(final Collection<? extends NamedAttributeMap<?>> c) {
     if (c.isEmpty()) {
       return List.of();
     }
-    final ArrayList<NamedAttributeMap<V>> list = new ArrayList<>(c.size());
-    for (final NamedAttributeMap<V> a : c) {
+    final ArrayList<NamedAttributeMap<?>> list = new ArrayList<>(c.size());
+    for (final NamedAttributeMap<?> a : c) {
       if (Kind.INTERCEPTOR_BINDING.describes(a)) {
         list.add(a);
       }

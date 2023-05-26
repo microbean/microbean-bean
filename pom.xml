@@ -156,6 +156,7 @@
             <additionalOptions>
               <additionalOption>--add-stylesheet</additionalOption>
               <additionalOption>${project.basedir}/src/main/javadoc/css/fonts.css</additionalOption>
+              <additionalOption>--enable-preview</additionalOption>
             </additionalOptions>
             <docfilessubdirs>true</docfilessubdirs>
           </configuration>
@@ -164,7 +165,6 @@
           <artifactId>maven-surefire-plugin</artifactId>
           <configuration>
             <argLine>--enable-preview</argLine>
-            <!-- <argLine>-add-opens=org.microbean.bean/org.microbean.bean=ALL-UNNAMED</argLine> -->
             <!-- See https://junit.org/junit5/docs/snapshot/user-guide/#running-tests-build-maven-config-params -->
             <!-- See https://github.com/apache/maven-surefire/blob/eb48f1b59ca5ccf6954ef33ecab03dbaf93214cd/surefire-providers/surefire-junit-platform/src/main/java/org/apache/maven/surefire/junitplatform/JUnitPlatformProvider.java#L242-L262 -->
             <properties>

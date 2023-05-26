@@ -15,7 +15,7 @@ package org.microbean.bean;
 
 public interface Destruction extends AutoCloseable, ReferencesProvider {
 
-  @Override // AutoCloseable
+  @Override // AutoCloseable; overridden to eliminate exception type
   public void close();
 
 }

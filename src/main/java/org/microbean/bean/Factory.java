@@ -17,20 +17,13 @@ import java.lang.constant.Constable;
 import java.lang.constant.ConstantDesc;
 import java.lang.constant.DynamicConstantDesc;
 import java.lang.constant.MethodHandleDesc;
-import java.lang.constant.MethodTypeDesc;
 
 import java.util.Optional;
 
-import org.microbean.constant.Constables;
-
 import static java.lang.constant.ConstantDescs.BSM_INVOKE;
-import static java.lang.constant.ConstantDescs.CD_Object;
-import static java.lang.constant.DirectMethodHandleDesc.Kind.STATIC;
-
-import static org.microbean.bean.ConstantDescs.CD_Factory;
 
 @FunctionalInterface // see #produce(Creation)
-public interface Factory<I> {
+public interface Factory<I> extends Constable {
 
 
   /*
@@ -42,11 +35,34 @@ public interface Factory<I> {
    * Instance methods.
    */
 
-  
+
+  /**
+   * Returns an {@link Optional} containing the nominal descriptor for this instance, if one can be constructed, or an
+   * {@linkplain Optional#isEmpty() empty <code>Optional</code>} if one cannot be constructed.
+   *
+   * <p>The default implementation of this method returns an {@link Optional} that contains a dynamic constant
+   * representing an invocation of the implementation's constructor that takes no arguments.  <strong>The resolution of
+   * this dynamic constant is undefined if the implementation does not declare such a constructor.</strong></p>
+   *
+   * @return an {@link Optional} containing the nominal descriptor for this instance, if one can be constructed, or an
+   * {@linkplain Optional#isEmpty() empty <code>Optional</code>} if one cannot be constructed
+   *
+   * @threadsafety This method is safe for concurrent use by multiple threads.
+   *
+   * @idempotency This method is neither idempotent nor deterministic.
+   */
+  @Override // Constable
+  public default Optional<? extends ConstantDesc> describeConstable() {
+    return this.getClass()
+      .describeConstable()
+      .map(classDesc -> DynamicConstantDesc.of(BSM_INVOKE,
+                                               MethodHandleDesc.ofConstructor(classDesc)));
+  }
+
   public default I singleton() {
     return null;
   }
-  
+
   /**
    * Returns a contextual instance equivalent to that which would be returned by an invocation of the following: {@code
    * return }{@link #intercept(Object, Creation) intercept}{@code (}{@link #initialize(Object, Creation)
@@ -65,7 +81,7 @@ public interface Factory<I> {
    *
    * <li>{@link #destroy(Object)}</li>
    *
-   * <li>{@link #destroy(Object, Creation)}</li>
+   * <li>{@link #destroy(Object, Destruction)}</li>
    *
    * </ul>
    *
@@ -95,7 +111,8 @@ public interface Factory<I> {
   // i.e. run the whole thing: constructor interception, if any, initializer methods, if any,
   // post-construct/initialized() stuff, then wrap it with an interception proxy if needed and return it
   public default I create(final Creation<I> c) {
-    return this.intercept(this.initialized(this.initialize(this.interceptedProduce(c), c), c), c);
+    final I s = this.singleton();
+    return s == null ? this.intercept(this.initialized(this.initialize(this.interceptedProduce(c), c), c), c) : s;
   }
 
   /**
@@ -119,7 +136,7 @@ public interface Factory<I> {
    *
    * <li>{@link #destroy(Object)}</li>
    *
-   * <li>{@link #destroy(Object, Creation)}</li>
+   * <li>{@link #destroy(Object, Destruction)}</li>
    *
    * </ul>
    *
@@ -165,7 +182,7 @@ public interface Factory<I> {
    *
    * <li>{@link #destroy(Object)}</li>
    *
-   * <li>{@link #destroy(Object, Creation)}</li>
+   * <li>{@link #destroy(Object, Destruction)}</li>
    *
    * </ul>
    *
@@ -224,10 +241,13 @@ public interface Factory<I> {
   // process explicit here, and I'm not entirely sure of what the overall repercussions will be.  I am hoping that it
   // simplifies the CDI need for a Producer/InjectionTarget interface, where an "ordinary" bean is distinguished from a
   // managed bean.
+  //
+  // This is where "setters" are called.
   public default I initialize(final I i, final Creation<I> c) {
     return i; // do nothing by default
   }
 
+  // This is where "post constructs" are called, maybe?
   public default I initialized(final I i, final Creation<I> c) {
     return i; // do nothing by default
   }
@@ -264,12 +284,27 @@ public interface Factory<I> {
     return true; // by default
   }
 
+  // Users call this and it calls #destroy(Object).
+  public default void destroy(final I i, final Destruction d) {
+    if (d == null) {
+      this.destroying(i, null);
+    } else {
+      try (d) {
+        this.destroy(this.destroying(i, d.references()));
+      }
+    }
+  }
+
   // MUST NOT call destroy(I) or destroy(I, Destruction).
-  public default I preDestroy(final I i, final References r) {
+  //
+  // This is where "pre destroys" happen.
+  public default I destroying(final I i, final References<?> r) {
     return i;
   }
 
-  // MUST NOT call destroy(I, Creation).  It's the other way around.
+  // Users should NOT call this.
+  //
+  // MUST NOT call destroy(I, Destruction).  It's the other way around.
   public default void destroy(final I i) {
     if (i instanceof AutoCloseable ac) {
       try {
@@ -280,45 +315,16 @@ public interface Factory<I> {
         if (e instanceof InterruptedException) {
           Thread.currentThread().interrupt();
         }
-        throw new IllegalStateException(e.getMessage(), e);
+        throw new DestructionException(e.getMessage(), e);
       }
     }
   }
 
-  // Users call this and it calls #destroy(
-  public default void destroy(final I i, final Destruction d) {
-    if (d == null) {
-      this.preDestroy(i, null);
-    } else {
-      try (d) {
-        this.destroy(this.preDestroy(i, d.references()));
-      }
-    }
-  }
 
+
+  // Purely for convenience. May delete later.
   public static <I> Factory<I> of(final I singleton) {
-    final class SingletonFactory implements Constable, Factory<I> {
-      @Override
-      public final Optional<? extends ConstantDesc> describeConstable() {
-        return Constables.describeConstable(singleton)
-          .map(singletonDesc -> DynamicConstantDesc.of(BSM_INVOKE,
-                                                       MethodHandleDesc.ofMethod(STATIC,
-                                                                                 CD_Factory,
-                                                                                 "of",
-                                                                                 MethodTypeDesc.of(CD_Factory,
-                                                                                                   CD_Object)),
-                                                       singletonDesc));
-      }
-      @Override
-      public final I singleton() {
-        return singleton;
-      }
-      @Override
-      public final I produce(final Creation<I> c) {
-        return singleton;
-      }
-    }
-    return new SingletonFactory();
+    return new SingletonFactory<>(singleton);
   }
 
 }

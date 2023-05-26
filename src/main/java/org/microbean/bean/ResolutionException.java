@@ -13,18 +13,18 @@
  */
 package org.microbean.bean;
 
-public class ResolutionException extends RuntimeException {
+public class ResolutionException extends BeanException {
 
   private static final long serialVersionUID = 1L;
 
-  private transient final Selector<?> selector;
+  private transient final Selector selector;
 
   public ResolutionException() {
     super();
     this.selector = null;
   }
 
-  public ResolutionException(final Selector<?> selector) {
+  public ResolutionException(final Selector selector) {
     super();
     this.selector = selector;
   }
@@ -34,7 +34,7 @@ public class ResolutionException extends RuntimeException {
     this.selector = null;
   }
 
-  public ResolutionException(final Selector<?> selector,
+  public ResolutionException(final Selector selector,
                              final String message) {
     super(message);
     this.selector = selector;
@@ -45,7 +45,7 @@ public class ResolutionException extends RuntimeException {
     this.selector = null;
   }
 
-  public ResolutionException(final Selector<?> selector,
+  public ResolutionException(final Selector selector,
                              final Throwable cause) {
     super(cause);
     this.selector = selector;
@@ -57,20 +57,20 @@ public class ResolutionException extends RuntimeException {
     this.selector = null;
   }
 
-  public ResolutionException(final Selector<?> selector,
+  public ResolutionException(final Selector selector,
                              final String message,
                              final Throwable cause) {
     super(message, cause);
     this.selector = selector;
   }
 
-  public final Selector<?> selector() {
+  public final Selector selector() {
     return this.selector;
   }
 
   @Override
   public String toString() {
-    final Selector<?> selector = this.selector();
+    final Selector selector = this.selector();
     if (selector == null) {
       return super.toString();
     } else if (this.getLocalizedMessage() == null) {

@@ -13,10 +13,55 @@
  */
 package org.microbean.bean;
 
-public interface References {
+import java.util.Iterator;
 
-  public Instances instances();
+import java.util.function.Supplier;
+
+public interface References<R> extends AutoCloseable, Iterable<R>, Supplier<R> {
+
+  public default <R> R supplyReference(final Selector selector) {
+    return this.supplyReference(selector, null);
+  }
+
+  public <R> R supplyReference(final Selector selector, final Bean<R> bean);
+
+  public default Cardinality cardinality() {
+    final Iterator<R> i = this.iterator();
+    if (i.hasNext()) {
+      i.next();
+      return i.hasNext() ? Cardinality.MANY : Cardinality.ONE;
+    }
+    return Cardinality.ZERO;
+  }
+
+  @Override // Supplier<R>
+  public default R get() {
+    final Iterator<R> iterator = this.iterator();
+    if (!iterator.hasNext()) {
+      throw new UnsatisfiedResolutionException();
+    }
+    final R returnValue = iterator.next();
+    if (iterator.hasNext()) {
+      throw new AmbiguousResolutionException();
+    }
+    return returnValue;
+  }
+
+  public <R2 extends R> References<R2> withSelector(final Selector selector);
+
+  public void destroy(final R r);
+
+  @Override // AutoCloseable
+  public default void close() {
+    
+  }
   
-  public <R> R supplyReference(final Selector<?> selector, final Bean<R> bean);
+  public enum Cardinality {
+
+    ZERO,
+    ONE,
+    MANY;
+
+  }
 
 }

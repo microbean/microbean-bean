@@ -47,19 +47,19 @@ final class TestSelector {
 
   @Test
   final void testSelectorStringSelectsString() {
-    final Selector<?> s = new Selector<>(Lang.declaredType(String.class), List.of());
+    final Selector s = new Selector(Lang.declaredType(String.class), List.of());
     assertTrue(s.selects(Lang.declaredType(String.class)));
   }
   
   @Test
   final void testSelectorStringDoesNotSelectObject() {
-    final Selector<?> s = new Selector<>(Lang.declaredType(String.class), List.of());
+    final Selector s = new Selector(Lang.declaredType(String.class), List.of());
     assertFalse(s.selects(Lang.declaredType(Object.class)));
   }
 
   @Test
   final void testSelectorIntSelectsInteger() {
-    final Selector<?> s = new Selector<>(Lang.primitiveType(TypeKind.INT), List.of()); // boxing is true by default
+    final Selector s = new Selector(Lang.primitiveType(TypeKind.INT), List.of()); // boxing is true by default
     /*
       java.lang.NullPointerException: Cannot invoke "com.sun.tools.javac.code.Symbol$ClassSymbol.erasure(com.sun.tools.javac.code.Types)" because "sym" is null
       at jdk.compiler/com.sun.tools.javac.model.JavacTypes.getDeclaredType(JavacTypes.java:237)
@@ -73,15 +73,15 @@ final class TestSelector {
   
   @Test
   final void testSelectorObjectDoesNotSelectString() {
-    final Selector<?> s = new Selector<>(Lang.declaredType(Object.class), List.of());
+    final Selector s = new Selector(Lang.declaredType(Object.class), List.of());
     assertFalse(s.selects(Lang.declaredType(String.class)));
   }
 
   @Test
   final void testSelectorListUnknownExtendsStringSelectsListString() {
-    final Selector<?> s =
-      new Selector<>(Lang.declaredType(Lang.typeElement(List.class),
-                                       Lang.wildcardType(Lang.declaredType(String.class), null)),
+    final Selector s =
+      new Selector(Lang.declaredType(Lang.typeElement(List.class),
+                                     Lang.wildcardType(Lang.declaredType(String.class), null)),
                      List.of());
     assertTrue(s.selects(Lang.declaredType(Lang.typeElement(List.class), Lang.declaredType(String.class))));
   }

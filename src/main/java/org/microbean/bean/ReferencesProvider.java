@@ -15,6 +15,6 @@ package org.microbean.bean;
 
 public interface ReferencesProvider {
 
-  public References references();
+  public References<Object> references();
   
 }

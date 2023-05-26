@@ -27,15 +27,15 @@ public interface BeanSet {
     throw new UnsupportedOperationException();
   }
 
-  // Optional operation
   public Set<Bean<?>> beans();
 
-  public Set<Bean<?>> beans(final Selector<?> selector);
+  public Set<Bean<?>> beans(final Selector selector);
 
-  public default Bean<?> bean(final Selector<?> selector) {
+  public default Bean<?> bean(final Selector selector) {
     return this.bean(selector, Alternate.Resolver::fail);
   }
   
-  public Bean<?> bean(final Selector<?> selector, final BiFunction<? super Selector<?>, ? super Collection<? extends Bean<?>>, ? extends Bean<?>> op);
+  public Bean<?> bean(final Selector selector,
+                      final BiFunction<? super Selector, ? super Collection<? extends Bean<?>>, ? extends Bean<?>> op);
   
 }
