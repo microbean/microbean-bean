@@ -45,12 +45,18 @@ public final record Id(ReferenceTypeList types,
                        int rank)
   implements Alternate, Constable, ScopeMember {
 
+  public Id(final TypeMirror type,
+            final List<NamedAttributeMap<?>> attributes,
+            final NamedAttributeMap<?> governingScopeId) {
+    this(new ReferenceTypeList(type), attributes, governingScopeId, Ranked.DEFAULT_RANK);
+  }
+
   public Id(final List<? extends TypeMirror> types,
             final List<NamedAttributeMap<?>> attributes,
             final NamedAttributeMap<?> governingScopeId) {
     this(new ReferenceTypeList(types), attributes, governingScopeId, Ranked.DEFAULT_RANK);
   }
-  
+
   public Id(final ReferenceTypeList types,
             final List<NamedAttributeMap<?>> attributes,
             final NamedAttributeMap<?> governingScopeId) {

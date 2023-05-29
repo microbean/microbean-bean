@@ -74,9 +74,14 @@ import static org.microbean.bean.ConstantDescs.CD_Selector;
 
 import static org.microbean.bean.InterceptorBindings.Kind.ANY_INTERCEPTOR_BINDING;
 import static org.microbean.bean.InterceptorBindings.Kind.INTERCEPTOR_BINDING;
+import static org.microbean.bean.Qualifiers.defaultQualifiers;
 import static org.microbean.bean.Qualifiers.Kind.ANY_QUALIFIER;
 import static org.microbean.bean.Qualifiers.Kind.DEFAULT_QUALIFIER;
 import static org.microbean.bean.Qualifiers.Kind.QUALIFIER;
+
+import static org.microbean.lang.Lang.elementSource;
+import static org.microbean.lang.Lang.erasure;
+import static org.microbean.lang.Lang.sameType;
 
 public final record Selector(TypeMirror type, List<NamedAttributeMap<?>> attributes, boolean box) implements Constable {
 
@@ -104,7 +109,7 @@ public final record Selector(TypeMirror type, List<NamedAttributeMap<?>> attribu
 
   public Selector {
     attributes = List.copyOf(attributes);
-    type = DelegatingTypeMirror.of(validateType(type, box), Selector::elementSource, SAME_TYPE_EQUALITY);
+    type = DelegatingTypeMirror.of(validateType(type, box), elementSource(), SAME_TYPE_EQUALITY);
   }
 
 
@@ -113,11 +118,6 @@ public final record Selector(TypeMirror type, List<NamedAttributeMap<?>> attribu
    */
 
 
-  @Override
-  public final TypeMirror type() {
-    return this.type; // TODO: or possibly DelegatingTypeMirror.unwrap(this.type)?
-  }
-  
   public final List<NamedAttributeMap<?>> interceptorBindings() {
     return InterceptorBindings.interceptorBindings(this.attributes());
   }
@@ -155,6 +155,27 @@ public final record Selector(TypeMirror type, List<NamedAttributeMap<?>> attribu
     return this.selectsQualifiers(attributes) && this.selectsInterceptorBindings(attributes) && this.selectsTypeFrom(types);
   }
 
+  public final Selector withType(final TypeMirror type) {
+    if (type == this.type()) {
+      return this;
+    }
+    return new Selector(type, this.attributes());
+  }
+
+  public final Selector withAttributes(final List<? extends NamedAttributeMap<?>> attributes) {
+    if (attributes == this.attributes()) {
+      return this;
+    }
+    return new Selector(this.type(), attributes);
+  }
+
+  public final Selector withBox(final boolean box) {
+    if (box == this.box()) {
+      return this;
+    }
+    return new Selector(this.type(), this.attributes(), box);
+  }
+
   private final boolean selectsInterceptorBindings(final Collection<? extends NamedAttributeMap<?>> attributes) {
     final List<? extends NamedAttributeMap<?>> herBindings = attributes.stream().filter(INTERCEPTOR_BINDING::describes).toList();
     if (herBindings.isEmpty()) {
@@ -170,16 +191,16 @@ public final record Selector(TypeMirror type, List<NamedAttributeMap<?>> attribu
     final Collection<? extends NamedAttributeMap<?>> myQualifiers = this.qualifiers();
     final List<? extends NamedAttributeMap<?>> herQualifiers = attributes.stream().filter(QUALIFIER::describes).toList();
     if (myQualifiers.isEmpty()) {
-      return herQualifiers.isEmpty();
+      // Pretend I had [@Default] and she had [@Default, @Any].
+      return herQualifiers.isEmpty() || containsAll(herQualifiers::contains, defaultQualifiers());
     } else if (herQualifiers.isEmpty()) {
       for (final NamedAttributeMap<?> myQualifier : myQualifiers) {
         if (ANY_QUALIFIER.describes(myQualifier) || DEFAULT_QUALIFIER.describes(myQualifier)) {
+          // I had [@Default] or [@Any] or [@Default, @Any]; pretend she had [@Default, @Any].
           return true;
         }
       }
       return false;
-    } else if (herQualifiers.size() == 1) {
-      return ANY_QUALIFIER.describes(herQualifiers.get(0));
     } else {
       return containsAll(herQualifiers::contains, myQualifiers);
     }
@@ -213,7 +234,7 @@ public final record Selector(TypeMirror type, List<NamedAttributeMap<?>> attribu
     }
     return null;
   }
-  
+
   private final boolean assignable(TypeMirror receiver, TypeMirror payload) {
     /*
     final class VisitorsHolder {
@@ -229,7 +250,7 @@ public final record Selector(TypeMirror type, List<NamedAttributeMap<?>> attribu
         final ContainsTypeVisitor containsTypeVisitor = new ContainsTypeVisitor(es, types); // not valid till passed to a SubtypeVisitor constructor
         final SupertypeVisitor supertypeVisitor = new SupertypeVisitor(es, types, eraseVisitor);
         final AsSuperVisitor asSuperVisitor = new AsSuperVisitor(es, null, types, supertypeVisitor);
-        
+
         // Bean semantics for these guys
         final SupertypeVisitor beanSupertypeVisitor = new SupertypeVisitor(es, types, eraseVisitor, t -> false);
         final AsSuperVisitor beanAsSuperVisitor = new AsSuperVisitor(es, null, types, beanSupertypeVisitor);
@@ -274,15 +295,15 @@ public final record Selector(TypeMirror type, List<NamedAttributeMap<?>> attribu
         final PrecedesPredicate precedesPredicate = new PrecedesPredicate(null, supertypeVisitor, subtypeVisitor);
         final TypeClosureVisitor typeClosureVisitor = new TypeClosureVisitor(es, supertypeVisitor, precedesPredicate);
         captureVisitor.setTypeClosureVisitor(typeClosureVisitor);
-        
+
       }
     }
     */
     // Boxing, if necessary, has already happened.
-    if (Lang.sameType(receiver, payload)) {
+    if (sameType(receiver, payload)) {
       return true;
     }
-    if (Lang.sameType(Lang.erasure(elementType(receiver)), Lang.erasure(elementType(payload)))) {
+    if (sameType(erasure(elementType(receiver)), erasure(elementType(payload)))) {
       // TODO: I think? maybe? this takes care of all the CDI anomalies, given a "legal" receiver and payload. Now we
       // should just be able to use stock assignability semantics.
       //
@@ -319,7 +340,7 @@ public final record Selector(TypeMirror type, List<NamedAttributeMap<?>> attribu
   private static final TypeKind kind(final TypeMirror t) {
     return t.getKind();
   }
-  
+
   private static final TypeMirror validateType(final TypeMirror type, final boolean box) {
     final TypeKind k = kind(type);
     if (box && k.isPrimitive()) {
@@ -347,7 +368,7 @@ public final record Selector(TypeMirror type, List<NamedAttributeMap<?>> attribu
     default -> t;
     };
   }
-  
+
   private static final boolean containsAll(final Predicate<? super Object> p, final Iterable<?> i) {
     for (final Object o : i) {
       if (p.test(o)) {
@@ -365,9 +386,11 @@ public final record Selector(TypeMirror type, List<NamedAttributeMap<?>> attribu
     return new Selector(type, List.copyOf(attributes), box);
   }
 
-  private static final Element elementSource(final String moduleName, final String typeName) {
-    return Lang.typeElement(Lang.moduleElement(moduleName), typeName);
-  }
+
+  /*
+   * Inner and nested classes.
+   */
+
 
   private static final class SameTypeEquality extends Equality {
 
@@ -382,7 +405,7 @@ public final record Selector(TypeMirror type, List<NamedAttributeMap<?>> attribu
       } else if (o1 == null || o2 == null) {
         return false;
       } else if (o1 instanceof TypeMirror t1 && o2 instanceof TypeMirror t2) {
-        return Lang.sameType(t1, t2);
+        return sameType(t1, t2);
       }
       return false;
     }

@@ -67,6 +67,10 @@ public final class ReferenceTypeList implements Constable {
 
   private final int interfaceIndex;
 
+  public ReferenceTypeList(final TypeMirror type) {
+    this(List.of(type), ReferenceTypeList::seen, ReferenceTypeList::validateType, Lang.elementSource());
+  }
+
   public ReferenceTypeList(final Collection<? extends TypeMirror> types) {
     this(types, ReferenceTypeList::seen, ReferenceTypeList::validateType, Lang.elementSource());
   }
@@ -138,7 +142,7 @@ public final class ReferenceTypeList implements Constable {
       list.addAll(sublist);
       list.add(this.types.get(this.types.size() - 1)); // Object
       return Collections.unmodifiableList(list);
-    }               
+    }
   }
 
   public final List<TypeMirror> interfaceTypes() {

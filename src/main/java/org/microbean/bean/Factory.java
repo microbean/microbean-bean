@@ -111,8 +111,7 @@ public interface Factory<I> extends Constable {
   // i.e. run the whole thing: constructor interception, if any, initializer methods, if any,
   // post-construct/initialized() stuff, then wrap it with an interception proxy if needed and return it
   public default I create(final Creation<I> c) {
-    final I s = this.singleton();
-    return s == null ? this.intercept(this.initialized(this.initialize(this.interceptedProduce(c), c), c), c) : s;
+    return this.intercept(this.initialized(this.initialize(this.interceptedProduce(c), c), c), c);
   }
 
   /**
@@ -281,7 +280,7 @@ public interface Factory<I> extends Constable {
   // Is custom destruction necessary?  Or can we just ignore it?  It's necessary by default because we don't know what
   // this Factory implementation is doing.  Many Factory instances will return false here which is just fine.
   public default boolean destroys() {
-    return true; // by default
+    return true;
   }
 
   // Users call this and it calls #destroy(Object).

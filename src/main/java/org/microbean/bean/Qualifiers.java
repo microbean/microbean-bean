@@ -23,17 +23,23 @@ import java.util.Map;
 import org.microbean.qualifier.NamedAttributeMap;
 
 public final class Qualifiers {
-  
+
+  private static final List<NamedAttributeMap<?>> ANY = List.of(Kind.ANY_QUALIFIER.of());
+
   private static final List<NamedAttributeMap<?>> ANY_AND_DEFAULT = List.of(Kind.ANY_QUALIFIER.of(), Kind.DEFAULT_QUALIFIER.of());
 
   private static final List<NamedAttributeMap<?>> DEFAULT = List.of(Kind.DEFAULT_QUALIFIER.of());
-  
+
   private Qualifiers() {
     super();
   }
 
   public static final NamedAttributeMap<?> anyQualifier() {
     return Kind.ANY_QUALIFIER.of();
+  }
+
+  public static final List<NamedAttributeMap<?>> anyQualifiers() {
+    return ANY;
   }
 
   public static final NamedAttributeMap<?> defaultQualifier() {
@@ -53,7 +59,7 @@ public final class Qualifiers {
   }
 
   public static final List<NamedAttributeMap<?>> qualifiers(final Collection<? extends NamedAttributeMap<?>> c) {
-    if (c.isEmpty()) {
+    if (c == null || c.isEmpty()) {
       return List.of();
     }
     final ArrayList<NamedAttributeMap<?>> list = new ArrayList<>(c.size());
@@ -65,7 +71,7 @@ public final class Qualifiers {
     list.trimToSize();
     return Collections.unmodifiableList(list);
   }
-  
+
   public enum Kind {
 
     QUALIFIER() {
@@ -73,11 +79,12 @@ public final class Qualifiers {
 
       @Override
       public final boolean describes(final NamedAttributeMap<?> a) {
-        if (a == null) {
-          return false;
-        }
-        for (final NamedAttributeMap<?> m : a.metadata()) {
-          if (m.containsKey("Qualifier")) {
+        return a != null && this.describes(a.metadata());
+      }
+
+      private final boolean describes(final Iterable<? extends NamedAttributeMap<?>> mds) {
+        for (final NamedAttributeMap<?> md : mds) {
+          if (md.name().equalsIgnoreCase("Qualifier") || this.describes(md)) {
             return true;
           }
         }
@@ -89,18 +96,19 @@ public final class Qualifiers {
         return INSTANCE;
       }
     },
-    
+
     ANY_QUALIFIER() {
       private static final NamedAttributeMap<?> INSTANCE =
         new NamedAttributeMap<>("Any", Map.of(), Map.of(), List.of(QUALIFIER.of()));
 
       @Override
       public final boolean describes(final NamedAttributeMap<?> a) {
-        if (a == null) {
-          return false;
-        }
-        for (final NamedAttributeMap<?> m : a.metadata()) {
-          if (m.name().equalsIgnoreCase("Any") && m.containsKey("Qualifier")) {
+        return a != null && this.describes(a.metadata());
+      }
+
+      private final boolean describes(final Iterable<? extends NamedAttributeMap<?>> mds) {
+        for (final NamedAttributeMap<?> md : mds) {
+          if (md.name().equalsIgnoreCase("Any") && QUALIFIER.describes(md)) {
             return true;
           }
         }
@@ -112,18 +120,19 @@ public final class Qualifiers {
         return INSTANCE;
       }
     },
-    
+
     DEFAULT_QUALIFIER() {
       private static final NamedAttributeMap<?> INSTANCE =
         new NamedAttributeMap<>("Default", Map.of(), Map.of(), List.of(QUALIFIER.of()));
 
       @Override
       public final boolean describes(final NamedAttributeMap<?> a) {
-        if (a == null) {
-          return false;
-        }
-        for (final NamedAttributeMap<?> m : a.metadata()) {
-          if (m.name().equalsIgnoreCase("Default") && m.containsKey("Qualifier")) {
+        return a != null && this.describes(a.metadata());
+      }
+
+      private final boolean describes(final Iterable<? extends NamedAttributeMap<?>> mds) {
+        for (final NamedAttributeMap<?> md : mds) {
+          if (md.name().equalsIgnoreCase("Default") && QUALIFIER.describes(md)) {
             return true;
           }
         }
@@ -135,7 +144,7 @@ public final class Qualifiers {
         return INSTANCE;
       }
     },
-    
+
     OTHER() {
       @Override
       public final boolean describes(final NamedAttributeMap<?> a) {
@@ -163,5 +172,5 @@ public final class Qualifiers {
     private static final EnumSet<Kind> nonOther = EnumSet.complementOf(EnumSet.of(OTHER));
 
   }
-  
+
 }
