@@ -19,6 +19,8 @@ import java.lang.constant.DynamicConstantDesc;
 import java.lang.constant.MethodHandleDesc;
 import java.lang.constant.MethodTypeDesc;
 
+import java.lang.reflect.Type;
+
 import java.util.Collection;
 import java.util.EnumSet;
 import java.util.List;
@@ -79,6 +81,7 @@ import static org.microbean.bean.Qualifiers.Kind.ANY_QUALIFIER;
 import static org.microbean.bean.Qualifiers.Kind.DEFAULT_QUALIFIER;
 import static org.microbean.bean.Qualifiers.Kind.QUALIFIER;
 
+import static org.microbean.lang.Lang.declaredType;
 import static org.microbean.lang.Lang.elementSource;
 import static org.microbean.lang.Lang.erasure;
 import static org.microbean.lang.Lang.sameType;
@@ -102,6 +105,18 @@ public final record Selector(TypeMirror type, List<NamedAttributeMap<?>> attribu
    * Constructors.
    */
 
+
+  public Selector(final Type type) {
+    this(declaredType(type), defaultQualifiers());
+  }
+
+  public Selector(final Type type, final List<? extends NamedAttributeMap<?>> attributes) {
+    this(declaredType(type), attributes);
+  }
+
+  public Selector(final TypeMirror type) {
+    this(type, defaultQualifiers());
+  }
 
   public Selector(final TypeMirror type, final List<? extends NamedAttributeMap<?>> attributes) {
     this(type, List.copyOf(attributes), true);

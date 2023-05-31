@@ -13,6 +13,7 @@
  */
 package org.microbean.bean;
 
+@FunctionalInterface
 public interface ReferencesProvider {
 
   public References<Object> references();

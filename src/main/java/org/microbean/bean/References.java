@@ -17,7 +17,11 @@ import java.util.Iterator;
 
 import java.util.function.Supplier;
 
+import javax.lang.model.type.TypeMirror;
+
 public interface References<R> extends AutoCloseable, Iterable<R>, Supplier<R> {
+
+  public BeanSet beanSet();
 
   public default <R> R supplyReference(final Selector selector) {
     return this.supplyReference(selector, null);
@@ -49,11 +53,14 @@ public interface References<R> extends AutoCloseable, Iterable<R>, Supplier<R> {
 
   public <R2 extends R> References<R2> withSelector(final Selector selector);
 
-  public void destroy(final R r);
+  public boolean destroy(final R r);
 
+  // Overriding encouraged to be more efficient/threadsafe/etc.
   @Override // AutoCloseable
   public default void close() {
-    
+    for (final R r : this) {
+      this.destroy(r);
+    }
   }
   
   public enum Cardinality {

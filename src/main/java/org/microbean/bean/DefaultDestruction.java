@@ -21,15 +21,17 @@ import java.util.concurrent.CopyOnWriteArraySet;
 
 import java.util.concurrent.atomic.AtomicReference;
 
+// Useful only for implementing your own Creation object.
 public class DefaultDestruction implements Dependents, Destruction {
 
-  private final References<Object> references;
+  // Don't get smart and try to change this back to References<Object>.
+  private final ReferencesProvider rp;
 
   private final AtomicReference<Collection<AutoCloseable>> dependents;
   
-  public DefaultDestruction(final References<Object> references) {
+  public DefaultDestruction(final ReferencesProvider rp) {
     super();
-    this.references = Objects.requireNonNull(references, "references");
+    this.rp = Objects.requireNonNull(rp, "rp");
     this.dependents = new AtomicReference<>();
   }
 
@@ -45,7 +47,7 @@ public class DefaultDestruction implements Dependents, Destruction {
 
   @Override // ReferencesProvider
   public final References<Object> references() {
-    return this.references;
+    return this.rp.references();
   }
 
   @Override // Destruction

@@ -19,14 +19,15 @@ public class DefaultCreation<I> implements Creation<I> {
 
   private final Selector selector;
 
-  private final References<Object> references;
+  // Don't get smart and try to change this back to References<Object>.
+  private final ReferencesProvider referencesProvider;
 
   private final Destruction destruction;
 
-  public DefaultCreation(final References<Object> references, final Selector selector, final Destruction destruction) {
+  public DefaultCreation(final ReferencesProvider referencesProvider, final Selector selector, final Destruction destruction) {
     super();
     this.selector = selector;
-    this.references = Objects.requireNonNull(references, "references");
+    this.referencesProvider = Objects.requireNonNull(referencesProvider, "referencesProvider");
     this.destruction = Objects.requireNonNull(destruction, "destruction");
   }
 
@@ -42,7 +43,7 @@ public class DefaultCreation<I> implements Creation<I> {
 
   @Override // ReferencesProvider
   public final References<Object> references() {
-    return this.references;
+    return this.referencesProvider.references();
   }
 
   @Override // Creation<I>

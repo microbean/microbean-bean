@@ -158,7 +158,7 @@ public class DefaultBeanSet implements BeanProvider<DefaultBeanSet>, BeanSet, Co
 
     // Prime the selection and resolution caches.
     this.bean(new Selector(declaredType(BeanSet.class), defaultQualifiers()), DefaultBeanSet::returnNull);
-    this.bean(new Selector(declaredType(typeElement(Resolver.class), declaredType(typeElement(Bean.class), wildcardType())),
+    this.bean(new Selector(declaredType(null, typeElement(Resolver.class), declaredType(null, typeElement(Bean.class), wildcardType())),
                            defaultQualifiers()),
               DefaultBeanSet::returnNull);
 
@@ -192,7 +192,7 @@ public class DefaultBeanSet implements BeanProvider<DefaultBeanSet>, BeanSet, Co
     return
       new Bean<>(new Id(new ReferenceTypeList(List.of(declaredType(DefaultBeanSet.class),
                                                       declaredType(BeanSet.class),
-                                                      declaredType(BeanProvider.class, new Class<?>[] { DefaultBeanSet.class }))),
+                                                      declaredType(null, BeanProvider.class, new Class<?>[] { DefaultBeanSet.class }))),
                         anyAndDefaultQualifiers(),
                         SINGLETON_ID,
                         DEFAULT_RANK - 100),

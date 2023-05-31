@@ -24,6 +24,7 @@ public interface Instances {
 
   public <I> I supply(final Selector selector, final Bean<I> bean);
 
-  public void remove(final Id id);
+  // returns true if id was known
+  public boolean remove(final Id id);
 
 }

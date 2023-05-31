@@ -37,6 +37,11 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.microbean.bean.Qualifiers.anyAndDefaultQualifiers;
 import static org.microbean.bean.Qualifiers.defaultQualifier;
 
+import static org.microbean.lang.Lang.declaredType;
+import static org.microbean.lang.Lang.primitiveType;
+import static org.microbean.lang.Lang.typeElement;
+import static org.microbean.lang.Lang.wildcardType;
+
 import static org.microbean.scope.Scope.SINGLETON_ID;
 
 final class TestSelector {
@@ -47,35 +52,36 @@ final class TestSelector {
 
   @Test
   final void testSelectorStringSelectsString() {
-    final Selector s = new Selector(Lang.declaredType(String.class), List.of());
-    assertTrue(s.selects(Lang.declaredType(String.class)));
+    final Selector s = new Selector(declaredType(String.class), List.of());
+    assertTrue(s.selects(declaredType(String.class)));
   }
   
   @Test
   final void testSelectorStringDoesNotSelectObject() {
-    final Selector s = new Selector(Lang.declaredType(String.class), List.of());
-    assertFalse(s.selects(Lang.declaredType(Object.class)));
+    final Selector s = new Selector(declaredType(String.class), List.of());
+    assertFalse(s.selects(declaredType(Object.class)));
   }
 
   @Test
   final void testSelectorIntSelectsInteger() {
-    final Selector s = new Selector(Lang.primitiveType(TypeKind.INT), List.of()); // boxing is true by default
-    assertTrue(s.selects(Lang.declaredType(Integer.class)));
+    final Selector s = new Selector(primitiveType(TypeKind.INT), List.of()); // boxing is true by default
+    assertTrue(s.selects(declaredType(Integer.class)));
   }
   
   @Test
   final void testSelectorObjectDoesNotSelectString() {
-    final Selector s = new Selector(Lang.declaredType(Object.class), List.of());
-    assertFalse(s.selects(Lang.declaredType(String.class)));
+    final Selector s = new Selector(declaredType(Object.class), List.of());
+    assertFalse(s.selects(declaredType(String.class)));
   }
 
   @Test
   final void testSelectorListUnknownExtendsStringSelectsListString() {
     final Selector s =
-      new Selector(Lang.declaredType(Lang.typeElement(List.class),
-                                     Lang.wildcardType(Lang.declaredType(String.class), null)),
+      new Selector(declaredType(null,
+                                typeElement(List.class),
+                                wildcardType(declaredType(String.class), null)),
                      List.of());
-    assertTrue(s.selects(Lang.declaredType(Lang.typeElement(List.class), Lang.declaredType(String.class))));
+    assertTrue(s.selects(declaredType(null, typeElement(List.class), declaredType(String.class))));
   }
 
 }
