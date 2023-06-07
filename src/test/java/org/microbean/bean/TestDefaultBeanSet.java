@@ -91,10 +91,10 @@ final class TestDefaultBeanSet {
   final void testConstableStuff() throws ReflectiveOperationException {
     assertNotNull(beanSet);
     final DynamicConstantDesc<Set<Bean<?>>> cd = (DynamicConstantDesc<Set<Bean<?>>>)Constables.describeConstable(beanSet).orElseThrow(AssertionError::new);
-    Set<Bean<?>> set = cd.resolveConstantDesc(MethodHandles.lookup());
+    Set<Bean<?>> set = cd.resolveConstantDesc(MethodHandles.privateLookupIn(ReferenceTypeList.class, MethodHandles.lookup()));
     final class ConstantDefaultBeanSet extends DefaultBeanSet {
       public ConstantDefaultBeanSet() throws ReflectiveOperationException {
-        super((Collection<Bean<?>>)cd.resolveConstantDesc(java.lang.invoke.MethodHandles.lookup()));
+        super((Collection<Bean<?>>)cd.resolveConstantDesc(MethodHandles.privateLookupIn(ReferenceTypeList.class, MethodHandles.lookup())));
       }
     }
     final DefaultBeanSet beans = new ConstantDefaultBeanSet();

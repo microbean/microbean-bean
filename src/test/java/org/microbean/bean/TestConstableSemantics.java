@@ -40,6 +40,9 @@ import static org.junit.jupiter.api.Assertions.assertNotSame;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
+import static java.lang.invoke.MethodHandles.lookup;
+import static java.lang.invoke.MethodHandles.privateLookupIn;
+
 import static org.microbean.bean.Qualifiers.anyAndDefaultQualifiers;
 
 import static org.microbean.scope.Scope.SINGLETON_ID;
@@ -59,7 +62,7 @@ final class TestConstableSemantics {
   @Test
   final void testReferenceTypeList() throws ReflectiveOperationException {
     final ReferenceTypeList list = new ReferenceTypeList(List.of(Lang.declaredType(String.class), Lang.declaredType(Object.class)));
-    assertEquals(list, Constables.describeConstable(list).orElseThrow().resolveConstantDesc(MethodHandles.lookup()));
+    assertEquals(list, Constables.describeConstable(list).orElseThrow().resolveConstantDesc(privateLookupIn(ReferenceTypeList.class, lookup())));
   }
 
   @Test
@@ -68,7 +71,7 @@ final class TestConstableSemantics {
       new Id(List.of(Lang.declaredType(String.class), Lang.declaredType(Object.class)),
              anyAndDefaultQualifiers(),
              SINGLETON_ID);
-    assertEquals(id, Constables.describeConstable(id).orElseThrow().resolveConstantDesc(MethodHandles.lookup()));
+    assertEquals(id, Constables.describeConstable(id).orElseThrow().resolveConstantDesc(privateLookupIn(ReferenceTypeList.class, lookup())));
   }
 
   @Test
