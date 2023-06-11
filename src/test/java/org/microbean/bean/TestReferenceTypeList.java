@@ -106,7 +106,7 @@ final class TestReferenceTypeList {
 
   @Test
   final <T extends ClassDesc, S extends String> void testTypeVariables() throws IllegalAccessException, NoSuchMethodException {
-    final Visitors visitors = new Visitors(Lang.elementSource());
+    final Visitors visitors = new Visitors(Lang.typeAndElementSource());
     final TypeVariable t = Lang.typeVariable(this.getClass().getDeclaredMethod("testTypeVariables"), "T");
     final TypeVariable s = Lang.typeVariable(this.getClass().getDeclaredMethod("testTypeVariables"), "S");
 

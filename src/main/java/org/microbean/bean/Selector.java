@@ -40,7 +40,7 @@ import javax.lang.model.type.TypeMirror;
 
 import org.microbean.constant.Constables;
 
-import org.microbean.lang.ElementSource;
+import org.microbean.lang.TypeAndElementSource;
 import org.microbean.lang.Equality;
 import org.microbean.lang.Lang;
 
@@ -82,7 +82,7 @@ import static org.microbean.bean.Qualifiers.Kind.DEFAULT_QUALIFIER;
 import static org.microbean.bean.Qualifiers.Kind.QUALIFIER;
 
 import static org.microbean.lang.Lang.declaredType;
-import static org.microbean.lang.Lang.elementSource;
+import static org.microbean.lang.Lang.typeAndElementSource;
 import static org.microbean.lang.Lang.erasure;
 import static org.microbean.lang.Lang.sameType;
 
@@ -124,7 +124,7 @@ public final record Selector(TypeMirror type, List<NamedAttributeMap<?>> attribu
 
   public Selector {
     attributes = List.copyOf(attributes);
-    type = DelegatingTypeMirror.of(validateType(type, box), elementSource(), SAME_TYPE_EQUALITY);
+    type = DelegatingTypeMirror.of(validateType(type, box), typeAndElementSource(), SAME_TYPE_EQUALITY);
   }
 
 
@@ -255,7 +255,7 @@ public final record Selector(TypeMirror type, List<NamedAttributeMap<?>> attribu
     final class VisitorsHolder {
       private static final Visitors visitors = new Visitors((m, n) -> Lang.typeElement(Lang.moduleElement(m), n));
       static {
-        final ElementSource es = (m, n) -> Lang.typeElement(Lang.moduleElement(m), n);
+        final TypeAndElementSource es = (m, n) -> Lang.typeElement(Lang.moduleElement(m), n);
         final Types types = new Types(es);
         final boolean subtypeCapture = false;
         final boolean wildcardsCompatible = true;

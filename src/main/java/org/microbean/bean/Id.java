@@ -35,11 +35,11 @@ import static java.lang.constant.ConstantDescs.CD_int;
 import static java.lang.constant.ConstantDescs.CD_List;
 
 import static org.microbean.bean.ConstantDescs.CD_Id;
-import static org.microbean.bean.ConstantDescs.CD_ReferenceTypeList;
+import static org.microbean.bean.ConstantDescs.CD_BeanTypeList;
 
 import static org.microbean.qualifier.ConstantDescs.CD_NamedAttributeMap;
 
-public final record Id(ReferenceTypeList types,
+public final record Id(BeanTypeList types,
                        List<NamedAttributeMap<?>> attributes,
                        NamedAttributeMap<?> governingScopeId,
                        int rank)
@@ -48,16 +48,16 @@ public final record Id(ReferenceTypeList types,
   public Id(final TypeMirror type,
             final List<NamedAttributeMap<?>> attributes,
             final NamedAttributeMap<?> governingScopeId) {
-    this(new ReferenceTypeList(type), attributes, governingScopeId, Ranked.DEFAULT_RANK);
+    this(new BeanTypeList(type), attributes, governingScopeId, Ranked.DEFAULT_RANK);
   }
 
   public Id(final List<? extends TypeMirror> types,
             final List<NamedAttributeMap<?>> attributes,
             final NamedAttributeMap<?> governingScopeId) {
-    this(new ReferenceTypeList(types), attributes, governingScopeId, Ranked.DEFAULT_RANK);
+    this(new BeanTypeList(types), attributes, governingScopeId, Ranked.DEFAULT_RANK);
   }
 
-  public Id(final ReferenceTypeList types,
+  public Id(final BeanTypeList types,
             final List<NamedAttributeMap<?>> attributes,
             final NamedAttributeMap<?> governingScopeId) {
     this(types, attributes, governingScopeId, Ranked.DEFAULT_RANK);
@@ -76,7 +76,7 @@ public final record Id(ReferenceTypeList types,
                .flatMap(governingScopeIdDesc -> types.describeConstable()
                         .map(typesDesc -> DynamicConstantDesc.of(BSM_INVOKE,
                                                                  MethodHandleDesc.ofConstructor(CD_Id,
-                                                                                                CD_ReferenceTypeList,
+                                                                                                CD_BeanTypeList,
                                                                                                 CD_List,
                                                                                                 CD_NamedAttributeMap,
                                                                                                 CD_int),

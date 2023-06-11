@@ -190,9 +190,9 @@ public class DefaultBeanSet implements BeanProvider<DefaultBeanSet>, BeanSet, Co
   @Override // BeanProvider<DefaultBeanSet>
   public final Bean<DefaultBeanSet> bean() {
     return
-      new Bean<>(new Id(new ReferenceTypeList(List.of(declaredType(DefaultBeanSet.class),
-                                                      declaredType(BeanSet.class),
-                                                      declaredType(null, BeanProvider.class, new Class<?>[] { DefaultBeanSet.class }))),
+      new Bean<>(new Id(new BeanTypeList(List.of(declaredType(DefaultBeanSet.class),
+                                                 declaredType(BeanSet.class),
+                                                 declaredType(null, BeanProvider.class, new Class<?>[] { DefaultBeanSet.class }))),
                         anyAndDefaultQualifiers(),
                         SINGLETON_ID,
                         DEFAULT_RANK - 100),
@@ -255,11 +255,11 @@ public class DefaultBeanSet implements BeanProvider<DefaultBeanSet>, BeanSet, Co
 
   private final Bean<Resolver<Bean<?>>> resolverBean() {
     return
-      new Bean<>(new Id(new ReferenceTypeList(List.of(declaredType(null,
-                                                                   typeElement(Resolver.class),
-                                                                   declaredType(null,
-                                                                                typeElement(Bean.class),
-                                                                                wildcardType())))),
+      new Bean<>(new Id(new BeanTypeList(List.of(declaredType(null,
+                                                              typeElement(Resolver.class),
+                                                              declaredType(null,
+                                                                           typeElement(Bean.class),
+                                                                           declaredType(Object.class))))), // we want to use wildcardType() here but wildcards, anywhere they appear, poison otherwise legal bean types
                         anyAndDefaultQualifiers(),
                         SINGLETON_ID,
                         DEFAULT_RANK),
