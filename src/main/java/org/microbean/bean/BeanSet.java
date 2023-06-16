@@ -23,7 +23,7 @@ import org.microbean.bean.Alternate.Resolver;
 public interface BeanSet {
 
   // Optional operation
-  public default Resolver<Bean<?>> resolver(final Resolver<Bean<?>> r) {
+  public default Resolver resolver(final Resolver r) {
     throw new UnsupportedOperationException();
   }
 
@@ -34,8 +34,8 @@ public interface BeanSet {
   public default Bean<?> bean(final Selector selector) {
     return this.bean(selector, Alternate.Resolver::fail);
   }
-  
+
   public Bean<?> bean(final Selector selector,
                       final BiFunction<? super Selector, ? super Collection<? extends Bean<?>>, ? extends Bean<?>> op);
-  
+
 }

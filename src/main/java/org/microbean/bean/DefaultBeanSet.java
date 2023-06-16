@@ -18,7 +18,6 @@ import java.lang.constant.DynamicConstantDesc;
 import java.lang.constant.MethodHandleDesc;
 
 import java.lang.invoke.MethodHandles;
-import java.lang.invoke.MethodHandles.Lookup;
 import java.lang.invoke.VarHandle;
 
 import java.util.function.BiFunction;
@@ -34,13 +33,9 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
-import javax.lang.model.type.TypeMirror;
-
 import org.microbean.bean.Alternate.Resolver;
 
 import org.microbean.constant.Constables;
-
-import org.microbean.lang.Lang;
 
 import static java.lang.constant.ConstantDescs.BSM_INVOKE;
 import static java.lang.constant.ConstantDescs.CD_Collection;
@@ -54,13 +49,11 @@ import static java.util.stream.Collectors.toUnmodifiableSet;
 import static org.microbean.bean.ConstantDescs.CD_DefaultBeanSet;
 import static org.microbean.bean.ConstantDescs.CD_Resolver;
 import static org.microbean.bean.Qualifiers.anyAndDefaultQualifiers;
-import static org.microbean.bean.Qualifiers.defaultQualifier;
 import static org.microbean.bean.Qualifiers.defaultQualifiers;
 import static org.microbean.bean.Ranked.DEFAULT_RANK;
 
 import static org.microbean.lang.Lang.declaredType;
 import static org.microbean.lang.Lang.typeElement;
-import static org.microbean.lang.Lang.wildcardType;
 
 import static org.microbean.scope.Scope.SINGLETON_ID;
 
@@ -90,7 +83,7 @@ public class DefaultBeanSet implements BeanProvider<DefaultBeanSet>, BeanSet, Co
    */
 
 
-  private volatile Resolver<Bean<?>> resolver;
+  private volatile Resolver resolver;
 
   private final Set<Bean<?>> beans;
 
@@ -109,7 +102,7 @@ public class DefaultBeanSet implements BeanProvider<DefaultBeanSet>, BeanSet, Co
     this(beans, Map.of(), StockResolver.INSTANCE);
   }
 
-  public DefaultBeanSet(final Collection<? extends Bean<?>> beans, final Resolver<Bean<?>> resolver) {
+  public DefaultBeanSet(final Collection<? extends Bean<?>> beans, final Resolver resolver) {
     this(beans, Map.of(), resolver);
   }
 
@@ -119,7 +112,7 @@ public class DefaultBeanSet implements BeanProvider<DefaultBeanSet>, BeanSet, Co
   }
 
   public DefaultBeanSet(final Map<? extends Selector, ? extends Bean<?>> preCalculatedResolutions,
-                        final Resolver<Bean<?>> resolver) {
+                        final Resolver resolver) {
     this(Set.of(), preCalculatedResolutions, resolver);
   }
 
@@ -129,7 +122,7 @@ public class DefaultBeanSet implements BeanProvider<DefaultBeanSet>, BeanSet, Co
 
   public DefaultBeanSet(final Collection<? extends Bean<?>> beans,
                         final Map<? extends Selector, ? extends Bean<?>> preCalculatedResolutions,
-                        final Resolver<Bean<?>> resolver) {
+                        final Resolver resolver) {
     super();
     this.resolver = resolver == null ? StockResolver.INSTANCE : resolver;
     this.resolutionCache = new ConcurrentHashMap<>();
@@ -158,8 +151,7 @@ public class DefaultBeanSet implements BeanProvider<DefaultBeanSet>, BeanSet, Co
 
     // Prime the selection and resolution caches.
     this.bean(new Selector(declaredType(BeanSet.class), defaultQualifiers()), DefaultBeanSet::returnNull);
-    this.bean(new Selector(declaredType(null, typeElement(Resolver.class), declaredType(null, typeElement(Bean.class), wildcardType())),
-                           defaultQualifiers()),
+    this.bean(new Selector(declaredType(null, typeElement(Resolver.class)), defaultQualifiers()),
               DefaultBeanSet::returnNull);
 
   }
@@ -183,8 +175,8 @@ public class DefaultBeanSet implements BeanProvider<DefaultBeanSet>, BeanSet, Co
   }
 
   @Override
-  public final Resolver<Bean<?>> resolver(final Resolver<Bean<?>> r) {
-    return (Resolver<Bean<?>>)RESOLVER.getAndSet(this, r == null ? StockResolver.INSTANCE : r);
+  public final Resolver resolver(final Resolver r) {
+    return (Resolver)RESOLVER.getAndSet(this, r == null ? StockResolver.INSTANCE : r);
   }
 
   @Override // BeanProvider<DefaultBeanSet>
@@ -253,13 +245,9 @@ public class DefaultBeanSet implements BeanProvider<DefaultBeanSet>, BeanSet, Co
     return this.selectionCache.computeIfAbsent(selector, s -> beans.stream().filter(s::selects).collect(toUnmodifiableSet()));
   }
 
-  private final Bean<Resolver<Bean<?>>> resolverBean() {
+  private final Bean<Resolver> resolverBean() {
     return
-      new Bean<>(new Id(new BeanTypeList(List.of(declaredType(null,
-                                                              typeElement(Resolver.class),
-                                                              declaredType(null,
-                                                                           typeElement(Bean.class),
-                                                                           declaredType(Object.class))))), // we want to use wildcardType() here but wildcards, anywhere they appear, poison otherwise legal bean types
+      new Bean<>(new Id(new BeanTypeList(List.of(declaredType(null, typeElement(Resolver.class)))),
                         anyAndDefaultQualifiers(),
                         SINGLETON_ID,
                         DEFAULT_RANK),
@@ -282,9 +270,9 @@ public class DefaultBeanSet implements BeanProvider<DefaultBeanSet>, BeanSet, Co
    */
 
 
-  private static final class StockResolver implements Constable, Resolver<Bean<?>> {
+  private static final class StockResolver implements Constable, Resolver {
 
-    private static final Resolver<Bean<?>> INSTANCE = new StockResolver();
+    private static final Resolver INSTANCE = new StockResolver();
 
     private StockResolver() {
       super();

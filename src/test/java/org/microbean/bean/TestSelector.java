@@ -13,36 +13,19 @@
  */
 package org.microbean.bean;
 
-import java.lang.constant.ClassDesc;
-
-import java.lang.reflect.Field;
-import java.lang.reflect.Modifier;
-
 import java.util.List;
-import java.util.Set;
 
 import javax.lang.model.type.TypeKind;
 
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import org.microbean.lang.Lang;
-
-import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-
-import static org.microbean.bean.Qualifiers.anyAndDefaultQualifiers;
-import static org.microbean.bean.Qualifiers.defaultQualifier;
 
 import static org.microbean.lang.Lang.declaredType;
 import static org.microbean.lang.Lang.primitiveType;
 import static org.microbean.lang.Lang.typeElement;
 import static org.microbean.lang.Lang.wildcardType;
-
-import static org.microbean.scope.Scope.SINGLETON_ID;
 
 final class TestSelector {
 
@@ -55,7 +38,7 @@ final class TestSelector {
     final Selector s = new Selector(declaredType(String.class), List.of());
     assertTrue(s.selects(declaredType(String.class)));
   }
-  
+
   @Test
   final void testSelectorStringDoesNotSelectObject() {
     final Selector s = new Selector(declaredType(String.class), List.of());
@@ -67,7 +50,7 @@ final class TestSelector {
     final Selector s = new Selector(primitiveType(TypeKind.INT), List.of()); // boxing is true by default
     assertTrue(s.selects(declaredType(Integer.class)));
   }
-  
+
   @Test
   final void testSelectorObjectDoesNotSelectString() {
     final Selector s = new Selector(declaredType(Object.class), List.of());

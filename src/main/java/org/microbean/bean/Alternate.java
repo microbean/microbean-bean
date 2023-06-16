@@ -19,9 +19,6 @@ import java.util.Set;
 
 import java.util.function.BiFunction;
 
-import org.microbean.bean.AmbiguousResolutionException;
-import org.microbean.bean.Selector;
-
 import static java.util.Collections.unmodifiableCollection;
 
 public interface Alternate extends Ranked {
@@ -30,7 +27,7 @@ public interface Alternate extends Ranked {
     return false;
   }
 
-  public static interface Resolver<T> {
+  public static interface Resolver {
 
     public default <T extends Alternate> T resolve(final Set<? extends T> alternates) {
       return this.resolve(null, alternates);

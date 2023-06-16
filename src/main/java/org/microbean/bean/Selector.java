@@ -22,16 +22,11 @@ import java.lang.constant.MethodTypeDesc;
 import java.lang.reflect.Type;
 
 import java.util.Collection;
-import java.util.EnumSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 
-import java.util.function.Function;
 import java.util.function.Predicate;
-
-import javax.lang.model.element.Element;
 
 import javax.lang.model.type.ArrayType;
 import javax.lang.model.type.PrimitiveType;
@@ -43,23 +38,6 @@ import org.microbean.constant.Constables;
 import org.microbean.lang.TypeAndElementSource;
 import org.microbean.lang.Equality;
 import org.microbean.lang.Lang;
-
-import org.microbean.lang.type.Types;
-
-import org.microbean.lang.visitor.AsSuperVisitor;
-import org.microbean.lang.visitor.AssignableVisitor;
-import org.microbean.lang.visitor.CaptureVisitor;
-import org.microbean.lang.visitor.ContainsTypeVisitor;
-import org.microbean.lang.visitor.ConvertibleVisitor;
-import org.microbean.lang.visitor.EraseVisitor;
-import org.microbean.lang.visitor.MemberTypeVisitor;
-import org.microbean.lang.visitor.PrecedesPredicate;
-import org.microbean.lang.visitor.SameTypeVisitor;
-import org.microbean.lang.visitor.SubtypeUncheckedVisitor;
-import org.microbean.lang.visitor.SubtypeVisitor;
-import org.microbean.lang.visitor.SupertypeVisitor;
-import org.microbean.lang.visitor.TypeClosureVisitor;
-import org.microbean.lang.visitor.Visitors;
 
 import org.microbean.lang.type.DelegatingTypeMirror;
 
@@ -81,12 +59,7 @@ import static org.microbean.bean.Qualifiers.Kind.ANY_QUALIFIER;
 import static org.microbean.bean.Qualifiers.Kind.DEFAULT_QUALIFIER;
 import static org.microbean.bean.Qualifiers.Kind.QUALIFIER;
 
-import static org.microbean.lang.Lang.declaredType;
-import static org.microbean.lang.Lang.typeAndElementSource;
-import static org.microbean.lang.Lang.erasure;
-import static org.microbean.lang.Lang.sameType;
-
-public final record Selector(TypeMirror type, List<NamedAttributeMap<?>> attributes, boolean box) implements Constable {
+public final record Selector(TypeAndElementSource typeAndElementSource, TypeMirror type, List<NamedAttributeMap<?>> attributes, boolean box) implements Constable {
 
 
   /*
@@ -95,6 +68,8 @@ public final record Selector(TypeMirror type, List<NamedAttributeMap<?>> attribu
 
 
   private static final ClassDesc CD_TypeMirror = ClassDesc.of("javax.lang.model.type.TypeMirror");
+
+  private static final ClassDesc CD_TypeAndElementSource = ClassDesc.of("org.microbean.lang.TypeAndElementSource");
 
   private static final Equality EQUALITY_IGNORING_ANNOTATIONS = new Equality(false);
 
@@ -107,11 +82,11 @@ public final record Selector(TypeMirror type, List<NamedAttributeMap<?>> attribu
 
 
   public Selector(final Type type) {
-    this(declaredType(type), defaultQualifiers());
+    this(Lang.typeAndElementSource(), type, defaultQualifiers(), true);
   }
 
   public Selector(final Type type, final List<? extends NamedAttributeMap<?>> attributes) {
-    this(declaredType(type), attributes);
+    this(Lang.typeAndElementSource(), type, attributes, true);
   }
 
   public Selector(final TypeMirror type) {
@@ -119,12 +94,17 @@ public final record Selector(TypeMirror type, List<NamedAttributeMap<?>> attribu
   }
 
   public Selector(final TypeMirror type, final List<? extends NamedAttributeMap<?>> attributes) {
-    this(type, List.copyOf(attributes), true);
+    this(Lang.typeAndElementSource(), type, List.copyOf(attributes), true);
+  }
+
+  public Selector(final TypeAndElementSource tes, final Type type, final List<? extends NamedAttributeMap<?>> attributes, final boolean box) {
+    this(tes, tes.declaredType(type), List.copyOf(attributes), box);
   }
 
   public Selector {
+    typeAndElementSource = Objects.requireNonNull(typeAndElementSource, "typeAndElementSource");
     attributes = List.copyOf(attributes);
-    type = DelegatingTypeMirror.of(validateType(type, box), typeAndElementSource(), SAME_TYPE_EQUALITY);
+    type = DelegatingTypeMirror.of(validateType(type, box), typeAndElementSource, SAME_TYPE_EQUALITY);
   }
 
 
@@ -174,21 +154,21 @@ public final record Selector(TypeMirror type, List<NamedAttributeMap<?>> attribu
     if (type == this.type()) {
       return this;
     }
-    return new Selector(type, this.attributes());
+    return new Selector(this.typeAndElementSource(), type, this.attributes(), this.box());
   }
 
   public final Selector withAttributes(final List<? extends NamedAttributeMap<?>> attributes) {
     if (attributes == this.attributes()) {
       return this;
     }
-    return new Selector(this.type(), attributes);
+    return new Selector(this.typeAndElementSource(), this.type(), List.copyOf(attributes), this.box());
   }
 
   public final Selector withBox(final boolean box) {
     if (box == this.box()) {
       return this;
     }
-    return new Selector(this.type(), this.attributes(), box);
+    return new Selector(this.typeAndElementSource(), this.type(), this.attributes(), box);
   }
 
   private final boolean selectsInterceptorBindings(final Collection<? extends NamedAttributeMap<?>> attributes) {
@@ -226,6 +206,21 @@ public final record Selector(TypeMirror type, List<NamedAttributeMap<?>> attribu
   }
 
   private final TypeMirror selectedTypeFrom(final Collection<? extends TypeMirror> types) {
+    final TypeAndElementSource tes = this.typeAndElementSource();
+    final Assignability a = new Assignability(tes::sameType,
+                                              tes::erasure,
+                                              tes::arrayTypeOf,
+                                              (r, p) -> tes.assignable(p, r)); // yes, backwards
+    for (final TypeMirror t : types) {
+      if (a.matches(this.type(), t)) {
+        return t;
+      }
+    }
+    return null;
+  }
+
+  @Deprecated(forRemoval = true)
+  private final TypeMirror oldSelectedTypeFrom(final Collection<? extends TypeMirror> types) {
     if (types.isEmpty()) {
       return null;
     }
@@ -251,98 +246,60 @@ public final record Selector(TypeMirror type, List<NamedAttributeMap<?>> attribu
   }
 
   private final boolean assignable(TypeMirror receiver, TypeMirror payload) {
-    /*
-    final class VisitorsHolder {
-      private static final Visitors visitors = new Visitors((m, n) -> Lang.typeElement(Lang.moduleElement(m), n));
-      static {
-        final TypeAndElementSource es = (m, n) -> Lang.typeElement(Lang.moduleElement(m), n);
-        final Types types = new Types(es);
-        final boolean subtypeCapture = false;
-        final boolean wildcardsCompatible = true;
-
-        // No special bean semantics here.
-        final EraseVisitor eraseVisitor = new EraseVisitor(es, types);
-        final ContainsTypeVisitor containsTypeVisitor = new ContainsTypeVisitor(es, types); // not valid till passed to a SubtypeVisitor constructor
-        final SupertypeVisitor supertypeVisitor = new SupertypeVisitor(es, types, eraseVisitor);
-        final AsSuperVisitor asSuperVisitor = new AsSuperVisitor(es, null, types, supertypeVisitor);
-
-        // Bean semantics for these guys
-        final SupertypeVisitor beanSupertypeVisitor = new SupertypeVisitor(es, types, eraseVisitor, t -> false);
-        final AsSuperVisitor beanAsSuperVisitor = new AsSuperVisitor(es, null, types, beanSupertypeVisitor);
-
-        // No special bean semantics here.
-        final MemberTypeVisitor memberTypeVisitor = new MemberTypeVisitor(es, null, types, asSuperVisitor, eraseVisitor, supertypeVisitor);
-
-        // No special bean semantics here.
-        final SameTypeVisitor sameTypeVisitor = new SameTypeVisitor(es, containsTypeVisitor, supertypeVisitor, wildcardsCompatible);
-
-        // No special bean semantics here.
-        final CaptureVisitor captureVisitor = new CaptureVisitor(es, null, types, supertypeVisitor, memberTypeVisitor);
-
-        final SubtypeVisitor subtypeVisitor =
-          new SubtypeVisitor(es,
-                             null,
-                             types,
-                             asSuperVisitor,
-                             supertypeVisitor,
-                             sameTypeVisitor,
-                             containsTypeVisitor,
-                             captureVisitor,
-                             subtypeCapture);
-        final SubtypeUncheckedVisitor subtypeUncheckedVisitor = new SubtypeUncheckedVisitor(types, subtypeVisitor, asSuperVisitor, sameTypeVisitor, subtypeCapture);
-        final ConvertibleVisitor convertibleVisitor = new ConvertibleVisitor(types, subtypeUncheckedVisitor, subtypeVisitor);
-        final AssignableVisitor assignableVisitor = new AssignableVisitor(types, convertibleVisitor);
-
-        final SubtypeVisitor beanSubtypeVisitor =
-          new SubtypeVisitor(es,
-                             null,
-                             types,
-                             beanAsSuperVisitor,
-                             beanSupertypeVisitor,
-                             sameTypeVisitor,
-                             containsTypeVisitor,
-                             captureVisitor,
-                             subtypeCapture);
-        final SubtypeUncheckedVisitor beanSubtypeUncheckedVisitor = new SubtypeUncheckedVisitor(types, beanSubtypeVisitor, beanAsSuperVisitor, sameTypeVisitor, subtypeCapture);
-        final ConvertibleVisitor beanConvertibleVisitor = new ConvertibleVisitor(types, beanSubtypeUncheckedVisitor, beanSubtypeVisitor);
-        final AssignableVisitor beanAssignableVisitor = new AssignableVisitor(types, beanConvertibleVisitor);
-
-        final PrecedesPredicate precedesPredicate = new PrecedesPredicate(null, supertypeVisitor, subtypeVisitor);
-        final TypeClosureVisitor typeClosureVisitor = new TypeClosureVisitor(es, supertypeVisitor, precedesPredicate);
-        captureVisitor.setTypeClosureVisitor(typeClosureVisitor);
-
-      }
-    }
-    */
-    // Boxing, if necessary, has already happened.
-    if (sameType(receiver, payload)) {
-      return true;
-    }
-    if (sameType(erasure(elementType(receiver)), erasure(elementType(payload)))) {
-      // TODO: I think? maybe? this takes care of all the CDI anomalies, given a "legal" receiver and payload. Now we
-      // should just be able to use stock assignability semantics.
-      //
-      // The order of this method's parameters is counterintuitive; pay attention.
-      return Lang.assignable(payload, receiver);
-    }
-    return false;
+    final TypeAndElementSource tes = this.typeAndElementSource();
+    return
+      // Boxing, if necessary, has already happened.
+      tes.sameType(receiver, payload) ||
+      (tes.sameType(tes.erasure(elementType(receiver)), tes.erasure(elementType(payload))) &&
+       // TODO: I think? maybe? this takes care of all the CDI anomalies, given a "legal" receiver and payload. Now we
+       // should just be able to use stock assignability semantics.
+       //
+       // Note: the order of this method's parameters is counterintuitive.
+       tes.assignable(payload, receiver));
   }
 
   @Override // Constable
   public final Optional<DynamicConstantDesc<Selector>> describeConstable() {
-    return Constables.describeConstable(this.attributes())
-      .flatMap(attributesDesc -> Lang.describeConstable(this.type())
-               .map(typeDesc -> DynamicConstantDesc.of(BSM_INVOKE,
-                                                       MethodHandleDesc.ofMethod(STATIC,
-                                                                                 CD_Selector,
-                                                                                 "of",
-                                                                                 MethodTypeDesc.of(CD_Selector,
-                                                                                                   CD_TypeMirror,
-                                                                                                   CD_Collection,
-                                                                                                   CD_boolean)),
-                                                       typeDesc,
-                                                       attributesDesc,
-                                                       this.box ? TRUE : FALSE)));
+    return Constables.describeConstable(this.typeAndElementSource())
+      .flatMap(tesDesc -> Lang.describeConstable(this.type())
+               .flatMap(typeDesc -> Constables.describeConstable(this.attributes())
+                        .map(attributesDesc -> DynamicConstantDesc.of(BSM_INVOKE,
+                                                                      MethodHandleDesc.ofMethod(STATIC,
+                                                                                                CD_Selector,
+                                                                                                "of",
+                                                                                                MethodTypeDesc.of(CD_Selector,
+                                                                                                                  CD_TypeAndElementSource,
+                                                                                                                  CD_TypeMirror,
+                                                                                                                  CD_Collection,
+                                                                                                                  CD_boolean)),
+                                                                      tesDesc,
+                                                                      typeDesc,
+                                                                      attributesDesc,
+                                                                      this.box ? TRUE : FALSE))));
+  }
+
+  @Override // Object
+  public final int hashCode() {
+    int hashCode = 17;
+    hashCode = 31 * hashCode + this.type().hashCode();
+    hashCode = 31 * hashCode + this.attributes().hashCode();
+    hashCode = 31 * hashCode + (this.box() ? 1 : 0);
+    return hashCode;
+  }
+
+  @Override // Object
+  public final boolean equals(final Object other) {
+    if (other == this) {
+      return true;
+    } else if (other != null && other.getClass() == this.getClass()) {
+      final Selector her = (Selector)other;
+      return
+        Objects.equals(this.type(), her.type()) &&
+        Objects.equals(this.attributes(), her.attributes()) &&
+        Objects.equals(this.box(), her.box());
+    } else {
+      return false;
+    }
   }
 
 
@@ -395,10 +352,11 @@ public final record Selector(TypeMirror type, List<NamedAttributeMap<?>> attribu
   }
 
   // Called by describeConstable().
-  public static final Selector of(final Collection<? extends NamedAttributeMap<?>> attributes,
+  public static final Selector of(final TypeAndElementSource tes,
                                   final TypeMirror type,
+                                  final Collection<? extends NamedAttributeMap<?>> attributes,
                                   final boolean box) {
-    return new Selector(type, List.copyOf(attributes), box);
+    return new Selector(tes, type, List.copyOf(attributes), box);
   }
 
 
@@ -420,7 +378,7 @@ public final record Selector(TypeMirror type, List<NamedAttributeMap<?>> attribu
       } else if (o1 == null || o2 == null) {
         return false;
       } else if (o1 instanceof TypeMirror t1 && o2 instanceof TypeMirror t2) {
-        return sameType(t1, t2);
+        return Lang.sameType(t1, t2);
       }
       return false;
     }
