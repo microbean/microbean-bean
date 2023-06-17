@@ -35,7 +35,6 @@ import javax.lang.model.type.TypeMirror;
 
 import org.microbean.constant.Constables;
 
-import org.microbean.lang.TypeAndElementSource;
 import org.microbean.lang.Equality;
 import org.microbean.lang.Lang;
 
@@ -59,7 +58,7 @@ import static org.microbean.bean.Qualifiers.Kind.ANY_QUALIFIER;
 import static org.microbean.bean.Qualifiers.Kind.DEFAULT_QUALIFIER;
 import static org.microbean.bean.Qualifiers.Kind.QUALIFIER;
 
-public final record Selector(TypeAndElementSource typeAndElementSource, TypeMirror type, List<NamedAttributeMap<?>> attributes, boolean box) implements Constable {
+public final class Selector implements Constable {
 
 
   /*
@@ -67,13 +66,26 @@ public final record Selector(TypeAndElementSource typeAndElementSource, TypeMirr
    */
 
 
-  private static final ClassDesc CD_TypeMirror = ClassDesc.of("javax.lang.model.type.TypeMirror");
+  private static final ClassDesc CD_Assignability = ClassDesc.of(Assignability.class.getName());
 
-  private static final ClassDesc CD_TypeAndElementSource = ClassDesc.of("org.microbean.lang.TypeAndElementSource");
+  private static final ClassDesc CD_TypeMirror = ClassDesc.of("javax.lang.model.type.TypeMirror");
 
   private static final Equality EQUALITY_IGNORING_ANNOTATIONS = new Equality(false);
 
   private static final Equality SAME_TYPE_EQUALITY = new SameTypeEquality();
+
+
+  /*
+   * Instance fields.
+   */
+
+  private final Assignability assignability;
+
+  private final TypeMirror type;
+
+  private final List<NamedAttributeMap<?>> attributes;
+
+  private final boolean box;
 
 
   /*
@@ -82,29 +94,31 @@ public final record Selector(TypeAndElementSource typeAndElementSource, TypeMirr
 
 
   public Selector(final Type type) {
-    this(Lang.typeAndElementSource(), type, defaultQualifiers(), true);
+    this(Lang.typeAndElementSource().type(type), defaultQualifiers(), true);
   }
 
   public Selector(final Type type, final List<? extends NamedAttributeMap<?>> attributes) {
-    this(Lang.typeAndElementSource(), type, attributes, true);
+    this(Lang.typeAndElementSource().type(type), attributes, true);
   }
 
   public Selector(final TypeMirror type) {
-    this(type, defaultQualifiers());
+    this(type, defaultQualifiers(), true);
   }
 
   public Selector(final TypeMirror type, final List<? extends NamedAttributeMap<?>> attributes) {
-    this(Lang.typeAndElementSource(), type, List.copyOf(attributes), true);
+    this(type, attributes, true);
   }
 
-  public Selector(final TypeAndElementSource tes, final Type type, final List<? extends NamedAttributeMap<?>> attributes, final boolean box) {
-    this(tes, tes.declaredType(type), List.copyOf(attributes), box);
+  public Selector(final TypeMirror type, final List<? extends NamedAttributeMap<?>> attributes, final boolean box) {
+    this(new Assignability(), type, attributes, box);
   }
 
-  public Selector {
-    typeAndElementSource = Objects.requireNonNull(typeAndElementSource, "typeAndElementSource");
-    attributes = List.copyOf(attributes);
-    type = DelegatingTypeMirror.of(validateType(type, box), typeAndElementSource, SAME_TYPE_EQUALITY);
+  public Selector(final Assignability assignability, final TypeMirror type, final List<? extends NamedAttributeMap<?>> attributes, final boolean box) {
+    super();
+    this.assignability = Objects.requireNonNull(assignability, "assignability");
+    this.type = DelegatingTypeMirror.of(validateType(type, box), Lang.typeAndElementSource(), SAME_TYPE_EQUALITY);
+    this.attributes = List.copyOf(attributes);
+    this.box = box;
   }
 
 
@@ -112,6 +126,18 @@ public final record Selector(TypeAndElementSource typeAndElementSource, TypeMirr
    * Instance methods.
    */
 
+
+  public final TypeMirror type() {
+    return this.type;
+  }
+
+  public final List<NamedAttributeMap<?>> attributes() {
+    return this.attributes;
+  }
+
+  public final boolean box() {
+    return this.box;
+  }
 
   public final List<NamedAttributeMap<?>> interceptorBindings() {
     return InterceptorBindings.interceptorBindings(this.attributes());
@@ -154,21 +180,21 @@ public final record Selector(TypeAndElementSource typeAndElementSource, TypeMirr
     if (type == this.type()) {
       return this;
     }
-    return new Selector(this.typeAndElementSource(), type, this.attributes(), this.box());
+    return new Selector(this.assignability, type, this.attributes(), this.box());
   }
 
   public final Selector withAttributes(final List<? extends NamedAttributeMap<?>> attributes) {
     if (attributes == this.attributes()) {
       return this;
     }
-    return new Selector(this.typeAndElementSource(), this.type(), List.copyOf(attributes), this.box());
+    return new Selector(this.assignability, this.type(), List.copyOf(attributes), this.box());
   }
 
   public final Selector withBox(final boolean box) {
     if (box == this.box()) {
       return this;
     }
-    return new Selector(this.typeAndElementSource(), this.type(), this.attributes(), box);
+    return new Selector(this.assignability, this.type(), this.attributes(), box);
   }
 
   private final boolean selectsInterceptorBindings(final Collection<? extends NamedAttributeMap<?>> attributes) {
@@ -202,23 +228,21 @@ public final record Selector(TypeAndElementSource typeAndElementSource, TypeMirr
   }
 
   final boolean selectsTypeFrom(final Collection<? extends TypeMirror> types) {
-    return selectedTypeFrom(types) != null;
+    return this.assignability.matchesOne(this.type(), types);
   }
 
+  /*
   private final TypeMirror selectedTypeFrom(final Collection<? extends TypeMirror> types) {
-    final TypeAndElementSource tes = this.typeAndElementSource();
-    final Assignability a = new Assignability(tes::sameType,
-                                              tes::erasure,
-                                              tes::arrayTypeOf,
-                                              (r, p) -> tes.assignable(p, r)); // yes, backwards
     for (final TypeMirror t : types) {
-      if (a.matches(this.type(), t)) {
+      if (this.assignability.matches(this.type(), t)) {
         return t;
       }
     }
     return null;
   }
+  */
 
+  /*
   @Deprecated(forRemoval = true)
   private final TypeMirror oldSelectedTypeFrom(final Collection<? extends TypeMirror> types) {
     if (types.isEmpty()) {
@@ -244,9 +268,12 @@ public final record Selector(TypeAndElementSource typeAndElementSource, TypeMirr
     }
     return null;
   }
+  */
 
+  /*
+  @Deprecated(forRemoval = true)
   private final boolean assignable(TypeMirror receiver, TypeMirror payload) {
-    final TypeAndElementSource tes = this.typeAndElementSource();
+    final TypeAndElementSource tes = this.typeAndElementSource;
     return
       // Boxing, if necessary, has already happened.
       tes.sameType(receiver, payload) ||
@@ -257,22 +284,23 @@ public final record Selector(TypeAndElementSource typeAndElementSource, TypeMirr
        // Note: the order of this method's parameters is counterintuitive.
        tes.assignable(payload, receiver));
   }
+  */
 
   @Override // Constable
   public final Optional<DynamicConstantDesc<Selector>> describeConstable() {
-    return Constables.describeConstable(this.typeAndElementSource())
-      .flatMap(tesDesc -> Lang.describeConstable(this.type())
+    return Constables.describeConstable(this.assignability)
+      .flatMap(assignabilityDesc -> Lang.describeConstable(this.type())
                .flatMap(typeDesc -> Constables.describeConstable(this.attributes())
                         .map(attributesDesc -> DynamicConstantDesc.of(BSM_INVOKE,
                                                                       MethodHandleDesc.ofMethod(STATIC,
                                                                                                 CD_Selector,
                                                                                                 "of",
                                                                                                 MethodTypeDesc.of(CD_Selector,
-                                                                                                                  CD_TypeAndElementSource,
+                                                                                                                  CD_Assignability,
                                                                                                                   CD_TypeMirror,
                                                                                                                   CD_Collection,
                                                                                                                   CD_boolean)),
-                                                                      tesDesc,
+                                                                      assignabilityDesc,
                                                                       typeDesc,
                                                                       attributesDesc,
                                                                       this.box ? TRUE : FALSE))));
@@ -300,6 +328,16 @@ public final record Selector(TypeAndElementSource typeAndElementSource, TypeMirr
     } else {
       return false;
     }
+  }
+
+  @Override
+  public final String toString() {
+    return
+      this.getClass().getSimpleName() + "[" +
+      "type=" + this.type() + ", " +
+      "attributes=" + this.attributes() + ", " +
+      "box=" + this.box() +
+      "]";
   }
 
 
@@ -352,11 +390,11 @@ public final record Selector(TypeAndElementSource typeAndElementSource, TypeMirr
   }
 
   // Called by describeConstable().
-  public static final Selector of(final TypeAndElementSource tes,
+  public static final Selector of(final Assignability a,
                                   final TypeMirror type,
                                   final Collection<? extends NamedAttributeMap<?>> attributes,
                                   final boolean box) {
-    return new Selector(tes, type, List.copyOf(attributes), box);
+    return new Selector(a, type, List.copyOf(attributes), box);
   }
 
 

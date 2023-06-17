@@ -36,9 +36,17 @@ import javax.lang.model.type.TypeMirror;
 import javax.lang.model.type.TypeVariable;
 import javax.lang.model.type.WildcardType;
 
+import org.microbean.lang.Lang;
+import org.microbean.lang.TypeAndElementSource;
 
 // Applies CDI assignability semantics to types.
-final class Assignability {
+public final class Assignability {
+
+
+  /*
+   * Instance fields.
+   */
+
 
   private final BiPredicate<? super TypeMirror, ? super TypeMirror> sameType;
 
@@ -48,10 +56,27 @@ final class Assignability {
 
   private final BiPredicate<? super ReferenceType, ? super ReferenceType> covariantlyAssignable;
 
-  Assignability(final BiPredicate<? super TypeMirror, ? super TypeMirror> sameType,
-                final Function<? super TypeMirror, ? extends TypeMirror> erasure,
-                final Function<? super TypeMirror, ? extends ArrayType> arrayType,
-                final BiPredicate<? super ReferenceType, ? super ReferenceType> covariantlyAssignable) {
+
+  /*
+   * Constructors.
+   */
+
+
+  public Assignability() {
+    this(Lang.typeAndElementSource());
+  }
+
+  private Assignability(final TypeAndElementSource tes) {
+    this(tes::sameType,
+         tes::erasure,
+         tes::arrayTypeOf,
+         (r, p) -> tes.assignable(p, r)); // yes, backwards
+  }
+
+  private Assignability(final BiPredicate<? super TypeMirror, ? super TypeMirror> sameType,
+                        final Function<? super TypeMirror, ? extends TypeMirror> erasure,
+                        final Function<? super TypeMirror, ? extends ArrayType> arrayType,
+                        final BiPredicate<? super ReferenceType, ? super ReferenceType> covariantlyAssignable) {
     super();
     this.sameType = Objects.requireNonNull(sameType, "sameType");
     this.erasure = Objects.requireNonNull(erasure, "erasure");
@@ -59,7 +84,22 @@ final class Assignability {
     this.covariantlyAssignable = Objects.requireNonNull(covariantlyAssignable, "covariantlyAssignable");
   }
 
-  final boolean matches(final TypeMirror receiver, final TypeMirror payload) {
+
+  /*
+   * Instance methods.
+   */
+
+
+  public final boolean matchesOne(final TypeMirror receiver, final Iterable<? extends TypeMirror> payloads) {
+    for (final TypeMirror payload : payloads) {
+      if (matches(receiver, payload)) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  public final boolean matches(final TypeMirror receiver, final TypeMirror payload) {
     // "A bean [an object, not a type] is assignable to a given injection point if:
     //
     // "The bean has a bean type [payload] that matches the required type [receiver]. For this purpose..."
@@ -98,6 +138,10 @@ final class Assignability {
     };
   }
 
+  /*
+   * Private methods.
+   */
+
   private final boolean assignable(final TypeMirror receiver, final TypeMirror payload) {
     return switch (payload) {
       // "A parameterized bean type is considered assignable..."
@@ -114,7 +158,7 @@ final class Assignability {
         // "...to a parameterized required type..."
         case DeclaredType parameterizedReceiver when parameterized(receiver) -> {
           // "...if they have identical raw type [really if their declarations/elements are identical]..."
-          if (identical(nonGenericClassOrRawType(receiver), nonGenericClassOrRawType(parameterizedPayload))) {
+          if (identical(rawType(receiver), rawType(parameterizedPayload))) {
             // "...and for each parameter [type argument] [pair]..."
             final List<? extends TypeMirror> rtas = parameterizedReceiver.getTypeArguments();
             final List<? extends TypeMirror> ptas = parameterizedPayload.getTypeArguments();
@@ -131,7 +175,7 @@ final class Assignability {
                     // "...and, if the type [?] is parameterized [?]..."
                     //
                     // Let rta and pta be array types with parameterized element types, such as List<Number>[] and
-                    // List<String>[]. Then their raw types are List and List. Their parameterized element types are
+                    // List<String>[]. Then their raw types are List[] and List[]. Their parameterized element types are
                     // List<Number> and List<String>. According to the JLS, neither List<Number>[] nor List<String>[] is
                     // parameterized.
                     //
@@ -166,8 +210,9 @@ final class Assignability {
                     //   "...and, if at least one of the two type arguments is a parameterized type, or if at least one
                     //   of the two types is an array type with a parameterized element type..."
                     //
-                    // That, in turn, designates any type capable of yielding a raw type! That means it is exactly equal
-                    // to our yieldsRawType(TypeMirror) method, and so that's what cdiParameterized(TypeMirror) returns.
+                    // That, in turn, designates any type capable of properly yielding a raw type, while ruling out
+                    // those that can't! That means it is exactly equal to our yieldsRawType(TypeMirror) method, and so
+                    // that's what cdiParameterized(TypeMirror) returns.
                     if (cdiParameterized(rta)) {
                       assert cdiParameterized(pta); // ...because otherwise their raw types would not have been "identical"
                       // "...the bean type parameter [argument] is assignable to the required type parameter [argument]
@@ -177,6 +222,7 @@ final class Assignability {
                       }
                       yield false;
                     } else {
+                      assert !cdiParameterized(pta);
                       continue;
                     }
                   }
@@ -253,8 +299,11 @@ final class Assignability {
             allTypeArgumentsAre(parameterizedReceiver.getTypeArguments(),
                                 ((Predicate<TypeMirror>)Assignability::unboundedTypeVariable).or(Assignability::isJavaLangObject));
         }
-        // [Otherwise the payload is not assignable to the receiver.]
-        case DeclaredType nonGenericOrRawReceiver when receiver.getKind() == TypeKind.DECLARED -> false;
+        // [Otherwise the payload is not assignable to the receiver; identity checking should have already happened in
+        // matches(), not here.]
+        case DeclaredType nonGenericOrRawReceiver when receiver.getKind() == TypeKind.DECLARED -> {
+          yield false;
+        }
         default -> throw new AssertionError("Unexpected payload kind: " + payload.getKind() + "; receiver: " + receiver + "; payload: " + payload);
       };
     };
@@ -264,32 +313,6 @@ final class Assignability {
     // CDI has an undefined notion of "identical to".  This method attempts to interpret that.  Recall that
     // javax.lang.model.* compares types with "sameType" semantics.
     return receiver == payload || this.sameType.test(receiver, payload);
-  }
-
-  private static final boolean declaredTypeNamed(final TypeMirror t, final CharSequence n) {
-    return t.getKind() == TypeKind.DECLARED && named(((DeclaredType)t), n);
-  }
-
-  private static final boolean named(final DeclaredType t, final CharSequence n) {
-    // (No getKind() check on purpose.)
-    return ((TypeElement)t.asElement()).getQualifiedName().contentEquals(n);
-  }
-
-  private static final boolean allTypeArgumentsAre(final Iterable<? extends TypeMirror> typeArguments, final Predicate<? super TypeMirror> p) {
-    for (final TypeMirror t : typeArguments) {
-      if (!p.test(t)) {
-        return false;
-      }
-    }
-    return true;
-  }
-
-  private static final boolean isJavaLangObject(final Element e) {
-    return e.getKind() == ElementKind.CLASS && ((TypeElement)e).getQualifiedName().contentEquals("java.lang.Object");
-  }
-
-  private static final boolean isJavaLangObject(final TypeMirror t) {
-    return t.getKind() == TypeKind.DECLARED && isJavaLangObject(((DeclaredType)t).asElement());
   }
 
   // This test asks: is the *required type* assignable to the *bean type*'s bounds?
@@ -339,48 +362,6 @@ final class Assignability {
   //
   // So maybe not quite. getUppermostTypeVariableBounds just gets to "actual" types. So T extends S, S extends String
   // yields T extends String.
-
-  // If t is a TypeVariable whose bounds are, for example, S extends String, replaces S with String and returns a List
-  // whose sole element is String.
-  //
-  // If t is an IntersectionType whose first and therefore only permitted bound is, for example, S extends String,
-  // replaces S in the list of bounds with String instead.
-  //
-  // In all other cases returns List.of(t).
-  private static final List<? extends TypeMirror> condense(final TypeMirror t) {
-    if (t == null) {
-      return List.of();
-    }
-    return switch (t.getKind()) {
-    case INTERSECTION -> condense(((IntersectionType)t).getBounds()); // drop t; replace with its bounds
-    case TYPEVAR -> condense(((TypeVariable)t).getUpperBound()); // drop t; replace with its bounds
-    default -> List.of(t); // it doesn't have bounds, or it's a wildcard and we didn't say which bounds
-    };
-  }
-
-  private static final List<? extends TypeMirror> condense(final List<? extends TypeMirror> ts) {
-    if (ts == null || ts.isEmpty()) {
-      return List.of();
-    }
-    final TypeMirror t = ts.get(0);
-    return switch (t.getKind()) {
-    case INTERSECTION -> {
-      final ArrayList<TypeMirror> newBounds = new ArrayList<>();
-      newBounds.addAll(((IntersectionType)t).getBounds()); // replace the first element (t) with its bounds
-      newBounds.addAll(ts.subList(1, ts.size()));
-      newBounds.trimToSize();
-      yield condense(Collections.unmodifiableList(newBounds));
-    }
-    case TYPEVAR -> {
-      final ArrayList<TypeMirror> newBounds = new ArrayList<>();
-      newBounds.add(((TypeVariable)t).getUpperBound()); // replace the first element (t) with its bounds
-      newBounds.addAll(ts.subList(1, ts.size()));
-      newBounds.trimToSize();
-      yield condense(Collections.unmodifiableList(newBounds));
-    }
-    default -> ts;
-    };
-  }
 
   // For every bound in receiverBounds, after condensing, is there a bound in payloadBounds, after condensing, that is
   // assignable to it using Java, not CDI, assignability semantics?
@@ -471,6 +452,94 @@ final class Assignability {
     return superBound == null || covariantlyAssignable(candidate, superBound);
   }
 
+  // Get the raw type yielded by t, assuming t is the sort of type that can yield a raw type.
+  //
+  // An array type with a parameterized element type can yield a raw type.
+  //
+  // A declared type that is parameterized can yield a raw type.
+  //
+  // No other type yields a raw type.
+  private final TypeMirror rawType(final TypeMirror t) {
+    switch (t.getKind()) {
+    case ARRAY:
+      final TypeMirror et = elementType(t);
+      if (!parameterized(et)) {
+        throw new IllegalArgumentException("t is an array type whose element type is not parameterized so cannot yield a raw type");
+      }
+      return arrayType(erasure(et));
+    case DECLARED:
+      if (!parameterized(t)) {
+        throw new IllegalArgumentException("t is a declared type that is not parameterized so cannot yield a raw type");
+      }
+      return erasure(t);
+    default:
+      throw new IllegalArgumentException("t is a " + t.getKind() + " type and so cannot yield a raw type");
+    }
+  }
+
+  // Return t if its element declares a non-generic class, or if it is the raw type usage of a generic class.
+  private final TypeMirror nonGenericClassOrRawType(final TypeMirror t) {
+    return yieldsRawType(t) ? rawType(t) : t;
+  }
+
+  // Erase t and return its erasure. Erasing is a complex business that can involve the creation of new types.
+  private final TypeMirror erasure(final TypeMirror t) {
+    return this.erasure.apply(t);
+  }
+
+  // Return a possibly new ArrayType whose component type is the supplied componentType.
+  private final ArrayType arrayType(final TypeMirror componentType) {
+    return this.arrayType.apply(componentType);
+  }
+
+
+  /*
+   * Static methods.
+   */
+
+
+  // If t is a TypeVariable whose bounds are, for example, S extends String, replaces S with String and returns a List
+  // whose sole element is String.
+  //
+  // If t is an IntersectionType whose first and therefore only permitted bound is, for example, S extends String,
+  // replaces S in the list of bounds with String instead.
+  //
+  // In all other cases returns List.of(t).
+  private static final List<? extends TypeMirror> condense(final TypeMirror t) {
+    if (t == null) {
+      return List.of();
+    }
+    return switch (t.getKind()) {
+    case INTERSECTION -> condense(((IntersectionType)t).getBounds()); // drop t; replace with its bounds
+    case TYPEVAR -> condense(((TypeVariable)t).getUpperBound()); // drop t; replace with its bounds
+    default -> List.of(t); // it doesn't have bounds, or it's a wildcard and we didn't say which bounds
+    };
+  }
+
+  private static final List<? extends TypeMirror> condense(final List<? extends TypeMirror> ts) {
+    if (ts == null || ts.isEmpty()) {
+      return List.of();
+    }
+    final TypeMirror t = ts.get(0);
+    return switch (t.getKind()) {
+    case INTERSECTION -> {
+      final ArrayList<TypeMirror> newBounds = new ArrayList<>();
+      newBounds.addAll(((IntersectionType)t).getBounds()); // replace the first element (t) with its bounds
+      newBounds.addAll(ts.subList(1, ts.size()));
+      newBounds.trimToSize();
+      yield condense(Collections.unmodifiableList(newBounds));
+    }
+    case TYPEVAR -> {
+      final ArrayList<TypeMirror> newBounds = new ArrayList<>();
+      newBounds.add(((TypeVariable)t).getUpperBound()); // replace the first element (t) with its bounds
+      newBounds.addAll(ts.subList(1, ts.size()));
+      newBounds.trimToSize();
+      yield condense(Collections.unmodifiableList(newBounds));
+    }
+    default -> ts;
+    };
+  }
+
   // Does e represent a generic declaration?
   //
   // A declaration is generic if it declares one or more type parameters.
@@ -543,44 +612,30 @@ final class Assignability {
     };
   }
 
-  // Get the raw type yielded by t, assuming t is the sort of type that can yield a raw type.
-  //
-  // An array type with a parameterized element type can yield a raw type.
-  //
-  // A declared type that is parameterized can yield a raw type.
-  //
-  // No other type yields a raw type.
-  private final TypeMirror rawType(final TypeMirror t) {
-    switch (t.getKind()) {
-    case ARRAY:
-      final TypeMirror et = elementType(t);
-      if (!parameterized(et)) {
-        throw new IllegalArgumentException("t is an array type whose element type is not parameterized so cannot yield a raw type");
+  private static final boolean declaredTypeNamed(final TypeMirror t, final CharSequence n) {
+    return t.getKind() == TypeKind.DECLARED && named(((DeclaredType)t), n);
+  }
+
+  private static final boolean named(final DeclaredType t, final CharSequence n) {
+    // (No getKind() check on purpose.)
+    return ((TypeElement)t.asElement()).getQualifiedName().contentEquals(n);
+  }
+
+  private static final boolean allTypeArgumentsAre(final Iterable<? extends TypeMirror> typeArguments, final Predicate<? super TypeMirror> p) {
+    for (final TypeMirror t : typeArguments) {
+      if (!p.test(t)) {
+        return false;
       }
-      return arrayType(erasure(et));
-    case DECLARED:
-      if (!parameterized(t)) {
-        throw new IllegalArgumentException("t is a declared type that is not parameterized so cannot yield a raw type");
-      }
-      return erasure(t);
-    default:
-      throw new IllegalArgumentException("t is a " + t.getKind() + " type and so cannot yield a raw type");
     }
+    return true;
   }
 
-  // Return t if its element declares a non-generic class, or if it is the raw type usage of a generic class.
-  private final TypeMirror nonGenericClassOrRawType(final TypeMirror t) {
-    return yieldsRawType(t) ? rawType(t) : t;
+  private static final boolean isJavaLangObject(final Element e) {
+    return e.getKind() == ElementKind.CLASS && ((TypeElement)e).getQualifiedName().contentEquals("java.lang.Object");
   }
 
-  // Erase t and return its erasure. Erasing is a complex business that can involve the creation of new types.
-  private final TypeMirror erasure(final TypeMirror t) {
-    return this.erasure.apply(t);
-  }
-
-  // Return a possibly new ArrayType whose component type is the supplied componentType.
-  private final ArrayType arrayType(final TypeMirror componentType) {
-    return this.arrayType.apply(componentType);
+  private static final boolean isJavaLangObject(final TypeMirror t) {
+    return t.getKind() == TypeKind.DECLARED && isJavaLangObject(((DeclaredType)t).asElement());
   }
 
   // Is t an "actual type"?
