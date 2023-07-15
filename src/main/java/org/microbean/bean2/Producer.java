@@ -11,21 +11,11 @@
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  See the License for the
  * specific language governing permissions and limitations under the License.
  */
+package org.microbean.bean2;
 
-/**
- * Provides packages related to implementing beans.
- *
- * @author <a href="https://about.me/lairdnelson" target="_parent">Laird Nelson</a>
- */
-module org.microbean.bean {
+@FunctionalInterface
+public interface Producer<I> {
 
-  exports org.microbean.bean;
-  exports org.microbean.bean2;
+  public I produce(final Creation<I> c, final References<?> r);
   
-  requires transitive java.compiler;
-  requires            org.microbean.constant;
-  requires transitive org.microbean.lang;
-  requires transitive org.microbean.qualifier;
-  requires transitive org.microbean.scope;
-
 }

@@ -11,7 +11,7 @@
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  See the License for the
  * specific language governing permissions and limitations under the License.
  */
-package org.microbean.bean;
+package org.microbean.bean2;
 
 import java.lang.constant.ClassDesc;
 import java.lang.constant.Constable;
@@ -57,23 +57,23 @@ import static java.lang.constant.ConstantDescs.BSM_INVOKE;
 import static java.lang.constant.ConstantDescs.CD_int;
 import static java.lang.constant.ConstantDescs.CD_List;
 
-import static org.microbean.bean.ConstantDescs.CD_ReferenceTypeList;
+import static org.microbean.bean2.ConstantDescs.CD_ReferenceTypeList;
 
 import static org.microbean.lang.Lang.sameTypeEquality;
 
-public class ReferenceTypeList implements Constable {
+class ReferenceTypeList implements Constable {
 
-  private static final ClassDesc CD_Equality = ClassDesc.of(Equality.class.getName());
+  static final ClassDesc CD_Equality = ClassDesc.of(Equality.class.getName());
 
-  private final Equality equality;
+  final Equality equality;
 
   private final List<DelegatingTypeMirror> types;
 
-  private final int classesIndex;
+  final int classesIndex;
 
-  private final int arraysIndex;
+  final int arraysIndex;
 
-  private final int interfacesIndex;
+  final int interfacesIndex;
 
   public ReferenceTypeList(final TypeMirror type) {
     this(List.of(type), null, Lang.typeAndElementSource(), Lang.sameTypeEquality());
@@ -185,7 +185,7 @@ public class ReferenceTypeList implements Constable {
   }
 
   @Override // Constable
-  public final Optional<DynamicConstantDesc<ReferenceTypeList>> describeConstable() {
+  public Optional<DynamicConstantDesc<?>> describeConstable() {
     return Constables.describeConstable(this.types(), Lang::describeConstable)
       .flatMap(typesDesc -> this.equality.describeConstable()
                .map(equalityDesc -> DynamicConstantDesc.of(BSM_INVOKE,
@@ -279,23 +279,23 @@ public class ReferenceTypeList implements Constable {
    */
 
 
-  public static final ReferenceTypeList closure(final TypeMirror t) {
+  public static ReferenceTypeList closure(final TypeMirror t) {
     return closure(t, ReferenceTypeList::validateType, new Visitors(Lang.typeAndElementSource()));
   }
 
-  public static final ReferenceTypeList closure(final TypeMirror t, final Visitors visitors) {
+  public static ReferenceTypeList closure(final TypeMirror t, final Visitors visitors) {
     return closure(t, ReferenceTypeList::validateType, visitors);
   }
 
-  public static final ReferenceTypeList closure(final TypeMirror t,
-                                                Predicate<? super TypeMirror> typeFilter,
-                                                final TypeAndElementSource typeAndElementSource) {
+  public static ReferenceTypeList closure(final TypeMirror t,
+                                          Predicate<? super TypeMirror> typeFilter,
+                                          final TypeAndElementSource typeAndElementSource) {
     return closure(t, typeFilter, new Visitors(typeAndElementSource));
   }
 
-  public static final ReferenceTypeList closure(final TypeMirror t,
-                                                Predicate<? super TypeMirror> typeFilter,
-                                                final Visitors visitors) {
+  public static ReferenceTypeList closure(final TypeMirror t,
+                                          Predicate<? super TypeMirror> typeFilter,
+                                          final Visitors visitors) {
     return new ReferenceTypeList(visitors.typeClosureVisitor().visit(t).toList(),
                                  typeFilter,
                                  visitors.typeAndElementSource());
@@ -305,9 +305,9 @@ public class ReferenceTypeList implements Constable {
   //
   // java.lang.NullPointerException: Cannot invoke "javax.lang.model.type.TypeMirror.getKind()" because "t" is null
   //  at org.microbean.bean@0.0.1-SNAPSHOT/org.microbean.bean.ReferenceTypeList.validateType(ReferenceTypeList.java:305)
-	//  at org.microbean.bean@0.0.1-SNAPSHOT/org.microbean.bean.ReferenceTypeList.<init>(ReferenceTypeList.java:116)
-	//  at org.microbean.bean@0.0.1-SNAPSHOT/org.microbean.bean.ReferenceTypeList.<init>(ReferenceTypeList.java:83)
-	//  at org.microbean.bean@0.0.1-SNAPSHOT/org.microbean.bean.TestReferenceTypeList.testSorting(TestReferenceTypeList.java:71)
+  //  at org.microbean.bean@0.0.1-SNAPSHOT/org.microbean.bean.ReferenceTypeList.<init>(ReferenceTypeList.java:116)
+  //  at org.microbean.bean@0.0.1-SNAPSHOT/org.microbean.bean.ReferenceTypeList.<init>(ReferenceTypeList.java:83)
+  //  at org.microbean.bean@0.0.1-SNAPSHOT/org.microbean.bean.TestReferenceTypeList.testSorting(TestReferenceTypeList.java:71)
   static final boolean validateType(final TypeMirror t) {
     return switch (t.getKind()) {
     case ARRAY, DECLARED, TYPEVAR -> true;

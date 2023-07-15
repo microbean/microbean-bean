@@ -58,6 +58,7 @@ public interface Factory<I> extends Constable {
       .map(classDesc -> DynamicConstantDesc.of(BSM_INVOKE,
                                                MethodHandleDesc.ofConstructor(classDesc)));
   }
+  
 
   public default I singleton() {
     return null;

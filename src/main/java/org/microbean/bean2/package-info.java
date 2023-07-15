@@ -13,19 +13,8 @@
  */
 
 /**
- * Provides packages related to implementing beans.
+ * Provides classes and interfaces related to implementing beans.
  *
  * @author <a href="https://about.me/lairdnelson" target="_parent">Laird Nelson</a>
  */
-module org.microbean.bean {
-
-  exports org.microbean.bean;
-  exports org.microbean.bean2;
-  
-  requires transitive java.compiler;
-  requires            org.microbean.constant;
-  requires transitive org.microbean.lang;
-  requires transitive org.microbean.qualifier;
-  requires transitive org.microbean.scope;
-
-}
+package org.microbean.bean2;

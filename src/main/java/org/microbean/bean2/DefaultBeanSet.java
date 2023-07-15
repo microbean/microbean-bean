@@ -11,7 +11,7 @@
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  See the License for the
  * specific language governing permissions and limitations under the License.
  */
-package org.microbean.bean;
+package org.microbean.bean2;
 
 import java.lang.constant.Constable;
 import java.lang.constant.DynamicConstantDesc;
@@ -36,7 +36,7 @@ import java.util.concurrent.ConcurrentMap;
 
 import javax.lang.model.type.TypeMirror;
 
-import org.microbean.bean.Alternate.Resolver;
+import org.microbean.bean2.Alternate.Resolver;
 
 import org.microbean.constant.Constables;
 
@@ -51,11 +51,11 @@ import static java.util.function.Predicate.not;
 
 import static java.util.stream.Collectors.toUnmodifiableSet;
 
-import static org.microbean.bean.ConstantDescs.CD_DefaultBeanSet;
-import static org.microbean.bean.ConstantDescs.CD_Resolver;
-import static org.microbean.bean.Qualifiers.anyAndDefaultQualifiers;
-import static org.microbean.bean.Qualifiers.defaultQualifiers;
-import static org.microbean.bean.Ranked.DEFAULT_RANK;
+import static org.microbean.bean2.ConstantDescs.CD_DefaultBeanSet;
+import static org.microbean.bean2.ConstantDescs.CD_Resolver;
+import static org.microbean.bean2.Qualifiers.anyAndDefaultQualifiers;
+import static org.microbean.bean2.Qualifiers.defaultQualifiers;
+import static org.microbean.bean2.Ranked.DEFAULT_RANK;
 
 import static org.microbean.lang.Lang.typeAndElementSource;
 
@@ -63,7 +63,7 @@ import static org.microbean.scope.Scope.SINGLETON_ID;
 
 // Experimenting with making this non-final so the no-arg constructor can supply its own beans via some other
 // mechanism. Think ldc.
-public class DefaultBeanSet implements BeanProvider<DefaultBeanSet>, BeanSet, Constable {
+public class DefaultBeanSet implements BeanSet, Constable {
 
 
   /*
@@ -90,7 +90,7 @@ public class DefaultBeanSet implements BeanProvider<DefaultBeanSet>, BeanSet, Co
   private volatile Resolver resolver;
 
   private final TypeAndElementSource tes;
-  
+
   private final Set<Bean<?>> beans;
 
   // A cache of Beans that were selected by a selector
@@ -143,7 +143,7 @@ public class DefaultBeanSet implements BeanProvider<DefaultBeanSet>, BeanSet, Co
                         final Resolver resolver) {
     this(new Assignability(tes), tes, beans, preCalculatedResolutions, resolver);
   }
-  
+
   public DefaultBeanSet(final Assignability assignability,
                         final TypeAndElementSource tes,
                         final Collection<? extends Bean<?>> beans,
@@ -192,7 +192,7 @@ public class DefaultBeanSet implements BeanProvider<DefaultBeanSet>, BeanSet, Co
 
 
   @Override
-  public final Optional<DynamicConstantDesc<DefaultBeanSet>> describeConstable() {
+  public Optional<DynamicConstantDesc<DefaultBeanSet>> describeConstable() {
     return Constables.describeConstable(this.resolver)
       .flatMap(resolverDesc -> Constables.describeConstable(this.beans)
                .map(beansDesc -> DynamicConstantDesc.of(BSM_INVOKE,
@@ -203,40 +203,18 @@ public class DefaultBeanSet implements BeanProvider<DefaultBeanSet>, BeanSet, Co
                                                         resolverDesc)));
   }
 
-  @Override
   public final Resolver resolver(final Resolver r) {
     return (Resolver)RESOLVER.getAndSet(this, r == null ? StockResolver.INSTANCE : r);
   }
 
-  @Override // BeanProvider<DefaultBeanSet>
   public final Bean<DefaultBeanSet> bean() {
-    // See below for where this occurs:
-    //
-    // java.lang.NullPointerException: Cannot invoke "javax.lang.model.type.TypeMirror.toString()" because "t" is null
-    // at jdk.compiler/com.sun.tools.javac.model.JavacTypes.getDeclaredType0(JavacTypes.java:272)
-    // at jdk.compiler/com.sun.tools.javac.model.JavacTypes.getDeclaredType(JavacTypes.java:241)
-    // at jdk.compiler/com.sun.tools.javac.model.JavacTypes.getDeclaredType(JavacTypes.java:249)
-    // at org.microbean.lang@0.0.1-SNAPSHOT/org.microbean.lang.Lang.declaredType(Lang.java:1381)
-    // at org.microbean.lang@0.0.1-SNAPSHOT/org.microbean.lang.Lang$ConstableTypeAndElementSource.declaredType(Lang.java:2010)
-    // at org.microbean.bean@0.0.1-SNAPSHOT/org.microbean.bean.DefaultBeanSet.bean(DefaultBeanSet.java:216)
-    //
-    // Also:
-    //
-    // java.lang.AssertionError
-    // at org.microbean.lang@0.0.1-SNAPSHOT/org.microbean.lang.Lang.declaredType(Lang.java:1378)
-    // at org.microbean.lang@0.0.1-SNAPSHOT/org.microbean.lang.Lang$ConstableTypeAndElementSource.declaredType(Lang.java:2026)
-    // at org.microbean.lang@0.0.1-SNAPSHOT/org.microbean.lang.TypeAndElementSource.declaredType(TypeAndElementSource.java:56)
-    // at org.microbean.bean@0.0.1-SNAPSHOT/org.microbean.bean.DefaultBeanSet.bean(DefaultBeanSet.java:221)
-    //
-    // In the third of the three list elements, one of the two declaredType calls ends up supplying a null TypeElement to the three-argument Lang#declaredType method.
     return
       new Bean<>(new Id(new BeanTypeList(List.of(tes.declaredType(DefaultBeanSet.class),
-                                                 tes.declaredType(BeanSet.class),
-                                                 tes.declaredType(null, tes.typeElement(BeanProvider.class), new TypeMirror[] { tes.declaredType(DefaultBeanSet.class) }))), // see occasional error above
+                                                 tes.declaredType(BeanSet.class))),
                         anyAndDefaultQualifiers(),
                         SINGLETON_ID,
                         DEFAULT_RANK - 100),
-                 Factory.of(this));
+                 new Singleton<>(this));
   }
 
   @Override // BeanSet
@@ -295,7 +273,7 @@ public class DefaultBeanSet implements BeanProvider<DefaultBeanSet>, BeanSet, Co
                         anyAndDefaultQualifiers(),
                         SINGLETON_ID,
                         DEFAULT_RANK),
-                 new SingletonFactory<>(this.resolver)); // volatile read
+                 new Singleton<>(this.resolver)); // volatile read
   }
 
 
@@ -304,7 +282,7 @@ public class DefaultBeanSet implements BeanProvider<DefaultBeanSet>, BeanSet, Co
    */
 
 
-  private static Bean<?> returnNull(final Selector x, final Collection<? extends Bean<?>> xx) {
+  private static final Bean<?> returnNull(final Selector x, final Collection<? extends Bean<?>> xx) {
     return null;
   }
 

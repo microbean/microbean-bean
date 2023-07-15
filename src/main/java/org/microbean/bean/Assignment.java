@@ -11,21 +11,11 @@
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  See the License for the
  * specific language governing permissions and limitations under the License.
  */
+package org.microbean.bean;
 
-/**
- * Provides packages related to implementing beans.
- *
- * @author <a href="https://about.me/lairdnelson" target="_parent">Laird Nelson</a>
- */
-module org.microbean.bean {
+import java.util.function.Supplier;
 
-  exports org.microbean.bean;
-  exports org.microbean.bean2;
-  
-  requires transitive java.compiler;
-  requires            org.microbean.constant;
-  requires transitive org.microbean.lang;
-  requires transitive org.microbean.qualifier;
-  requires transitive org.microbean.scope;
-
-}
+// Placeholder class for an assignment of a reference, loosely speaking, to a variable.
+//
+// Will the "reference" be a Supplier<T>? Something like that.
+public record Assignment<V, R extends V>(Variable<V> variable, Supplier<? extends R> reference) {};

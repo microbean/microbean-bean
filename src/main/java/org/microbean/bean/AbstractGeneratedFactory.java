@@ -103,8 +103,8 @@ public abstract class AbstractGeneratedFactory<I> implements Constable, Factory<
   protected abstract I initialize(final I i, final Creation<I> c, final Creation<?> transientC);
 
   /**
-   * Destroys the supplied instance by first calling the {@link #destroyWithoutClosing(Object, Creation)} method and
-   * then calling the {@link BeanContext#close()} method as if in a {@code finally} block.
+   * Destroys the supplied instance by first calling the {@link #destroyWithoutClosing(Object, Destruction)} method and
+   * then calling the {@link Destruction#close()} method as if in a {@code finally} block.
    *
    * @param i the instance to destroy; may be {@code null}
    *

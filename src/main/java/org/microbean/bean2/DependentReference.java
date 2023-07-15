@@ -11,21 +11,18 @@
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  See the License for the
  * specific language governing permissions and limitations under the License.
  */
+package org.microbean.bean2;
 
-/**
- * Provides packages related to implementing beans.
- *
- * @author <a href="https://about.me/lairdnelson" target="_parent">Laird Nelson</a>
- */
-module org.microbean.bean {
+import java.lang.ref.ReferenceQueue;
+import java.lang.ref.WeakReference;
 
-  exports org.microbean.bean;
-  exports org.microbean.bean2;
+public class DependentReference<R> extends WeakReference<R> {
+
+  private final R value;
+
+  public DependentReference(final R referent) {
+    super(referent);
+    this.value = referent;
+  }
   
-  requires transitive java.compiler;
-  requires            org.microbean.constant;
-  requires transitive org.microbean.lang;
-  requires transitive org.microbean.qualifier;
-  requires transitive org.microbean.scope;
-
 }

@@ -27,6 +27,9 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
+import javax.lang.model.element.ModuleElement;
+import javax.lang.model.element.TypeElement;
+
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -72,6 +75,15 @@ final class TestDefaultBeanSet {
   @BeforeEach
   final void setup() {
     this.beans = new DefaultBeanSet(beanSet);
+  }
+
+  @Test
+  final void testTypeElementResolution() {
+    System.out.println(this.getClass().getModule());
+    final ModuleElement m = Lang.moduleElement("org.microbean.bean");
+    assertNotNull(m);
+    final TypeElement e = Lang.typeElement(m, "org.microbean.bean.Alternate.Resolver");
+    assertNotNull(e);
   }
   
   @Test

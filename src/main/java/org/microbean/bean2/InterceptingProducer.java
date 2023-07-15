@@ -11,21 +11,30 @@
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  See the License for the
  * specific language governing permissions and limitations under the License.
  */
+package org.microbean.bean2;
 
-/**
- * Provides packages related to implementing beans.
- *
- * @author <a href="https://about.me/lairdnelson" target="_parent">Laird Nelson</a>
- */
-module org.microbean.bean {
+import java.util.Objects;
 
-  exports org.microbean.bean;
-  exports org.microbean.bean2;
+// A Producer that applies constructor interceptions.
+//
+// Intended mainly for generated subclasses.
+public abstract class InterceptingProducer<I> implements Producer<I> {
+
+  protected final Object[] EMPTY_OBJECT_ARRAY = new Object[0];
   
-  requires transitive java.compiler;
-  requires            org.microbean.constant;
-  requires transitive org.microbean.lang;
-  requires transitive org.microbean.qualifier;
-  requires transitive org.microbean.scope;
+  protected InterceptingProducer() {
+    super();
+  }
 
+  @Override // Producer<I>
+  public final I produce(final Creation<I> c, final References<?> r) {
+    return this.produce(this.parameters(c, r));
+  }
+
+  protected Object[] parameters(final Creation<I> c, final References<?> r) {
+    return EMPTY_OBJECT_ARRAY;
+  }
+  
+  protected abstract I produce(final Object[] parameters);
+  
 }

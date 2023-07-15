@@ -11,7 +11,7 @@
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  See the License for the
  * specific language governing permissions and limitations under the License.
  */
-package org.microbean.bean;
+package org.microbean.bean2;
 
 import java.util.Iterator;
 
@@ -23,19 +23,7 @@ public interface References<R> extends AutoCloseable, Iterable<R>, Supplier<R> {
 
   public BeanSet beanSet();
 
-  public default <R> R supplyReference(final Selector selector) {
-    return this.supplyReference(selector, null);
-  }
-
-  public <R> R supplyReference(final Selector selector, final Bean<R> bean);
-
-  public default <R> Supplier<? extends R> supplier(final Selector selector) {
-    return () -> this.supplyReference(selector);
-  }
-
-  public default <R> Supplier<? extends R> supplier(final Selector selector, final Bean<R> bean) {
-    return () -> this.supplyReference(selector, bean);
-  }
+  public <R> R supplyReference(final Selector selector, final Bean<R> bean, final Creation<R> creation);
 
   public default Cardinality cardinality() {
     final Iterator<R> i = this.iterator();
@@ -58,8 +46,6 @@ public interface References<R> extends AutoCloseable, Iterable<R>, Supplier<R> {
     }
     return returnValue;
   }
-
-  public <R2 extends R> References<R2> withSelector(final Selector selector);
 
   public boolean destroy(final R r);
 

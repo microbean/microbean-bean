@@ -11,7 +11,7 @@
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  See the License for the
  * specific language governing permissions and limitations under the License.
  */
-package org.microbean.bean;
+package org.microbean.bean2;
 
 import java.lang.constant.ClassDesc;
 import java.lang.constant.Constable;
@@ -49,14 +49,14 @@ import static java.lang.constant.ConstantDescs.FALSE;
 import static java.lang.constant.ConstantDescs.TRUE;
 import static java.lang.constant.DirectMethodHandleDesc.Kind.STATIC;
 
-import static org.microbean.bean.ConstantDescs.CD_Selector;
+import static org.microbean.bean2.ConstantDescs.CD_Selector;
 
-import static org.microbean.bean.InterceptorBindings.Kind.ANY_INTERCEPTOR_BINDING;
-import static org.microbean.bean.InterceptorBindings.Kind.INTERCEPTOR_BINDING;
-import static org.microbean.bean.Qualifiers.defaultQualifiers;
-import static org.microbean.bean.Qualifiers.Kind.ANY_QUALIFIER;
-import static org.microbean.bean.Qualifiers.Kind.DEFAULT_QUALIFIER;
-import static org.microbean.bean.Qualifiers.Kind.QUALIFIER;
+import static org.microbean.bean2.InterceptorBindings.Kind.ANY_INTERCEPTOR_BINDING;
+import static org.microbean.bean2.InterceptorBindings.Kind.INTERCEPTOR_BINDING;
+import static org.microbean.bean2.Qualifiers.defaultQualifiers;
+import static org.microbean.bean2.Qualifiers.Kind.ANY_QUALIFIER;
+import static org.microbean.bean2.Qualifiers.Kind.DEFAULT_QUALIFIER;
+import static org.microbean.bean2.Qualifiers.Kind.QUALIFIER;
 
 public final class Selector implements Constable {
 

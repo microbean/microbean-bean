@@ -61,12 +61,16 @@ final class TestReferenceTypeList {
   final <T> void testSorting() {
     final List<TypeMirror> l = new ArrayList<>();
     final TypeMirror object = declaredType(Object.class);
+    assertTrue(object instanceof DelegatingTypeMirror);
     l.add(object);
     final TypeMirror mapStringString = declaredType(null, typeElement(Map.class), declaredType(String.class), declaredType(String.class));
+    assertTrue(mapStringString instanceof DelegatingTypeMirror);
     l.add(mapStringString);
     final TypeMirror concurrentMapStringString = declaredType(null, typeElement(ConcurrentMap.class), declaredType(String.class), declaredType(String.class));
+    assertTrue(concurrentMapStringString instanceof DelegatingTypeMirror);
     l.add(concurrentMapStringString);
     final TypeMirror objectArray = arrayType(Object[].class);
+    assertTrue(objectArray instanceof DelegatingTypeMirror);
     l.add(objectArray);
     final ReferenceTypeList rtl = new ReferenceTypeList(l);
     List<? extends TypeMirror> types = rtl.types();
