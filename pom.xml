@@ -147,8 +147,6 @@
               <arg>-Xlint:-preview</arg>
               <arg>-Xlint:all</arg>
               <arg>-Xpkginfo:always</arg>
-              <arg>--add-reads</arg>
-              <arg>org.microbean.bean=java.logging</arg>
             </compilerArgs>
           </configuration>
         </plugin>

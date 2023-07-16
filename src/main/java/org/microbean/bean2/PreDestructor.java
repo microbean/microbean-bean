@@ -16,6 +16,7 @@ package org.microbean.bean2;
 @FunctionalInterface
 public interface PreDestructor<I> {
 
+  // MUST be idempotent
   public I destroying(final I i, final References<?> r);
 
 }

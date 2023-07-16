@@ -17,6 +17,9 @@ public class Destructor<I> {
 
   private final PreDestructor<I> preDestructor;
 
+  // @GuardedBy("this")
+  private volatile boolean destroyed;
+
   public Destructor() {
     this(null);
   }
@@ -26,7 +29,10 @@ public class Destructor<I> {
     this.preDestructor = preDestructor == null ? Destructor::noopDestroying : preDestructor;
   }
 
-  public final void destroy(final I i, final AutoCloseable destructionRegistry, final References<?> r) {
+  public synchronized final void destroy(final I i, final AutoCloseable destructionRegistry, final References<?> r) {
+    if (this.destroyed) {
+      return;
+    }
     if (destructionRegistry == null) {
       this.preDestructor.destroying(i, r);
     } else {
@@ -42,11 +48,13 @@ public class Destructor<I> {
         throw new DestructionException(e.getMessage(), e);
       }
     }
+    this.destroyed = true;
   }
 
   // Users should NOT call this.
   //
   // MUST NOT call destroy(I, Destruction). It's the other way around.
+  // MUST be idempotent
   protected void destroy(final I i) {
     if (i instanceof AutoCloseable ac) {
       try {

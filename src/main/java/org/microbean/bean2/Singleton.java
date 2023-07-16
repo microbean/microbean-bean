@@ -13,10 +13,57 @@
  */
 package org.microbean.bean2;
 
-public final class Singleton<I> extends AbstractFactory<I> {
+import java.lang.constant.Constable;
+import java.lang.constant.ClassDesc;
+import java.lang.constant.DynamicConstantDesc;
+import java.lang.constant.MethodHandleDesc;
 
+import java.util.Objects;
+import java.util.Optional;
+
+import org.microbean.constant.Constables;
+
+import static java.lang.constant.ConstantDescs.BSM_INVOKE;
+import static java.lang.constant.ConstantDescs.CD_Object;
+
+public final class Singleton<I> implements Factory<I> {
+
+  private static final ClassDesc CD_Singleton = ClassDesc.of(Singleton.class.getName());
+  
+  private volatile I singleton;
+
+  private final I product;
+  
   public Singleton(final I i) {
-    super((c, r) -> i);
+    super();
+    this.product = Objects.requireNonNull(i, "i");
+  }
+
+  @Override
+  public final boolean destroys() {
+    return false;
+  }
+
+  @Override
+  public final I singleton() {
+    return this.singleton;
+  }
+
+  @Override
+  public final I create(final Creation<I> c, final References<?> references) {
+    if (this.singleton == null) {
+      this.singleton = this.product;
+    }
+    return this.product;
+  }
+
+  @Override // Constable
+  public final Optional<DynamicConstantDesc<Singleton<I>>> describeConstable() {
+    return Constables.describeConstable(this.singleton)
+      .map(singletonDesc -> DynamicConstantDesc.of(BSM_INVOKE,
+                                                   MethodHandleDesc.ofConstructor(CD_Singleton,
+                                                                                  CD_Object),
+                                                   singletonDesc));
   }
   
 }

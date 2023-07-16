@@ -13,27 +13,32 @@
  */
 package org.microbean.bean2;
 
-public abstract class Initializer<I> {
+import java.lang.constant.Constable;
+import java.lang.constant.ConstantDesc;
 
-  private final PostInitializer<I> postInitializer;
+import org.junit.jupiter.api.Test;
 
-  protected Initializer() {
-    this(null);
-  }
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
-  protected Initializer(final PostInitializer<I> postInitializer) {
+final class TestFactory {
+
+  private TestFactory() {
     super();
-    this.postInitializer = postInitializer == null ? Initializer::noopPostInitialize : postInitializer;
   }
 
-  public final I initialize(final I i, final Creation<I> c, final References<?> r) {
-    return this.postInitializer.postInitialize(this.performInitialization(i, c, r), c, r);
+  @Test
+  final void testSingletonBehavior() {
+    final Factory<String> f = new Singleton<>("Hello");
+
+    // No one has created it yet
+    assertNull(f.singleton());
+
+    // Now someone has
+    final String s = f.create(null, null);
+    assertSame("Hello", s);
+    assertSame("Hello", f.singleton());
   }
-
-  protected abstract I performInitialization(final I i, final Creation<I> c,  final References<?> r);
-
-  private static final <I> I noopPostInitialize(final I i, final Creation<I> c, final References<?> r) {
-    return i;
-  }
-
+  
 }

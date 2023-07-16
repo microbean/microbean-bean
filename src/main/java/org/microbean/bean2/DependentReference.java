@@ -16,13 +16,44 @@ package org.microbean.bean2;
 import java.lang.ref.ReferenceQueue;
 import java.lang.ref.WeakReference;
 
-public class DependentReference<R> extends WeakReference<R> {
+import java.util.Objects;
 
-  private final R value;
+import java.util.function.Consumer;
 
-  public DependentReference(final R referent) {
-    super(referent);
-    this.value = referent;
+public class DependentReference<R> extends WeakReference<R> implements AutoCloseable {
+
+  private final R referent;
+
+  private final Consumer<? super R> destructor;
+
+  private volatile boolean destroyed;
+
+  public DependentReference(final R referent, final ReferenceQueue<? super R> rq, final Consumer<? super R> destructor) {
+    super(Objects.requireNonNull(referent, "referent"), rq);
+    this.referent = referent;
+    this.destructor = destructor == null ? DependentReference::noopDestroy : destructor;
   }
-  
+
+  @Override // AutoCloseable
+  public void close() {
+    this.enqueue(); // idempotent
+  }
+
+  public boolean closed() {
+    return this.refersTo(null);
+  }
+
+  public final void destroy() {
+    if (!this.destroyed()) {
+      this.destructor.accept(this.referent);
+      this.destroyed = true;
+    }
+  }
+
+  public final boolean destroyed() {
+    return this.destroyed;
+  }
+
+  private static final <R> void noopDestroy(final R r) {}
+
 }

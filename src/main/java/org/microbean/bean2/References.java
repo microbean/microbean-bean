@@ -23,7 +23,18 @@ public interface References<R> extends AutoCloseable, Iterable<R>, Supplier<R> {
 
   public BeanSet beanSet();
 
-  public <R> R supplyReference(final Selector selector, final Bean<R> bean, final Creation<R> creation);
+  public <R> R reference(final Selector selector, final Bean<R> bean, final Creation<R> creation);
+
+  // Destroys r if and only if it is (a) dependent and (b) supplied by get()
+  public boolean destroy(final R r);  
+  
+  public default <R> R reference(final Selector selector, final Creation<R> creation) {
+    final Bean<?> b = this.beanSet().bean(selector);
+    if (b == null) {
+      throw new UnsatisfiedResolutionException(selector);
+    }
+    return this.reference(selector, b.cast(), creation);
+  }
 
   public default Cardinality cardinality() {
     final Iterator<R> i = this.iterator();
@@ -46,8 +57,6 @@ public interface References<R> extends AutoCloseable, Iterable<R>, Supplier<R> {
     }
     return returnValue;
   }
-
-  public boolean destroy(final R r);
 
   // Overriding encouraged to be more efficient/threadsafe/etc.
   @Override // AutoCloseable

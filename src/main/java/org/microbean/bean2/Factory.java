@@ -35,13 +35,10 @@ public interface Factory<I> extends Constable {
     return true;
   }
 
-  @Deprecated(forRemoval = true)
-  @SuppressWarnings("try")
-  public default <D extends ReferencesProvider & AutoCloseable> void destroy(final I i, final D d) {
-    this.destroy(i, d, d.references());
-  }
-
-  public default void destroy(final I i, final AutoCloseable destructionRegistry, final References<?> references) {
+  // MUST be idempotent
+  // If i is an AutoCloseable, MUST be idempotent
+  // autoCloseableRegistry's close() MUST be idempotent
+  public default void destroy(final I i, final AutoCloseable autoCloseableRegistry, final References<?> references) {
     if (i == null) {
       return;
     }
@@ -59,10 +56,10 @@ public interface Factory<I> extends Constable {
         }
       }
     };
-    if (destructionRegistry == null) {
+    if (autoCloseableRegistry == null) {
       r.run();
     } else {
-      try (destructionRegistry) {
+      try (autoCloseableRegistry) {
         r.run();
       } catch (final RuntimeException | Error re) {
         throw re;

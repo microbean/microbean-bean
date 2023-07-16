@@ -54,7 +54,7 @@ public abstract class AbstractFactory<I> implements Factory<I> {
   }
 
   @Override // Factory<I>
-  public final I create(final Creation<I> c, final References<?> r) {
+  public I create(final Creation<I> c, final References<?> r) {
     // Produce the product, initialize the product, apply business method interceptions to the product, return the
     // product
     return this.interceptionsApplicator.apply(this.initializer.initialize(this.producer.produce(c, r), c, r), c, r);
@@ -65,9 +65,10 @@ public abstract class AbstractFactory<I> implements Factory<I> {
     return this.destroys;
   }
 
+  // MUST be idempotent
   @Override // Factory<I>
   @SuppressWarnings("try")
-  public final void destroy(final I i, final AutoCloseable destructionRegistry, final References<?> references) {
+  public void destroy(final I i, final AutoCloseable destructionRegistry, final References<?> references) {
     this.destructor.destroy(i, destructionRegistry, references);
   }
 

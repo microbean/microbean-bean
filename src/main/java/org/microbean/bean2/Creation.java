@@ -13,12 +13,17 @@
  */
 package org.microbean.bean2;
 
-public interface Creation<I> extends Cloneable, AutoCloseableRegistry {
+public interface Creation<I> extends AutoCloseable, Cloneable {
 
-  public void created(final I instance);
+  // MUST be idempotent
+  // For incomplete instances
+  public default void created(final I instance) {}
 
-  // Hazy; may not be needed
-  // @Override // Cloneable
   public Creation<I> clone();
+
+  // MUST be idempotent
+  // During creation (as opposed to destruction) this method should throw an IllegalStateException.
+  @Override // AutoCloseable
+  public void close();
 
 }

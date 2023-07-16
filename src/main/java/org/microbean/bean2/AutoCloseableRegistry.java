@@ -13,9 +13,40 @@
  */
 package org.microbean.bean2;
 
-@FunctionalInterface
-public interface AutoCloseableRegistry {
+public interface AutoCloseableRegistry extends AutoCloseable, Cloneable {
 
+  /**
+   * Returns a new {@link AutoCloseableRegistry} instance that is not {@linkplain #closed() closed} and has no
+   * {@linkplain #register(AutoCloseable)} registrations.
+   *
+   * <p>The new instance will be {@linkplain #register(AutoCloseable) registered} with this {@link
+   * AutoCloseableRegistry} if this {@link AutoCloseableRegistry} is not {@linkplain #closed() closed}.</p>
+   *
+   * return a new {@link AutoCloseableRegistry}
+   *
+   * @nullability Implementations of this method must not return {@code null}.
+   *
+   * @idempotency All invocations of implementations of this method must return new, distinct {@link AutoCloseable}
+   * instances.
+   *
+   * @threadsafety Implementations of this method must be safe for concurrent use by multiple threads.
+   *
+   * @see Cloneable#clone()
+   *
+   * @see #closed()
+   *
+   * @see #register(AutoCloseable)
+   */
+  public AutoCloseableRegistry clone();
+
+  // MUST be idempotent and thread safe
+  @Override
+  public void close();
+
+  // MUST be idempotent and thread safe
+  public boolean closed();
+
+  // When closed, this must do nothing and return false, not throw an exception
   public boolean register(final AutoCloseable c);
 
 }
