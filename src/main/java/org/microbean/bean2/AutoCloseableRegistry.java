@@ -31,7 +31,7 @@ public interface AutoCloseableRegistry extends AutoCloseable, Cloneable {
    *
    * @threadsafety Implementations of this method must be safe for concurrent use by multiple threads.
    *
-   * @see Cloneable#clone()
+   * @see Cloneable
    *
    * @see #closed()
    *

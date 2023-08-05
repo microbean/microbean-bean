@@ -23,6 +23,8 @@ public interface References<R> extends AutoCloseable, Iterable<R>, Supplier<R> {
 
   public BeanSet beanSet();
 
+  public <I> Creation<I> creation();
+
   public <R> R reference(final Selector selector, final Bean<R> bean, final Creation<R> creation);
 
   // Destroys r if and only if it is (a) dependent and (b) supplied by get()

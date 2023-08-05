@@ -13,17 +13,115 @@
  */
 package org.microbean.bean2;
 
+/**
+ * A representation of a {@link Factory}'s {@linkplain Factory#create(Creation, References) creation activity}.
+ *
+ * <p>Most {@link Creation} implementations will also be {@link AutoCloseableRegistry} implementations.  See {@link
+ * DefaultCreation} as one arbitrary example.</p>
+ *
+ * @author <a href="https://about.me/lairdnelson" target="_parent">Laird Nelson</a>
+ */
 public interface Creation<I> extends AutoCloseable, Cloneable {
 
-  // MUST be idempotent
-  // For incomplete instances
-  public default void created(final I instance) {}
-
+  /**
+   * Clones this {@link Creation} and arranges to have the resulting clone registered with its immediate ancestor such
+   * that {@linkplain #close() closing} the ancestor will also {@linkplain #close() close} the clone.
+   *
+   * <p>If an implementation of this method does not adhere to these requirements, undefined behavior, and possibly
+   * memory leaks, will occur.</p>
+   *
+   * <p>Most implementations will be, simply:</p>
+   *
+   * {@snippet :
+   * try {
+   *     return (Creation<I>)super.clone();
+   * } catch (final CloneNotSupportedException e) {
+   *     throw new AssertionError(e.getMessage(), e);
+   * }
+   * }
+   *
+   * @return a clone of this {@link Creation}; never {@code null}
+   *
+   * @see #close()
+   *
+   * @see AutoCloseableRegistry
+   *
+   * @threadsafety Implementations of this method must be safe for concurrent use by multiple threads.
+   */
   public Creation<I> clone();
 
+  /**
+   * Closes this {@link Creation}, and any clones that were registered with it.
+   *
+   * <p>{@link Factory} implementations (and other user-authored code) normally should not invoke this method, and
+   * indeed doing so may result in undefined behavior and/or an {@link IllegalStateException} being thrown.</p>
+   *
+   * <p>Invoking this method during actual creation may cause undefined behavior and/or an {@link IllegalStateException}
+   * to be thrown.</p>
+   *
+   * @exception IllegalStateException if it is not legal yet to close this {@link Creation}
+   *
+   * @see #clone()
+   *
+   * @see AutoCloseableRegistry
+   *
+   * @idempotency Implementations of this method must be idempotent.
+   *
+   * @threadsafety Implementations of this method must be safe for concurrent use by multiple threads.
+   */
   // MUST be idempotent
   // During creation (as opposed to destruction) this method should throw an IllegalStateException.
   @Override // AutoCloseable
   public void close();
+
+  /**
+   * Casts this {@link Creation} to the inferred return type and returns it.
+   *
+   * <p>Overrides of this default method must return this {@link Creation} cast to the apppropriate type. Any other
+   * return value will result in undefined behavior.</p>
+   *
+   * @return this {@link Creation}, cast to an appropriate type; never {@code null}
+   *
+   * @exception ClassCastException if the cast could not be performed for any reason
+   */
+  public default <J> Creation<J> cast() {
+    return cast(this);
+  }
+
+  /**
+   * Signals that the supplied {@code instance} has been created and is about to be made available for use.
+   *
+   * <p>This method is typically invoked from within a {@link Factory#create(Creation, References)} implementation
+   * immediately prior to its returning a value.</p>
+   *
+   * <p>The default implementation of this method does nothing.</p>
+   *
+   * @param instance the instance that was created; must not be {@code null}
+   *
+   * @exception NullPointerException if {@code instance} was {@code null}
+   *
+   * @exception IllegalArgumentException if {@code instance} was found to be unsuitable for any reason
+   *
+   * @idempotency Overrides of this method must be idempotent.
+   *
+   * @threadsafety Overrides of this method must be safe for concurrent use by multiple threads.
+   */
+  // MUST be idempotent
+  // For incomplete instances
+  public default void created(final I instance) {
+
+  }
+
+  /**
+   * Casts the supplied {@link Creation} to the inferred return type and returns it.
+   *
+   * @param c the {@link Creation} to cast and return; may be {@code null}
+   *
+   * @return the {@link Creation}, cast to an appropriate type, or {@code null}
+   */
+  @SuppressWarnings("unchecked")
+  public static <I> Creation<I> cast(final Creation<?> c) {
+    return (Creation<I>)c;
+  }
 
 }
