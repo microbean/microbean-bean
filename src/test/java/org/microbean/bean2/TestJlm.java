@@ -11,31 +11,21 @@
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  See the License for the
  * specific language governing permissions and limitations under the License.
  */
-package org.microbean.bean;
+package org.microbean.bean2;
 
-import java.util.Collection;
-import java.util.Set;
+import org.junit.jupiter.api.Test;
 
-import java.util.function.BiFunction;
+import org.microbean.lang.Lang;
 
-import org.microbean.bean.Alternate.Resolver;
+final class TestJlm {
 
-public interface BeanSet {
-
-  // Optional operation
-  public default Resolver resolver(final Resolver r) {
-    throw new UnsupportedOperationException();
+  private TestJlm() {
+    super();
   }
 
-  public Set<Bean<?>> beans();
-
-  public Set<Bean<?>> beans(final Selector selector);
-
-  public default Bean<?> bean(final Selector selector) {
-    return this.bean(selector, Alternate.Resolver::fail);
+  @Test
+  final void testJlm() {
+    Lang.type(Object.class);
   }
-
-  public Bean<?> bean(final Selector selector,
-                      final BiFunction<? super Selector, ? super Collection<? extends Bean<?>>, ? extends Bean<?>> op);
 
 }

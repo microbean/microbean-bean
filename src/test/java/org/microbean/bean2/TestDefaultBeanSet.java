@@ -11,7 +11,7 @@
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  See the License for the
  * specific language governing permissions and limitations under the License.
  */
-package org.microbean.bean;
+package org.microbean.bean2;
 
 import java.lang.constant.ClassDesc;
 import java.lang.constant.ConstantDesc;
@@ -38,14 +38,17 @@ import org.microbean.constant.Constables;
 
 import org.microbean.lang.Lang;
 
+import static java.lang.invoke.MethodHandles.lookup;
+import static java.lang.invoke.MethodHandles.privateLookupIn;
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import static org.microbean.bean.Qualifiers.anyAndDefaultQualifiers;
-import static org.microbean.bean.Qualifiers.defaultQualifier;
+import static org.microbean.bean2.Qualifiers.anyAndDefaultQualifiers;
+import static org.microbean.bean2.Qualifiers.defaultQualifier;
 
 import static org.microbean.scope.Scope.SINGLETON_ID;
 
@@ -67,7 +70,7 @@ final class TestDefaultBeanSet {
       new Bean<>(new Id(List.of(Lang.declaredType(String.class), Lang.declaredType(Object.class)),
                         anyAndDefaultQualifiers(),
                         SINGLETON_ID),
-                 Factory.of("Hello"));
+                 new Singleton<>("Hello"));
     assertTrue(hello.factory() instanceof java.lang.constant.Constable);
     beanSet = Set.of(hello);
   }
@@ -82,7 +85,7 @@ final class TestDefaultBeanSet {
     System.out.println(this.getClass().getModule());
     final ModuleElement m = Lang.moduleElement("org.microbean.bean");
     assertNotNull(m);
-    final TypeElement e = Lang.typeElement(m, "org.microbean.bean.Alternate.Resolver");
+    final TypeElement e = Lang.typeElement(m, "org.microbean.bean2.Alternate.Resolver");
     assertNotNull(e);
   }
   
@@ -93,9 +96,9 @@ final class TestDefaultBeanSet {
     // 3 == Bean<String>, Bean<DefaultBeanSet>, Bean<Alternate.Resolver>
     assertEquals(3, set.size());
     hello = beans.bean(new Selector(Lang.declaredType(String.class), List.of(defaultQualifier()))).cast();
-    assertSame("Hello", hello.factory().create(null));
+    assertSame("Hello", hello.factory().create(null, null));
     hello = beans.bean(new Selector(Lang.declaredType(Object.class), List.of(defaultQualifier()))).cast();
-    assertSame("Hello", hello.factory().create(null));
+    assertSame("Hello", hello.factory().create(null, null));
   }
 
   @SuppressWarnings("unchecked")
@@ -103,10 +106,10 @@ final class TestDefaultBeanSet {
   final void testConstableStuff() throws ReflectiveOperationException {
     assertNotNull(beanSet);
     final DynamicConstantDesc<Set<Bean<?>>> cd = (DynamicConstantDesc<Set<Bean<?>>>)Constables.describeConstable(beanSet).orElseThrow(AssertionError::new);
-    Set<Bean<?>> set = cd.resolveConstantDesc(MethodHandles.privateLookupIn(ReferenceTypeList.class, MethodHandles.lookup()));
+    Set<Bean<?>> set = cd.resolveConstantDesc(privateLookupIn(ReferenceTypeList.class, lookup()));
     final class ConstantDefaultBeanSet extends DefaultBeanSet {
       public ConstantDefaultBeanSet() throws ReflectiveOperationException {
-        super((Collection<Bean<?>>)cd.resolveConstantDesc(MethodHandles.privateLookupIn(ReferenceTypeList.class, MethodHandles.lookup())));
+        super((Collection<Bean<?>>)cd.resolveConstantDesc(privateLookupIn(ReferenceTypeList.class, lookup())));
       }
     }
     final DefaultBeanSet beans = new ConstantDefaultBeanSet();
@@ -115,9 +118,9 @@ final class TestDefaultBeanSet {
     // 3 == Bean<String>, Bean<DefaultBeanSet>, Bean<Alternate.Resolver>
     assertEquals(1, set.size());
     hello = beans.bean(new Selector(Lang.declaredType(String.class), List.of(defaultQualifier()))).cast();
-    assertSame("Hello", hello.factory().create(null));
+    assertSame("Hello", hello.factory().create(null, null));
     hello = beans.bean(new Selector(Lang.declaredType(Object.class), List.of(defaultQualifier()))).cast();
-    assertSame("Hello", hello.factory().create(null));
+    assertSame("Hello", hello.factory().create(null, null));
   }
 
 }

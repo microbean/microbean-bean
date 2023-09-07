@@ -15,7 +15,8 @@ package org.microbean.bean2;
 
 import java.util.Objects;
 
-// A Producer that applies constructor interceptions.
+// A Producer that applies constructor interceptions, so useful only when constructor interception is supposed to be
+// happening. Used, like all Producers, as part of implementing a Factory.
 //
 // Intended mainly for generated subclasses.
 public abstract class InterceptingProducer<I> implements Producer<I> {

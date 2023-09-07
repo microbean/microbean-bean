@@ -22,7 +22,7 @@ public interface AutoCloseableRegistry extends AutoCloseable, Cloneable {
    * <p>The new instance will be {@linkplain #register(AutoCloseable) registered} with this {@link
    * AutoCloseableRegistry} if this {@link AutoCloseableRegistry} is not {@linkplain #closed() closed}.</p>
    *
-   * return a new {@link AutoCloseableRegistry}
+   * @return a new {@link AutoCloseableRegistry}
    *
    * @nullability Implementations of this method must not return {@code null}.
    *

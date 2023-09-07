@@ -16,29 +16,22 @@ package org.microbean.bean2;
 /**
  * A representation of a {@link Factory}'s {@linkplain Factory#create(Creation, References) creation activity}.
  *
- * <p>Most {@link Creation} implementations will also be {@link AutoCloseableRegistry} implementations.  See {@link
- * DefaultCreation} as one arbitrary example.</p>
+ * <p>Most {@link Creation} implementations will, and should, also be {@link AutoCloseableRegistry} implementations.
+ * See {@link DefaultCreation} as one arbitrary example.</p>
  *
  * @author <a href="https://about.me/lairdnelson" target="_parent">Laird Nelson</a>
  */
 public interface Creation<I> extends AutoCloseable, Cloneable {
 
   /**
-   * Clones this {@link Creation} and arranges to have the resulting clone registered with its immediate ancestor such
-   * that {@linkplain #close() closing} the ancestor will also {@linkplain #close() close} the clone.
+   * Clones this {@link Creation} and, critically, if this {@link Creation} implementation implements {@link
+   * AutoCloseableRegistry}, arranges to have the resulting clone {@linkplain
+   * AutoCloseableRegistry#register(AutoCloseable) registered with} its immediate ancestor (this {@link Creation}) such
+   * that {@linkplain #close() closing} the ancestor (this {@link Creation}) will also {@linkplain #close() close} the
+   * clone.
    *
    * <p>If an implementation of this method does not adhere to these requirements, undefined behavior, and possibly
    * memory leaks, will occur.</p>
-   *
-   * <p>Most implementations will be, simply:</p>
-   *
-   * {@snippet :
-   * try {
-   *     return (Creation<I>)super.clone();
-   * } catch (final CloneNotSupportedException e) {
-   *     throw new AssertionError(e.getMessage(), e);
-   * }
-   * }
    *
    * @return a clone of this {@link Creation}; never {@code null}
    *
@@ -46,12 +39,16 @@ public interface Creation<I> extends AutoCloseable, Cloneable {
    *
    * @see AutoCloseableRegistry
    *
+   * @see AutoCloseableRegistry#register(AutoCloseable)
+   *
    * @threadsafety Implementations of this method must be safe for concurrent use by multiple threads.
    */
   public Creation<I> clone();
 
   /**
-   * Closes this {@link Creation}, and any clones that were registered with it.
+   * Closes this {@link Creation}, and, if this {@link Creation} implementation implements {@link
+   * AutoCloseableRegistry}, any clones that were {@linkplain AutoCloseableRegistry#register(AutoCloseable) registered
+   * with it}.
    *
    * <p>{@link Factory} implementations (and other user-authored code) normally should not invoke this method, and
    * indeed doing so may result in undefined behavior and/or an {@link IllegalStateException} being thrown.</p>

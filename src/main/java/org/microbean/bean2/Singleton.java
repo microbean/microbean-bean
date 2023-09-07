@@ -13,8 +13,9 @@
  */
 package org.microbean.bean2;
 
-import java.lang.constant.Constable;
 import java.lang.constant.ClassDesc;
+import java.lang.constant.Constable;
+import java.lang.constant.ConstantDesc;
 import java.lang.constant.DynamicConstantDesc;
 import java.lang.constant.MethodHandleDesc;
 
@@ -25,18 +26,27 @@ import org.microbean.constant.Constables;
 
 import static java.lang.constant.ConstantDescs.BSM_INVOKE;
 import static java.lang.constant.ConstantDescs.CD_Object;
+import static java.lang.constant.ConstantDescs.CD_boolean;
+import static java.lang.constant.ConstantDescs.FALSE;
+import static java.lang.constant.ConstantDescs.NULL;
+import static java.lang.constant.ConstantDescs.TRUE;
 
 public final class Singleton<I> implements Factory<I> {
 
   private static final ClassDesc CD_Singleton = ClassDesc.of(Singleton.class.getName());
-  
+
   private volatile I singleton;
 
   private final I product;
-  
-  public Singleton(final I i) {
+
+  public Singleton(final I product) {
+    this(product, false);
+  }
+
+  public Singleton(final I product, final boolean preCreate) {
     super();
-    this.product = Objects.requireNonNull(i, "i");
+    this.product = Objects.requireNonNull(product, "product");
+    this.singleton = preCreate ? product : null;
   }
 
   @Override
@@ -59,11 +69,13 @@ public final class Singleton<I> implements Factory<I> {
 
   @Override // Constable
   public final Optional<DynamicConstantDesc<Singleton<I>>> describeConstable() {
-    return Constables.describeConstable(this.singleton)
-      .map(singletonDesc -> DynamicConstantDesc.of(BSM_INVOKE,
-                                                   MethodHandleDesc.ofConstructor(CD_Singleton,
-                                                                                  CD_Object),
-                                                   singletonDesc));
+    return Constables.describeConstable(this.product)
+      .map(productDesc -> DynamicConstantDesc.of(BSM_INVOKE,
+                                                 MethodHandleDesc.ofConstructor(CD_Singleton,
+                                                                                CD_Object,
+                                                                                CD_boolean),
+                                                 productDesc,
+                                                 this.singleton == null ? FALSE : TRUE));
   }
-  
+
 }

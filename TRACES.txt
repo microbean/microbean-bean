@@ -627,3 +627,283 @@ java.lang.NullPointerException: Cannot invoke "javax.lang.model.element.Paramete
   
 java.lang.AssertionError: null type element for module org.microbean.bean and org.microbean.bean.Alternate.Resolver
 	at org.microbean.lang@0.0.1-SNAPSHOT/org.microbean.lang.TypeAndElementSource.typeElement(TypeAndElementSource.java:140)
+
+
+2023-08-30 4:11 PM PDT
+
+This stack is getting closer to resolution. This is triggered by a (parallel) run of unit tests, and only extremely
+infrequently.
+
+When it happens, it is because some way, somehow, Lang#describeConstable(TypeElement) is causing a DynamicConstantDesc
+of NULL to be created for the module housing java.lang.String or java.lang.Object (!). (Obviously this should be a
+DynamicConstantDesc representing java.base.)
+
+This *could* end up being a bug in the javac compiler. Or it can be a problem with the root set of modules. See
+https://github.com/openjdk/jdk/blob/jdk-22%2B13/src/jdk.compiler/share/classes/com/sun/tools/javac/model/JavacElements.java#L453-L461.
+
+[ERROR] org.microbean.bean2.TestConstableSemantics.testReferenceTypeList  Time elapsed: 0.227 s  <<< ERROR!
+java.lang.BootstrapMethodError: java.lang.NullPointerException: moduleElement
+	at java.base/java.lang.constant.DynamicConstantDesc.resolveConstantDesc(DynamicConstantDesc.java:272)
+	at java.base/java.lang.constant.DynamicConstantDesc.resolveConstantDesc(DynamicConstantDesc.java:266)
+	at java.base/java.lang.constant.DynamicConstantDesc.resolveConstantDesc(DynamicConstantDesc.java:266)
+	at java.base/java.lang.constant.DynamicConstantDesc.resolveConstantDesc(DynamicConstantDesc.java:266)
+	at java.base/java.lang.constant.DynamicConstantDesc.resolveConstantDesc(DynamicConstantDesc.java:266)
+	at org.microbean.bean@0.0.1-SNAPSHOT/org.microbean.bean2.TestConstableSemantics.testReferenceTypeList(TestConstableSemantics.java:65)
+	at java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(DirectMethodHandleAccessor.java:104)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:578)
+	at org.junit.platform.commons.util.ReflectionUtils.invokeMethod(ReflectionUtils.java:727)
+	at org.junit.jupiter.engine.execution.MethodInvocation.proceed(MethodInvocation.java:60)
+	at org.junit.jupiter.engine.execution.InvocationInterceptorChain$ValidatingInvocation.proceed(InvocationInterceptorChain.java:131)
+	at org.junit.jupiter.engine.extension.TimeoutExtension.intercept(TimeoutExtension.java:156)
+	at org.junit.jupiter.engine.extension.TimeoutExtension.interceptTestableMethod(TimeoutExtension.java:147)
+	at org.junit.jupiter.engine.extension.TimeoutExtension.interceptTestMethod(TimeoutExtension.java:86)
+	at org.junit.jupiter.engine.execution.InterceptingExecutableInvoker$ReflectiveInterceptorCall.lambda$ofVoidMethod$0(InterceptingExecutableInvoker.java:103)
+	at org.junit.jupiter.engine.execution.InterceptingExecutableInvoker.lambda$invoke$0(InterceptingExecutableInvoker.java:93)
+	at org.junit.jupiter.engine.execution.InvocationInterceptorChain$InterceptedInvocation.proceed(InvocationInterceptorChain.java:106)
+	at org.junit.jupiter.engine.execution.InvocationInterceptorChain.proceed(InvocationInterceptorChain.java:64)
+	at org.junit.jupiter.engine.execution.InvocationInterceptorChain.chainAndInvoke(InvocationInterceptorChain.java:45)
+	at org.junit.jupiter.engine.execution.InvocationInterceptorChain.invoke(InvocationInterceptorChain.java:37)
+	at org.junit.jupiter.engine.execution.InterceptingExecutableInvoker.invoke(InterceptingExecutableInvoker.java:92)
+	at org.junit.jupiter.engine.execution.InterceptingExecutableInvoker.invoke(InterceptingExecutableInvoker.java:86)
+	at org.junit.jupiter.engine.descriptor.TestMethodTestDescriptor.lambda$invokeTestMethod$7(TestMethodTestDescriptor.java:217)
+	at org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:73)
+	at org.junit.jupiter.engine.descriptor.TestMethodTestDescriptor.invokeTestMethod(TestMethodTestDescriptor.java:213)
+	at org.junit.jupiter.engine.descriptor.TestMethodTestDescriptor.execute(TestMethodTestDescriptor.java:138)
+	at org.junit.jupiter.engine.descriptor.TestMethodTestDescriptor.execute(TestMethodTestDescriptor.java:68)
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$6(NodeTestTask.java:151)
+	at org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:73)
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$8(NodeTestTask.java:141)
+	at org.junit.platform.engine.support.hierarchical.Node.around(Node.java:137)
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$9(NodeTestTask.java:139)
+	at org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:73)
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.executeRecursively(NodeTestTask.java:138)
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.execute(NodeTestTask.java:95)
+	at org.junit.platform.engine.support.hierarchical.ForkJoinPoolHierarchicalTestExecutorService$ExclusiveTask.compute(ForkJoinPoolHierarchicalTestExecutorService.java:202)
+	at java.base/java.util.concurrent.RecursiveAction.exec(RecursiveAction.java:194)
+	at java.base/java.util.concurrent.ForkJoinTask.doExec(ForkJoinTask.java:387)
+	at java.base/java.util.concurrent.ForkJoinPool$WorkQueue.tryRemoveAndExec(ForkJoinPool.java:1351)
+	at java.base/java.util.concurrent.ForkJoinTask.awaitDone(ForkJoinTask.java:422)
+	at java.base/java.util.concurrent.ForkJoinTask.join(ForkJoinTask.java:651)
+	at org.junit.platform.engine.support.hierarchical.ForkJoinPoolHierarchicalTestExecutorService.joinConcurrentTasksInReverseOrderToEnableWorkStealing(ForkJoinPoolHierarchicalTestExecutorService.java:179)
+	at org.junit.platform.engine.support.hierarchical.ForkJoinPoolHierarchicalTestExecutorService.invokeAll(ForkJoinPoolHierarchicalTestExecutorService.java:153)
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$6(NodeTestTask.java:155)
+	at org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:73)
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$8(NodeTestTask.java:141)
+	at org.junit.platform.engine.support.hierarchical.Node.around(Node.java:137)
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$9(NodeTestTask.java:139)
+	at org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:73)
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.executeRecursively(NodeTestTask.java:138)
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.execute(NodeTestTask.java:95)
+	at org.junit.platform.engine.support.hierarchical.ForkJoinPoolHierarchicalTestExecutorService$ExclusiveTask.compute(ForkJoinPoolHierarchicalTestExecutorService.java:202)
+	at java.base/java.util.concurrent.RecursiveAction.exec(RecursiveAction.java:194)
+	at java.base/java.util.concurrent.ForkJoinTask.doExec(ForkJoinTask.java:387)
+	at java.base/java.util.concurrent.ForkJoinPool$WorkQueue.topLevelExec(ForkJoinPool.java:1312)
+	at java.base/java.util.concurrent.ForkJoinPool.scan(ForkJoinPool.java:1843)
+	at java.base/java.util.concurrent.ForkJoinPool.runWorker(ForkJoinPool.java:1808)
+	at java.base/java.util.concurrent.ForkJoinWorkerThread.run(ForkJoinWorkerThread.java:188)
+Caused by: java.lang.NullPointerException: moduleElement
+	at java.base/java.util.Objects.requireNonNull(Objects.java:259)
+	at org.microbean.lang@0.0.1-SNAPSHOT/org.microbean.lang.Lang.typeElement(Lang.java:1662)
+	at java.base/java.lang.invoke.MethodHandle.invokeWithArguments(MethodHandle.java:733)
+	at java.base/java.lang.invoke.ConstantBootstraps.invoke(ConstantBootstraps.java:262)
+	at java.base/java.lang.invoke.MethodHandle.invokeWithArguments(MethodHandle.java:733)
+	at java.base/java.lang.invoke.MethodHandleImpl$AsVarargsCollector.invokeWithArguments(MethodHandleImpl.java:538)
+	at java.base/java.lang.constant.DynamicConstantDesc.resolveConstantDesc(DynamicConstantDesc.java:268)
+  
+2023-08-31
+
+[ERROR] org.microbean.bean2.TestReferenceTypeList.testTypeVariables  Time elapsed: 0.037 s  <<< ERROR!
+java.lang.IllegalArgumentException: t: java.lang.invoke.TypeDescriptor.OfField<java.lang.constant.ClassDesc>; t.getKind(): ERROR
+	at org.microbean.lang@0.0.1-SNAPSHOT/org.microbean.lang.visitor.TypeClosureVisitor.defaultAction(TypeClosureVisitor.java:56)
+	at org.microbean.lang@0.0.1-SNAPSHOT/org.microbean.lang.visitor.TypeClosureVisitor.defaultAction(TypeClosureVisitor.java:30)
+	at java.compiler@20/javax.lang.model.util.SimpleTypeVisitor6.visitError(SimpleTypeVisitor6.java:190)
+	at org.microbean.lang@0.0.1-SNAPSHOT/org.microbean.lang.type.DelegatingTypeMirror.accept(DelegatingTypeMirror.java:101)
+	at java.compiler@20/javax.lang.model.util.AbstractTypeVisitor6.visit(AbstractTypeVisitor6.java:104)
+	at org.microbean.lang@0.0.1-SNAPSHOT/org.microbean.lang.visitor.TypeClosureVisitor.visitDeclaredOrIntersectionOrTypeVariable(TypeClosureVisitor.java:142)
+	at org.microbean.lang@0.0.1-SNAPSHOT/org.microbean.lang.visitor.TypeClosureVisitor.visitDeclared(TypeClosureVisitor.java:62)
+	at org.microbean.lang@0.0.1-SNAPSHOT/org.microbean.lang.visitor.TypeClosureVisitor.visitDeclared(TypeClosureVisitor.java:30)
+	at org.microbean.lang@0.0.1-SNAPSHOT/org.microbean.lang.type.DelegatingTypeMirror.accept(DelegatingTypeMirror.java:100)
+	at java.compiler@20/javax.lang.model.util.AbstractTypeVisitor6.visit(AbstractTypeVisitor6.java:104)
+	at org.microbean.lang@0.0.1-SNAPSHOT/org.microbean.lang.visitor.TypeClosureVisitor.visitDeclaredOrIntersectionOrTypeVariable(TypeClosureVisitor.java:142)
+	at org.microbean.lang@0.0.1-SNAPSHOT/org.microbean.lang.visitor.TypeClosureVisitor.visitTypeVariable(TypeClosureVisitor.java:74)
+	at org.microbean.lang@0.0.1-SNAPSHOT/org.microbean.lang.visitor.TypeClosureVisitor.visitTypeVariable(TypeClosureVisitor.java:30)
+	at org.microbean.lang@0.0.1-SNAPSHOT/org.microbean.lang.type.DelegatingTypeMirror.accept(DelegatingTypeMirror.java:107)
+	at java.compiler@20/javax.lang.model.util.AbstractTypeVisitor6.visit(AbstractTypeVisitor6.java:104)
+	at org.microbean.bean@0.0.1-SNAPSHOT/org.microbean.bean2.ReferenceTypeList.closure(ReferenceTypeList.java:299)
+	at org.microbean.bean@0.0.1-SNAPSHOT/org.microbean.bean2.ReferenceTypeList.closure(ReferenceTypeList.java:287)
+	at org.microbean.bean@0.0.1-SNAPSHOT/org.microbean.bean2.TestReferenceTypeList.testTypeVariables(TestReferenceTypeList.java:119)
+
+[ERROR] org.microbean.bean2.TestConstableSemantics.testId  Time elapsed: 0.029 s  <<< ERROR!
+java.lang.BootstrapMethodError: java.lang.NullPointerException: moduleElement; canonicalName: java.lang.Object
+	at java.base/java.lang.constant.DynamicConstantDesc.resolveConstantDesc(DynamicConstantDesc.java:272)
+	at java.base/java.lang.constant.DynamicConstantDesc.resolveConstantDesc(DynamicConstantDesc.java:266)
+	at java.base/java.lang.constant.DynamicConstantDesc.resolveConstantDesc(DynamicConstantDesc.java:266)
+	at java.base/java.lang.constant.DynamicConstantDesc.resolveConstantDesc(DynamicConstantDesc.java:266)
+	at java.base/java.lang.constant.DynamicConstantDesc.resolveConstantDesc(DynamicConstantDesc.java:266)
+	at java.base/java.lang.constant.DynamicConstantDesc.resolveConstantDesc(DynamicConstantDesc.java:266)
+	at org.microbean.bean@0.0.1-SNAPSHOT/org.microbean.bean2.TestConstableSemantics.testId(TestConstableSemantics.java:75)
+
+[ERROR] org.microbean.bean2.TestConstableSemantics.testReferenceTypeList  Time elapsed: 0.236 s  <<< ERROR!
+java.lang.BootstrapMethodError: java.lang.NullPointerException: e
+	at java.base/java.lang.constant.DynamicConstantDesc.resolveConstantDesc(DynamicConstantDesc.java:272)
+	at java.base/java.lang.constant.DynamicConstantDesc.resolveConstantDesc(DynamicConstantDesc.java:266)
+	at java.base/java.lang.constant.DynamicConstantDesc.resolveConstantDesc(DynamicConstantDesc.java:266)
+	at java.base/java.lang.constant.DynamicConstantDesc.resolveConstantDesc(DynamicConstantDesc.java:266)
+	at org.microbean.bean@0.0.1-SNAPSHOT/org.microbean.bean2.TestConstableSemantics.testReferenceTypeList(TestConstableSemantics.java:66)
+  
+[ERROR] org.microbean.bean2.TestDefaultBeanSet.testTypeElementResolution  Time elapsed: 0.003 s  <<< ERROR!
+java.lang.NullPointerException: moduleElement; canonicalName: org.microbean.bean2.DefaultBeanSet
+	at java.base/java.util.Objects.requireNonNull(Objects.java:259)
+	at org.microbean.lang@0.0.1-SNAPSHOT/org.microbean.lang.Lang.typeElement(Lang.java:1679)
+	at org.microbean.lang@0.0.1-SNAPSHOT/org.microbean.lang.Lang$ConstableTypeAndElementSource.typeElement(Lang.java:2153)
+	at org.microbean.lang@0.0.1-SNAPSHOT/org.microbean.lang.TypeAndElementSource.typeElement(TypeAndElementSource.java:130)
+	at org.microbean.lang@0.0.1-SNAPSHOT/org.microbean.lang.TypeAndElementSource.declaredType(TypeAndElementSource.java:61)
+	at org.microbean.bean@0.0.1-SNAPSHOT/org.microbean.bean2.DefaultBeanSet.bean(DefaultBeanSet.java:212)
+	at org.microbean.bean@0.0.1-SNAPSHOT/org.microbean.bean2.DefaultBeanSet.<init>(DefaultBeanSet.java:177)
+	at org.microbean.bean@0.0.1-SNAPSHOT/org.microbean.bean2.DefaultBeanSet.<init>(DefaultBeanSet.java:137)
+	at org.microbean.bean@0.0.1-SNAPSHOT/org.microbean.bean2.DefaultBeanSet.<init>(DefaultBeanSet.java:109)
+	at org.microbean.bean@0.0.1-SNAPSHOT/org.microbean.bean2.TestDefaultBeanSet.setup(TestDefaultBeanSet.java:80)
+
+[ERROR] org.microbean.bean2.TestDefaultBeanSet.testConstableStuff  Time elapsed: 0.02 s  <<< ERROR!
+java.lang.BootstrapMethodError: java.lang.NullPointerException: moduleElement; canonicalName: java.lang.Object
+	at java.base/java.lang.constant.DynamicConstantDesc.resolveConstantDesc(DynamicConstantDesc.java:272)
+	at java.base/java.lang.constant.DynamicConstantDesc.resolveConstantDesc(DynamicConstantDesc.java:266)
+	at java.base/java.lang.constant.DynamicConstantDesc.resolveConstantDesc(DynamicConstantDesc.java:266)
+	at java.base/java.lang.constant.DynamicConstantDesc.resolveConstantDesc(DynamicConstantDesc.java:266)
+	at java.base/java.lang.constant.DynamicConstantDesc.resolveConstantDesc(DynamicConstantDesc.java:266)
+	at java.base/java.lang.constant.DynamicConstantDesc.resolveConstantDesc(DynamicConstantDesc.java:266)
+	at java.base/java.lang.constant.DynamicConstantDesc.resolveConstantDesc(DynamicConstantDesc.java:266)
+	at java.base/java.lang.constant.DynamicConstantDesc.resolveConstantDesc(DynamicConstantDesc.java:266)
+	at org.microbean.bean@0.0.1-SNAPSHOT/org.microbean.bean2.TestDefaultBeanSet$1ConstantDefaultBeanSet.<init>(TestDefaultBeanSet.java:112)
+	at org.microbean.bean@0.0.1-SNAPSHOT/org.microbean.bean2.TestDefaultBeanSet.testConstableStuff(TestDefaultBeanSet.java:115)
+
+[ERROR] org.microbean.bean2.TestConstableSemantics.testReferenceTypeList  Time elapsed: 0.227 s  <<< ERROR!
+java.lang.BootstrapMethodError: java.lang.NullPointerException: moduleElement; canonicalName: java.lang.String
+	at java.base/java.lang.constant.DynamicConstantDesc.resolveConstantDesc(DynamicConstantDesc.java:272)
+	at java.base/java.lang.constant.DynamicConstantDesc.resolveConstantDesc(DynamicConstantDesc.java:266)
+	at java.base/java.lang.constant.DynamicConstantDesc.resolveConstantDesc(DynamicConstantDesc.java:266)
+	at java.base/java.lang.constant.DynamicConstantDesc.resolveConstantDesc(DynamicConstantDesc.java:266)
+	at java.base/java.lang.constant.DynamicConstantDesc.resolveConstantDesc(DynamicConstantDesc.java:266)
+	at org.microbean.bean@0.0.1-SNAPSHOT/org.microbean.bean2.TestConstableSemantics.testReferenceTypeList(TestConstableSemantics.java:66)
+
+[ERROR] org.microbean.bean2.TestDefaultBeanSet.testConstableStuff  Time elapsed: 0.026 s  <<< ERROR!
+java.lang.NullPointerException: moduleElement; canonicalName: org.microbean.bean2.DefaultBeanSet
+	at org.microbean.lang@0.0.1-SNAPSHOT/org.microbean.lang.Lang.typeElement(Lang.java:1680)
+	at org.microbean.lang@0.0.1-SNAPSHOT/org.microbean.lang.Lang$ConstableTypeAndElementSource.typeElement(Lang.java:2025)
+	at org.microbean.lang@0.0.1-SNAPSHOT/org.microbean.lang.TypeAndElementSource.typeElement(TypeAndElementSource.java:130)
+	at org.microbean.lang@0.0.1-SNAPSHOT/org.microbean.lang.TypeAndElementSource.declaredType(TypeAndElementSource.java:61)
+	at org.microbean.bean@0.0.1-SNAPSHOT/org.microbean.bean2.DefaultBeanSet.bean(DefaultBeanSet.java:212)
+	at org.microbean.bean@0.0.1-SNAPSHOT/org.microbean.bean2.DefaultBeanSet.<init>(DefaultBeanSet.java:177)
+	at org.microbean.bean@0.0.1-SNAPSHOT/org.microbean.bean2.DefaultBeanSet.<init>(DefaultBeanSet.java:137)
+	at org.microbean.bean@0.0.1-SNAPSHOT/org.microbean.bean2.DefaultBeanSet.<init>(DefaultBeanSet.java:109)
+	at org.microbean.bean@0.0.1-SNAPSHOT/org.microbean.bean2.TestDefaultBeanSet$1ConstantDefaultBeanSet.<init>(TestDefaultBeanSet.java:112)
+	at org.microbean.bean@0.0.1-SNAPSHOT/org.microbean.bean2.TestDefaultBeanSet.testConstableStuff(TestDefaultBeanSet.java:115)
+  
+[ERROR] org.microbean.bean2.TestReferenceTypeList.testTypeVariables  Time elapsed: 0.002 s  <<< FAILURE!
+java.lang.AssertionError: null moduleElement for org.microbean.bean
+	at org.microbean.lang@0.0.1-SNAPSHOT/org.microbean.lang.Lang.moduleElement(Lang.java:1266)
+	at org.microbean.lang@0.0.1-SNAPSHOT/org.microbean.lang.Lang.typeElement(Lang.java:1651)
+	at org.microbean.lang@0.0.1-SNAPSHOT/org.microbean.lang.Lang.executableElement(Lang.java:1491)
+	at org.microbean.lang@0.0.1-SNAPSHOT/org.microbean.lang.Lang.executableElement(Lang.java:1479)
+	at org.microbean.lang@0.0.1-SNAPSHOT/org.microbean.lang.Lang.parameterizable(Lang.java:1733)
+	at org.microbean.lang@0.0.1-SNAPSHOT/org.microbean.lang.Lang.typeParameterElement(Lang.java:1750)
+	at org.microbean.lang@0.0.1-SNAPSHOT/org.microbean.lang.Lang.typeVariable(Lang.java:1764)
+	at org.microbean.bean@0.0.1-SNAPSHOT/org.microbean.bean2.TestReferenceTypeList.testTypeVariables(TestReferenceTypeList.java:114)
+
+This one's wild. If you trace it, you get to JavacElements#doGetElement(ModuleElement, String, CharSequence,
+Class). None of the arguments is null:
+
+[ERROR] org.microbean.bean2.TestDefaultBeanSet.testBeans  Time elapsed: 0.03 s  <<< FAILURE!
+java.lang.AssertionError: null type element for module org.microbean.bean and org.microbean.bean2.DefaultBeanSet
+	at org.microbean.lang@0.0.1-SNAPSHOT/org.microbean.lang.TypeAndElementSource.typeElement(TypeAndElementSource.java:131)
+	at org.microbean.lang@0.0.1-SNAPSHOT/org.microbean.lang.TypeAndElementSource.declaredType(TypeAndElementSource.java:61)
+	at org.microbean.bean@0.0.1-SNAPSHOT/org.microbean.bean2.DefaultBeanSet.bean(DefaultBeanSet.java:212)
+	at org.microbean.bean@0.0.1-SNAPSHOT/org.microbean.bean2.DefaultBeanSet.<init>(DefaultBeanSet.java:177)
+	at org.microbean.bean@0.0.1-SNAPSHOT/org.microbean.bean2.DefaultBeanSet.<init>(DefaultBeanSet.java:137)
+	at org.microbean.bean@0.0.1-SNAPSHOT/org.microbean.bean2.DefaultBeanSet.<init>(DefaultBeanSet.java:109)
+	at org.microbean.bean@0.0.1-SNAPSHOT/org.microbean.bean2.TestDefaultBeanSet.setup(TestDefaultBeanSet.java:80)
+
+
+This is also very strange; note "k8va". I wonder if the name table has a bug in it.
+
+Aug 31, 2023 5:44:27 PM org.microbean.lang.Lang moduleElement
+FINE: null ModuleElement for module name k8va.base
+
+[ERROR] Tests run: 6, Failures: 0, Errors: 1, Skipped: 0, Time elapsed: 0.273 s <<< FAILURE! - in org.microbean.bean2.TestReferenceTypeList
+[ERROR] org.microbean.bean2.TestConstableSemantics.testId  Time elapsed: 0.252 s  <<< ERROR!
+java.lang.BootstrapMethodError: java.lang.NullPointerException: moduleElement; canonicalName: java.lang.Object
+	at java.base/java.lang.constant.DynamicConstantDesc.resolveConstantDesc(DynamicConstantDesc.java:272)
+	at java.base/java.lang.constant.DynamicConstantDesc.resolveConstantDesc(DynamicConstantDesc.java:266)
+	at java.base/java.lang.constant.DynamicConstantDesc.resolveConstantDesc(DynamicConstantDesc.java:266)
+	at java.base/java.lang.constant.DynamicConstantDesc.resolveConstantDesc(DynamicConstantDesc.java:266)
+	at java.base/java.lang.constant.DynamicConstantDesc.resolveConstantDesc(DynamicConstantDesc.java:266)
+	at java.base/java.lang.constant.DynamicConstantDesc.resolveConstantDesc(DynamicConstantDesc.java:266)
+	at org.microbean.bean@0.0.1-SNAPSHOT/org.microbean.bean2.TestConstableSemantics.testId(TestConstableSemantics.java:75)
+
+Aug 31, 2023 8:06:51 PM org.microbean.lang.Lang typeElement
+FINE: null TypeElement for ModuleElement org.microbean.bean and canonicalName org.microbean.bean2.DefaultBeanSet
+[ERROR] Tests run: 5, Failures: 3, Errors: 0, Skipped: 0, Time elapsed: 0.267 s <<< FAILURE! - in org.microbean.bean2.TestDefaultBeanSet
+[ERROR] org.microbean.bean2.TestDefaultBeanSet.testTypeElementResolution  Time elapsed: 0.009 s  <<< FAILURE!
+java.lang.AssertionError: null type element for module org.microbean.bean and org.microbean.bean2.DefaultBeanSet
+	at org.microbean.lang@0.0.1-SNAPSHOT/org.microbean.lang.TypeAndElementSource.typeElement(TypeAndElementSource.java:131)
+	at org.microbean.lang@0.0.1-SNAPSHOT/org.microbean.lang.TypeAndElementSource.declaredType(TypeAndElementSource.java:61)
+	at org.microbean.bean@0.0.1-SNAPSHOT/org.microbean.bean2.DefaultBeanSet.bean(DefaultBeanSet.java:212)
+	at org.microbean.bean@0.0.1-SNAPSHOT/org.microbean.bean2.DefaultBeanSet.<init>(DefaultBeanSet.java:177)
+	at org.microbean.bean@0.0.1-SNAPSHOT/org.microbean.bean2.DefaultBeanSet.<init>(DefaultBeanSet.java:137)
+	at org.microbean.bean@0.0.1-SNAPSHOT/org.microbean.bean2.DefaultBeanSet.<init>(DefaultBeanSet.java:109)
+	at org.microbean.bean@0.0.1-SNAPSHOT/org.microbean.bean2.TestDefaultBeanSet.setup(TestDefaultBeanSet.java:80)
+
+More wildness:
+
+FINE: null TypeElement for ModuleElement java.base and canonicalName jupiterorg.junit
+
+I'm beginning to think that Name.toString() when backed by the compiler is not thread-safe.
+
+[ERROR] org.microbean.bean2.TestConstableSemantics.testId  Time elapsed: 0.211 s  <<< ERROR!
+java.lang.BootstrapMethodError: java.lang.NullPointerException: e
+	at java.base/java.lang.constant.DynamicConstantDesc.resolveConstantDesc(DynamicConstantDesc.java:272)
+	at java.base/java.lang.constant.DynamicConstantDesc.resolveConstantDesc(DynamicConstantDesc.java:266)
+	at java.base/java.lang.constant.DynamicConstantDesc.resolveConstantDesc(DynamicConstantDesc.java:266)
+	at java.base/java.lang.constant.DynamicConstantDesc.resolveConstantDesc(DynamicConstantDesc.java:266)
+	at java.base/java.lang.constant.DynamicConstantDesc.resolveConstantDesc(DynamicConstantDesc.java:266)
+	at org.microbean.bean@0.0.1-SNAPSHOT/org.microbean.bean2.TestConstableSemantics.testId(TestConstableSemantics.java:75)
+
+With useUnsharedTable everything seems to work fine.
+
+When I restore the default behavior (shared name table):
+
+[ERROR] org.microbean.bean2.TestReferenceTypeList.testSorting  Time elapsed: 0.003 s  <<< ERROR!
+java.lang.NullPointerException: e
+	at java.base/java.util.Objects.requireNonNull(Objects.java:259)
+	at org.microbean.lang@0.0.1-SNAPSHOT/org.microbean.lang.Lang.unwrap(Lang.java:2155)
+	at org.microbean.lang@0.0.1-SNAPSHOT/org.microbean.lang.Lang.declaredType(Lang.java:1624)
+	at org.microbean.bean@0.0.1-SNAPSHOT/org.microbean.bean2.TestReferenceTypeList.testSorting(TestReferenceTypeList.java:66)
+
+[INFO] Tests run: 4, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.31 s - in org.microbean.bean2.TestConstableSemantics
+Sep 06, 2023 8:02:06 PM org.microbean.lang.Lang moduleElement
+FINE: null ModuleElement for module name MethodOrd <-- NOTE
+Sep 06, 2023 8:02:06 PM org.microbean.lang.Lang moduleElement
+FINE: class org.microbean.lang.Lang (in module org.microbean.lang) cannot access a member of class com.sun.tools.javac.model.JavacElements (in module jdk.compiler) with modifiers "private final"
+java.lang.IllegalAccessException: class org.microbean.lang.Lang (in module org.microbean.lang) cannot access a member of class com.sun.tools.javac.model.JavacElements (in module jdk.compiler) with modifiers "private final"
+	at java.base/jdk.internal.reflect.Reflection.newIllegalAccessException(Reflection.java:394)
+	at java.base/java.lang.reflect.AccessibleObject.checkAccess(AccessibleObject.java:709)
+	at java.base/java.lang.reflect.Field.checkAccess(Field.java:1154)
+	at java.base/java.lang.reflect.Field.get(Field.java:439)
+	at org.microbean.lang@0.0.1-SNAPSHOT/org.microbean.lang.Lang.moduleElement(Lang.java:1424)
+	at java.base/java.lang.invoke.MethodHandle.invokeWithArguments(MethodHandle.java:733)
+	at java.base/java.lang.invoke.ConstantBootstraps.invoke(ConstantBootstraps.java:262)
+	at java.base/java.lang.invoke.MethodHandle.invokeWithArguments(MethodHandle.java:733)
+	at java.base/java.lang.invoke.MethodHandleImpl$AsVarargsCollector.invokeWithArguments(MethodHandleImpl.java:538)
+	at java.base/java.lang.constant.DynamicConstantDesc.resolveConstantDesc(DynamicConstantDesc.java:268)
+	at java.base/java.lang.constant.DynamicConstantDesc.resolveConstantDesc(DynamicConstantDesc.java:266)
+	at java.base/java.lang.constant.DynamicConstantDesc.resolveConstantDesc(DynamicConstantDesc.java:266)
+	at java.base/java.lang.constant.DynamicConstantDesc.resolveConstantDesc(DynamicConstantDesc.java:266)
+	at java.base/java.lang.constant.DynamicConstantDesc.resolveConstantDesc(DynamicConstantDesc.java:266)
+	at java.base/java.lang.constant.DynamicConstantDesc.resolveConstantDesc(DynamicConstantDesc.java:266)
+	at java.base/java.lang.constant.DynamicConstantDesc.resolveConstantDesc(DynamicConstantDesc.java:266)
+	at java.base/java.lang.constant.DynamicConstantDesc.resolveConstantDesc(DynamicConstantDesc.java:266)
+	at java.base/java.lang.constant.DynamicConstantDesc.resolveConstantDesc(DynamicConstantDesc.java:266)
+	at org.microbean.bean@0.0.1-SNAPSHOT/org.microbean.bean2.TestDefaultBeanSet$1ConstantDefaultBeanSet.<init>(TestDefaultBeanSet.java:112)
+	at org.microbean.bean@0.0.1-SNAPSHOT/org.microbean.bean2.TestDefaultBeanSet.testConstableStuff(TestDefaultBeanSet.java:115)
+
+

@@ -13,6 +13,7 @@
  */
 package org.microbean.bean2;
 
+// Right before destruction happens, calls any "@PreDestroy"-style methods. Used while assembling a Factory.
 @FunctionalInterface
 public interface PreDestructor<I> {
 

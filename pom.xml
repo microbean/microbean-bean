@@ -36,35 +36,30 @@
         <groupId>org.microbean</groupId>
         <artifactId>microbean-interceptor</artifactId>
         <version>0.1.3</version>
-        <type>jar</type>
       </dependency>
 
       <dependency>
         <groupId>org.microbean</groupId>
         <artifactId>microbean-invoke</artifactId>
         <version>0.0.16</version>
-        <type>jar</type>
       </dependency>
 
       <dependency>
         <groupId>org.microbean</groupId>
         <artifactId>microbean-lang</artifactId>
         <version>0.0.1-SNAPSHOT</version>
-        <type>jar</type>
       </dependency>
 
       <dependency>
         <groupId>org.microbean</groupId>
         <artifactId>microbean-qualifier</artifactId>
         <version>0.2.3</version>
-        <type>jar</type>
       </dependency>
 
       <dependency>
         <groupId>org.microbean</groupId>
         <artifactId>microbean-scope</artifactId>
         <version>0.0.1-SNAPSHOT</version>
-        <type>jar</type>
       </dependency>
 
 
@@ -82,35 +77,30 @@
     <dependency>
       <groupId>org.microbean</groupId>
       <artifactId>microbean-invoke</artifactId>
-      <type>jar</type>
       <scope>compile</scope>
     </dependency>
 
     <dependency>
       <groupId>org.microbean</groupId>
       <artifactId>microbean-interceptor</artifactId>
-      <type>jar</type>
       <scope>compile</scope>
     </dependency>
 
     <dependency>
       <groupId>org.microbean</groupId>
       <artifactId>microbean-lang</artifactId>
-      <type>jar</type>
       <scope>compile</scope>
     </dependency>
 
     <dependency>
       <groupId>org.microbean</groupId>
       <artifactId>microbean-qualifier</artifactId>
-      <type>jar</type>
       <scope>compile</scope>
     </dependency>
 
     <dependency>
       <groupId>org.microbean</groupId>
       <artifactId>microbean-scope</artifactId>
-      <type>jar</type>
       <scope>compile</scope>
     </dependency>
 
@@ -121,14 +111,12 @@
     <dependency>
       <groupId>org.junit.jupiter</groupId>
       <artifactId>junit-jupiter-api</artifactId>
-      <type>jar</type>
       <scope>test</scope>
     </dependency>
 
     <dependency>
       <groupId>org.junit.jupiter</groupId>
       <artifactId>junit-jupiter-engine</artifactId>
-      <type>jar</type>
       <scope>test</scope>
     </dependency>
 
@@ -165,6 +153,9 @@
           <artifactId>maven-surefire-plugin</artifactId>
           <configuration>
             <argLine>
+              --add-exports jdk.compiler/com.sun.tools.javac.comp=org.microbean.lang
+              --add-exports jdk.compiler/com.sun.tools.javac.model=org.microbean.lang
+              --add-opens jdk.compiler/com.sun.tools.javac.model=org.microbean.lang
               --enable-preview
             </argLine>
             <!-- See https://junit.org/junit5/docs/snapshot/user-guide/#running-tests-build-maven-config-params -->
@@ -173,6 +164,9 @@
               <configurationParameters>
                 junit.jupiter.execution.parallel.enabled=true
                 junit.jupiter.execution.parallel.mode.default=concurrent
+                junit.jupiter.testclass.order.default=org.junit.jupiter.api.ClassOrderer$Random
+                junit.jupiter.testmethod.order.default=org.junit.jupiter.api.MethodOrderer$Random
+                junit.platform.stacktrace.pruning.enabled=true
               </configurationParameters>
             </properties>
             <systemPropertyVariables>

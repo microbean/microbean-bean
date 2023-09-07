@@ -11,7 +11,7 @@
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  See the License for the
  * specific language governing permissions and limitations under the License.
  */
-package org.microbean.bean;
+package org.microbean.bean2;
 
 import java.util.Collection;
 
@@ -23,7 +23,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import static org.microbean.bean.Qualifiers.defaultQualifier;
+import static org.microbean.bean2.Qualifiers.defaultQualifier;
 
 final class TestQualifiers {
 

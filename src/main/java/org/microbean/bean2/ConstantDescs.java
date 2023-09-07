@@ -33,8 +33,6 @@ public final class ConstantDescs {
 
   public static final ClassDesc CD_Selector = ClassDesc.of("org.microbean.bean2.Selector");
 
-  public static final ClassDesc CD_SingletonFactory = ClassDesc.of("org.microbean.bean2.SingletonFactory");
-
   private ConstantDescs() {
     super();
   }

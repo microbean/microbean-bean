@@ -11,10 +11,27 @@
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  See the License for the
  * specific language governing permissions and limitations under the License.
  */
+package org.microbean.bean2;
 
-/**
- * Provides classes and interfaces related to implementing beans.
- *
- * @author <a href="https://about.me/lairdnelson" target="_parent">Laird Nelson</a>
- */
-package org.microbean.bean;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
+
+import org.junit.jupiter.api.Test;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
+
+final class TestConcurrentHashMapComputation {
+
+  private TestConcurrentHashMapComputation() {
+    super();
+  }
+
+  @Test
+  final void test() {
+    final ConcurrentMap<String, String> m = new ConcurrentHashMap<>();
+    assertNull(m.computeIfAbsent("key", k -> null));
+    assertEquals(0, m.size());
+  }
+
+}

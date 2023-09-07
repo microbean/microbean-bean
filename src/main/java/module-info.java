@@ -19,7 +19,6 @@
  */
 module org.microbean.bean {
 
-  exports org.microbean.bean;
   exports org.microbean.bean2;
   
   requires transitive java.compiler;

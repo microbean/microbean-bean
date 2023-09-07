@@ -13,6 +13,8 @@
  */
 package org.microbean.bean2;
 
+// After construction and initialization have happened, applies any last-minute operations. This handles the badly-named
+// "@PostConstruct"-type events. Used while assembling a Factory.
 @FunctionalInterface
 public interface PostInitializer<I> {
 

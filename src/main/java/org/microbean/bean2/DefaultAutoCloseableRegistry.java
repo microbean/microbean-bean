@@ -19,6 +19,7 @@ import java.util.Set;
 
 public class DefaultAutoCloseableRegistry implements AutoCloseableRegistry {
 
+  // @GuardedBy("this")
   private Set<AutoCloseable> closeables;
 
   public DefaultAutoCloseableRegistry() {
@@ -34,23 +35,24 @@ public class DefaultAutoCloseableRegistry implements AutoCloseableRegistry {
       throw new AssertionError(e.getMessage(), e);
     }
     dacr.closeables = null;
-    this.register(dacr);
+    this.register(dacr); // critical
     return dacr;
   }
 
   @Override // AutoCloseableRegistry
   public final void close() {
-    RuntimeException re = null;
+    final Set<? extends AutoCloseable> closeables;
     synchronized (this) {
-      final Set<? extends AutoCloseable> closeables = this.closeables;
+      closeables = this.closeables;
       if (closeables == null) {
         this.closeables = Set.of(); // prevent registrations
         return;
       } else if (this.closed()) {
         return;
       }
-      this.closeables = Set.of(); // prevent recursion
+      this.closeables = Set.of(); // prevent recursion; causes closed() to return true
     }
+    RuntimeException re = null;
     for (final AutoCloseable c : closeables) {
       try {
         c.close();
@@ -75,7 +77,7 @@ public class DefaultAutoCloseableRegistry implements AutoCloseableRegistry {
       throw re;
     }
   }
-  
+
   @Override // AutoCloseable
   public synchronized final boolean closed() {
     return this.closeables == Set.<AutoCloseable>of();

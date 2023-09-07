@@ -13,6 +13,7 @@
  */
 package org.microbean.bean2;
 
+// Usually used while implementing a Factory as the bottom-most subassembly.
 @FunctionalInterface
 public interface Producer<I> {
 

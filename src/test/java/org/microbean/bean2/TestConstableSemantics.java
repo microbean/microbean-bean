@@ -11,7 +11,7 @@
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  See the License for the
  * specific language governing permissions and limitations under the License.
  */
-package org.microbean.bean;
+package org.microbean.bean2;
 
 import java.lang.constant.Constable;
 import java.lang.constant.DynamicConstantDesc;
@@ -37,13 +37,14 @@ import org.microbean.lang.Lang;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNotSame;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import static java.lang.invoke.MethodHandles.lookup;
 import static java.lang.invoke.MethodHandles.privateLookupIn;
 
-import static org.microbean.bean.Qualifiers.anyAndDefaultQualifiers;
+import static org.microbean.bean2.Qualifiers.anyAndDefaultQualifiers;
 
 import static org.microbean.scope.Scope.SINGLETON_ID;
 
@@ -76,9 +77,10 @@ final class TestConstableSemantics {
 
   @Test
   final void testFactory() throws ReflectiveOperationException {
-    final Factory<String> f = Factory.of("Hello");
+    final Factory<String> f = new Singleton<>("Hello");
+    assertNull(f.singleton());
     @SuppressWarnings("unchecked")
-    final Factory<String> f2 = (Factory<String>)Constables.describeConstable(f).orElseThrow().resolveConstantDesc(MethodHandles.lookup());
+      final Factory<String> f2 = (Factory<String>)Constables.describeConstable(f).orElseThrow().resolveConstantDesc(lookup());
     assertNotSame(f, f2);
     assertSame(f.singleton(), f2.singleton());
   }
