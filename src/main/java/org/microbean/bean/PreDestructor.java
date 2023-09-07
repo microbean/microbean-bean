@@ -11,20 +11,13 @@
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  See the License for the
  * specific language governing permissions and limitations under the License.
  */
+package org.microbean.bean;
 
-/**
- * Provides packages related to implementing beans.
- *
- * @author <a href="https://about.me/lairdnelson" target="_parent">Laird Nelson</a>
- */
-module org.microbean.bean {
+// Right before destruction happens, calls any "@PreDestroy"-style methods. Used while assembling a Factory.
+@FunctionalInterface
+public interface PreDestructor<I> {
 
-  exports org.microbean.bean;
-  
-  requires transitive java.compiler;
-  requires            org.microbean.constant;
-  requires transitive org.microbean.lang;
-  requires transitive org.microbean.qualifier;
-  requires transitive org.microbean.scope;
+  // MUST be idempotent
+  public I destroying(final I i, final References<?> r);
 
 }

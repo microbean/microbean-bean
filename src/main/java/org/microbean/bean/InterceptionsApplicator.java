@@ -11,20 +11,15 @@
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  See the License for the
  * specific language governing permissions and limitations under the License.
  */
+package org.microbean.bean;
 
-/**
- * Provides packages related to implementing beans.
- *
- * @author <a href="https://about.me/lairdnelson" target="_parent">Laird Nelson</a>
- */
-module org.microbean.bean {
+import java.util.function.BiFunction;
 
-  exports org.microbean.bean;
+// An applicator of business method interceptions. This is used during assembly of a Factory implementation and should
+// be used probably only when "around-invoke" interceptions are in effect.
+@FunctionalInterface
+public interface InterceptionsApplicator<I> {
+
+  public I apply(final I i, final Creation<I> c, final References<?> r);
   
-  requires transitive java.compiler;
-  requires            org.microbean.constant;
-  requires transitive org.microbean.lang;
-  requires transitive org.microbean.qualifier;
-  requires transitive org.microbean.scope;
-
 }
