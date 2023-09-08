@@ -27,14 +27,14 @@ import java.util.function.Consumer;
 import static java.lang.System.Logger.Level.DEBUG;
 
 /**
- * An {@link AutoCloseable} {@link WeakReference} that destroys referents after they have been {@linkplain #clear()
- * cleared} by the Java Virtual Machine during garbage collection.
+ * An {@link AutoCloseable} {@link WeakReference} that formally disposes of referents after they have been {@linkplain
+ * #clear() cleared} by the Java Virtual Machine during garbage collection.
  *
  * @author <a href="https://about.me/lairdnelson" target="_top">Laird Nelson</a>
  *
- * @see #DependentReference(Object, Consumer)
+ * @see #DisposableReference(Object, Consumer)
  */
-public final class DependentReference<R> extends WeakReference<R> implements AutoCloseable {
+public final class DisposableReference<R> extends WeakReference<R> implements AutoCloseable {
 
 
   /*
@@ -47,24 +47,24 @@ public final class DependentReference<R> extends WeakReference<R> implements Aut
    *
    * <p>The {@link Logger}'s name is equal to this class' {@linkplain Class#getName() name}.</p>
    */
-  private static final Logger LOGGER = System.getLogger(DependentReference.class.getName());
+  private static final Logger LOGGER = System.getLogger(DisposableReference.class.getName());
 
   /**
-   * A {@link VarHandle} providing access to the {@link #destroyd} field.
+   * A {@link VarHandle} providing access to the {@link #disposed} field.
    *
    * @nullability This field is never {@code null}.
    *
-   * @see #destroyed
+   * @see #disposed
    *
-   * @see #destroy()
+   * @see #dispose()
    *
-   * @see #destroyed()
+   * @see #disposed()
    */
-  private static final VarHandle DESTROYED;
+  private static final VarHandle DISPOSED;
 
   static {
     try {
-      DESTROYED = MethodHandles.lookup().findVarHandle(DependentReference.class, "destroyed", boolean.class);
+      DISPOSED = MethodHandles.lookup().findVarHandle(DisposableReference.class, "disposed", boolean.class);
     } catch (final NoSuchFieldException | IllegalAccessException e) {
       throw (Error)new ExceptionInInitializerError(e.getMessage()).initCause(e);
     }
@@ -82,27 +82,27 @@ public final class DependentReference<R> extends WeakReference<R> implements Aut
    *
    * @nullability This field may be {@code null}.
    *
-   * @see #DependentReference(Object, Consumer)
+   * @see #DisposableReference(Object, Consumer)
    */
   private final R referent;
 
   /**
-   * A {@link Consumer} used to destroy the {@linkplain #referent referent} at the appropriate time.
+   * A {@link Consumer} used to dispose of the {@linkplain #referent referent} at the appropriate time.
    *
    * @nullability This field may be {@code null}.
    */
-  private final Consumer<? super R> destructor;
+  private final Consumer<? super R> disposer;
 
   /**
-   * Whether or not the {@link #destroy()} method has been called successfully.
+   * Whether or not the {@link #dispose()} method has been called successfully.
    *
-   * @see #destroy()
+   * @see #dispose()
    *
-   * @see #destroyed()
+   * @see #disposed()
    *
-   * @see #DESTROYED
+   * @see #DISPOSED
    */
-  private volatile boolean destroyed;
+  private volatile boolean disposed;
 
 
   /*
@@ -111,19 +111,19 @@ public final class DependentReference<R> extends WeakReference<R> implements Aut
 
 
   /**
-   * Creates a new {@link DependentReference}.
+   * Creates a new {@link DisposableReference}.
    *
    * @param referent the referent; may be {@code null}
    *
-   * @param destructor a thread-safe {@link Consumer} whose {@link Consumer#accept(Object) accept(Object)} method, which
-   * must be idempotent, will be invoked from a separate thread to destroy the referent after it has been {@linkplain
+   * @param disposer a thread-safe {@link Consumer} whose {@link Consumer#accept(Object) accept(Object)} method, which
+   * must be idempotent, will be invoked from a separate thread to dispose of the referent after it has been {@linkplain
    * #clear() cleared} by the Java Virtual Machine during garbage collection; may be {@code null} in which case no
    * destruction will take place
    */
-  public DependentReference(final R referent, final Consumer<? super R> destructor) {
+  public DisposableReference(final R referent, final Consumer<? super R> disposer) {
     super(Objects.requireNonNull(referent, "referent"), ReferenceQueue.INSTANCE);
     this.referent = referent;
-    this.destructor = destructor == null ? DependentReference::noopDestroy : destructor;
+    this.disposer = disposer == null ? DisposableReference::noopDispose : disposer;
   }
 
 
@@ -155,8 +155,8 @@ public final class DependentReference<R> extends WeakReference<R> implements Aut
 
   /**
    * If there has been no prior successful invocation of this method, calls the {@link Consumer#accept(Object)
-   * accept(Object)} method on the {@link Consumer} representing the destructor {@linkplain #DependentReference(Object,
-   * Consumer) supplied at construction time}, thus notionally destroying the {@linkplain #DependentReference(Object,
+   * accept(Object)} method on the {@link Consumer} representing the disposer {@linkplain #DisposableReference(Object,
+   * Consumer) supplied at construction time}, thus notionally disposeing the {@linkplain #DisposableReference(Object,
    * Consumer) referent supplied at construction time}, and returns {@code true}.
    *
    * <p>Destruction does not imply {@linkplain #close() closing}, and closing does not imply destruction (though it
@@ -168,28 +168,28 @@ public final class DependentReference<R> extends WeakReference<R> implements Aut
    * <p>If the first invocation of this method from any thread succeeds, then it will return {@code true}, and all other
    * invocations of this method from any thread will return {@code false}, and will have no effect.</p>
    *
-   * <p>This method is often called from a thread dedicated to destroying {@linkplain #enqueue() enqueued} {@link
-   * DependentReference}s, so the {@link Consumer} {@linkplain #DependentReference(Object, Consumer) supplied at
+   * <p>This method is often called from a thread dedicated to disposeing {@linkplain #enqueue() enqueued} {@link
+   * DisposableReference}s, so the {@link Consumer} {@linkplain #DisposableReference(Object, Consumer) supplied at
    * construction time} must be thread-safe.</p>
    *
    * @return {@code true} if this invocation of this method caused destruction to happen successfully; {@code false} in
    * all other cases
    *
    * @exception RuntimeException if an invocation of the {@link Consumer#accept(Object) accept(Object)} method on the
-   * {@link Consumer} {@linkplain #DependentReference(Object, Consumer) supplied at construction time} fails
+   * {@link Consumer} {@linkplain #DisposableReference(Object, Consumer) supplied at construction time} fails
    *
    * @idempotency This method is idempotent.
    *
    * @threadsafety This method is safe for concurrent use by multiple threads.
    *
-   * @see #DependentReference(Object, Consumer)
+   * @see #DisposableReference(Object, Consumer)
    */
-  public final boolean destroy() {
-    if (DESTROYED.compareAndSet(this, false, true)) { // volatile write; assume destructor success
+  public final boolean dispose() {
+    if (DISPOSED.compareAndSet(this, false, true)) { // volatile write; assume disposer success
       try {
-        this.destructor.accept(this.referent);
+        this.disposer.accept(this.referent);
       } catch (RuntimeException | Error e) {
-        DESTROYED.setVolatile(false); // volatile write; oops; our optimism was misplaced
+        DISPOSED.setVolatile(false); // volatile write; oops; our optimism was misplaced
         throw e;
       }
       return true;
@@ -199,16 +199,16 @@ public final class DependentReference<R> extends WeakReference<R> implements Aut
   }
 
   /**
-   * Returns {@code true} if and only if there has been a prior successful invocation of {@link #destroy()} that
+   * Returns {@code true} if and only if there has been a prior successful invocation of {@link #dispose()} that
    * returned {@code true}.
    *
-   * @return {@code true} if and only if there has been a prior successful invocation of {@link #destroy()} that
+   * @return {@code true} if and only if there has been a prior successful invocation of {@link #dispose()} that
    * returned {@code true}
    *
-   * @see #destroy()
+   * @see #dispose()
    */
-  public final boolean destroyed() {
-    return this.destroyed; // volatile read
+  public final boolean disposed() {
+    return this.disposed; // volatile read
   }
 
 
@@ -217,9 +217,9 @@ public final class DependentReference<R> extends WeakReference<R> implements Aut
    */
 
 
-  private static final <R> void noopDestroy(final R r) {
+  private static final <R> void noopDispose(final R r) {
     if (LOGGER.isLoggable(DEBUG)) {
-      LOGGER.log(DEBUG, "DependentReference referent " + r + " has been cleared");
+      LOGGER.log(DEBUG, "DisposableReference referent " + r + " has been cleared");
     }
   }
 
@@ -240,7 +240,7 @@ public final class DependentReference<R> extends WeakReference<R> implements Aut
     private static final ReferenceQueue INSTANCE = new ReferenceQueue();
 
     static {
-      final Thread t = new Thread(ReferenceQueue.INSTANCE, "DependentReference destroyer");
+      final Thread t = new Thread(ReferenceQueue.INSTANCE, "DisposableReference disposer");
       t.setDaemon(true);
       t.setPriority(3); // a little less important than the default
       t.start();
@@ -266,7 +266,7 @@ public final class DependentReference<R> extends WeakReference<R> implements Aut
     public final void run() {
       while (!Thread.currentThread().isInterrupted()) {
         try {
-          ((DependentReference<?>)this.remove()).destroy();
+          ((DisposableReference<?>)this.remove()).dispose();
         } catch (final InterruptedException e) {
           Thread.currentThread().interrupt();
         }

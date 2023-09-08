@@ -39,7 +39,7 @@ public interface References<R> extends AutoCloseable, Iterable<R>, Supplier<R> {
   }
 
   public default Cardinality cardinality() {
-    final Iterator<R> i = this.iterator();
+    final Iterator<?> i = this.iterator();
     if (i.hasNext()) {
       i.next();
       return i.hasNext() ? Cardinality.MANY : Cardinality.ONE;
