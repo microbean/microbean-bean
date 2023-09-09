@@ -31,7 +31,7 @@ public class AmbiguousResolutionException extends ResolutionException {
     this(null, alternates, message, null);
   }
 
-  public AmbiguousResolutionException(final Selector selector,
+  public AmbiguousResolutionException(final BeanSelector selector,
                                       final Collection<? extends Alternate> alternates,
                                       final String message) {
     this(selector, alternates, message, null);
@@ -42,7 +42,7 @@ public class AmbiguousResolutionException extends ResolutionException {
     this(null, alternates, null, cause);
   }
 
-  public AmbiguousResolutionException(final Selector selector,
+  public AmbiguousResolutionException(final BeanSelector selector,
                                       final Collection<? extends Alternate> alternates,
                                       final Throwable cause) {
     this(selector, alternates, null, cause);
@@ -54,7 +54,7 @@ public class AmbiguousResolutionException extends ResolutionException {
     this(null, alternates, message, cause);
   }
 
-  public AmbiguousResolutionException(final Selector selector,
+  public AmbiguousResolutionException(final BeanSelector selector,
                                       final Collection<? extends Alternate> alternates,
                                       final String message,
                                       final Throwable cause) {

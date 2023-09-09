@@ -60,7 +60,7 @@ public final class Singleton<I> implements Factory<I> {
   }
 
   @Override
-  public final I create(final Creation<I> c, final References<?> references) {
+  public final I create(final Creation<I> c, final ReferenceSelector references) {
     if (this.singleton == null) {
       this.singleton = this.product;
     }

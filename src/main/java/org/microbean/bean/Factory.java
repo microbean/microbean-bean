@@ -25,7 +25,7 @@ import static java.lang.constant.ConstantDescs.BSM_INVOKE;
 @FunctionalInterface
 public interface Factory<I> extends Constable {
 
-  public I create(final Creation<I> c, final References<?> references);
+  public I create(final Creation<I> c, final ReferenceSelector referenceSelector);
 
   public default I singleton() {
     return null;
@@ -38,7 +38,7 @@ public interface Factory<I> extends Constable {
   // MUST be idempotent
   // If i is an AutoCloseable, MUST be idempotent
   // autoCloseableRegistry's close() MUST be idempotent
-  public default void destroy(final I i, final AutoCloseable autoCloseableRegistry, final References<?> references) {
+  public default void destroy(final I i, final AutoCloseable autoCloseableRegistry, final ReferenceSelector referenceSelector) {
     if (i == null) {
       return;
     }

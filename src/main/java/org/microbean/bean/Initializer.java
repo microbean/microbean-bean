@@ -26,13 +26,13 @@ public abstract class Initializer<I> {
     this.postInitializer = postInitializer == null ? Initializer::noopPostInitialize : postInitializer;
   }
 
-  public final I initialize(final I i, final Creation<I> c, final References<?> r) {
+  public final I initialize(final I i, final Creation<I> c, final ReferenceSelector r) {
     return this.postInitializer.postInitialize(this.performInitialization(i, c, r), c, r);
   }
 
-  protected abstract I performInitialization(final I i, final Creation<I> c,  final References<?> r);
+  protected abstract I performInitialization(final I i, final Creation<I> c,  final ReferenceSelector r);
 
-  private static final <I> I noopPostInitialize(final I i, final Creation<I> c, final References<?> r) {
+  private static final <I> I noopPostInitialize(final I i, final Creation<I> c, final ReferenceSelector r) {
     return i;
   }
 

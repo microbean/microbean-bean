@@ -31,7 +31,7 @@ public final class ConstantDescs {
 
   public static final ClassDesc CD_Resolver = ClassDesc.of("org.microbean.bean.Alternate$Resolver");
 
-  public static final ClassDesc CD_Selector = ClassDesc.of("org.microbean.bean.Selector");
+  public static final ClassDesc CD_BeanSelector = ClassDesc.of("org.microbean.bean.BeanSelector");
 
   private ConstantDescs() {
     super();

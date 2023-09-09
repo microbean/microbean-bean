@@ -18,6 +18,6 @@ package org.microbean.bean;
 public interface PreDestructor<I> {
 
   // MUST be idempotent
-  public I destroying(final I i, final References<?> r);
+  public I destroying(final I i, final ReferenceSelector r);
 
 }

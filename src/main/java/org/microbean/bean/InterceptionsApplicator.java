@@ -20,6 +20,6 @@ import java.util.function.BiFunction;
 @FunctionalInterface
 public interface InterceptionsApplicator<I> {
 
-  public I apply(final I i, final Creation<I> c, final References<?> r);
+  public I apply(final I i, final Creation<I> c, final ReferenceSelector r);
   
 }

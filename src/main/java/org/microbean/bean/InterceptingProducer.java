@@ -28,11 +28,11 @@ public abstract class InterceptingProducer<I> implements Producer<I> {
   }
 
   @Override // Producer<I>
-  public final I produce(final Creation<I> c, final References<?> r) {
+  public final I produce(final Creation<I> c, final ReferenceSelector r) {
     return this.produce(this.parameters(c, r));
   }
 
-  protected Object[] parameters(final Creation<I> c, final References<?> r) {
+  protected Object[] parameters(final Creation<I> c, final ReferenceSelector r) {
     return EMPTY_OBJECT_ARRAY;
   }
   

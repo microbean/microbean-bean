@@ -13,10 +13,25 @@
  */
 package org.microbean.bean;
 
-@Deprecated // do we need it?
-@FunctionalInterface
-public interface ReferencesProvider {
+public interface ReferenceSelector extends AutoCloseable {
 
-  public References<Object> references();
-  
+  public BeanSet beanSet();
+
+  public <I> Creation<I> creation();
+
+  public <R> R reference(final BeanSelector selector, final Bean<R> bean, final Creation<R> creation);
+
+  @Override // AutoCloseable
+  public default void close() {
+
+  }
+
+  public default <R> R reference(final BeanSelector selector, final Creation<R> creation) {
+    final Bean<?> b = this.beanSet().bean(selector);
+    if (b == null) {
+      throw new UnsatisfiedResolutionException(selector);
+    }
+    return this.reference(selector, b.cast(), creation);
+  }
+
 }

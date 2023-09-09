@@ -95,9 +95,9 @@ final class TestDefaultBeanSet {
 
     // 3 == Bean<String>, Bean<DefaultBeanSet>, Bean<Alternate.Resolver>
     assertEquals(3, set.size());
-    hello = beans.bean(new Selector(Lang.declaredType(String.class), List.of(defaultQualifier()))).cast();
+    hello = beans.bean(new BeanSelector(Lang.declaredType(String.class), List.of(defaultQualifier()))).cast();
     assertSame("Hello", hello.factory().create(null, null));
-    hello = beans.bean(new Selector(Lang.declaredType(Object.class), List.of(defaultQualifier()))).cast();
+    hello = beans.bean(new BeanSelector(Lang.declaredType(Object.class), List.of(defaultQualifier()))).cast();
     assertSame("Hello", hello.factory().create(null, null));
   }
 
@@ -117,9 +117,9 @@ final class TestDefaultBeanSet {
 
     // 3 == Bean<String>, Bean<DefaultBeanSet>, Bean<Alternate.Resolver>
     assertEquals(1, set.size());
-    hello = beans.bean(new Selector(Lang.declaredType(String.class), List.of(defaultQualifier()))).cast();
+    hello = beans.bean(new BeanSelector(Lang.declaredType(String.class), List.of(defaultQualifier()))).cast();
     assertSame("Hello", hello.factory().create(null, null));
-    hello = beans.bean(new Selector(Lang.declaredType(Object.class), List.of(defaultQualifier()))).cast();
+    hello = beans.bean(new BeanSelector(Lang.declaredType(Object.class), List.of(defaultQualifier()))).cast();
     assertSame("Hello", hello.factory().create(null, null));
   }
 

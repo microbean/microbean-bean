@@ -17,6 +17,6 @@ package org.microbean.bean;
 @FunctionalInterface
 public interface Producer<I> {
 
-  public I produce(final Creation<I> c, final References<?> r);
+  public I produce(final Creation<I> c, final ReferenceSelector r);
   
 }

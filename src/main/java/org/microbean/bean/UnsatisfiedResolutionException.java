@@ -21,7 +21,7 @@ public class UnsatisfiedResolutionException extends ResolutionException {
     super();
   }
 
-  public UnsatisfiedResolutionException(final Selector selector) {
+  public UnsatisfiedResolutionException(final BeanSelector selector) {
     super(selector);
   }
 
@@ -29,7 +29,7 @@ public class UnsatisfiedResolutionException extends ResolutionException {
     super(message);
   }
 
-  public UnsatisfiedResolutionException(final Selector selector,
+  public UnsatisfiedResolutionException(final BeanSelector selector,
                                         final String message) {
     super(selector, message);
   }
@@ -38,7 +38,7 @@ public class UnsatisfiedResolutionException extends ResolutionException {
     super(cause);
   }
 
-  public UnsatisfiedResolutionException(final Selector selector,
+  public UnsatisfiedResolutionException(final BeanSelector selector,
                                         final Throwable cause) {
     super(selector, cause);
   }
@@ -47,7 +47,7 @@ public class UnsatisfiedResolutionException extends ResolutionException {
     super(message, cause);
   }
 
-  public UnsatisfiedResolutionException(final Selector selector,
+  public UnsatisfiedResolutionException(final BeanSelector selector,
                                         final String message,
                                         final Throwable cause) {
     super(selector, message, cause);

@@ -54,7 +54,7 @@ public abstract class AbstractFactory<I> implements Factory<I> {
   }
 
   @Override // Factory<I>
-  public I create(final Creation<I> c, final References<?> r) {
+  public I create(final Creation<I> c, final ReferenceSelector r) {
     // Produce the product, initialize the product, apply business method interceptions to the product, return the
     // product
     return this.interceptionsApplicator.apply(this.initializer.initialize(this.producer.produce(c, r), c, r), c, r);
@@ -68,11 +68,11 @@ public abstract class AbstractFactory<I> implements Factory<I> {
   // MUST be idempotent
   @Override // Factory<I>
   @SuppressWarnings("try")
-  public void destroy(final I i, final AutoCloseable destructionRegistry, final References<?> references) {
+  public void destroy(final I i, final AutoCloseable destructionRegistry, final ReferenceSelector references) {
     this.destructor.destroy(i, destructionRegistry, references);
   }
 
-  private static final <I> I noopIntercept(final I i, final Creation<I> c, final References<?> r) {
+  private static final <I> I noopIntercept(final I i, final Creation<I> c, final ReferenceSelector r) {
     return i;
   }
 
@@ -85,7 +85,7 @@ public abstract class AbstractFactory<I> implements Factory<I> {
     }
 
     @Override
-    protected final I performInitialization(final I i, final Creation<I> c, final References<?> r) {
+    protected final I performInitialization(final I i, final Creation<I> c, final ReferenceSelector r) {
       return i;
     }
 

@@ -29,7 +29,7 @@ public class Destructor<I> {
     this.preDestructor = preDestructor == null ? Destructor::noopDestroying : preDestructor;
   }
 
-  public synchronized final void destroy(final I i, final AutoCloseable destructionRegistry, final References<?> r) {
+  public synchronized final void destroy(final I i, final AutoCloseable destructionRegistry, final ReferenceSelector r) {
     if (this.destroyed) {
       return;
     }
@@ -70,7 +70,7 @@ public class Destructor<I> {
     }
   }
 
-  private static final <I> I noopDestroying(final I i, final References<?> r) {
+  private static final <I> I noopDestroying(final I i, final ReferenceSelector r) {
     return i;
   }
 

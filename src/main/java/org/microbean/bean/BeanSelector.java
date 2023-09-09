@@ -49,7 +49,7 @@ import static java.lang.constant.ConstantDescs.FALSE;
 import static java.lang.constant.ConstantDescs.TRUE;
 import static java.lang.constant.DirectMethodHandleDesc.Kind.STATIC;
 
-import static org.microbean.bean.ConstantDescs.CD_Selector;
+import static org.microbean.bean.ConstantDescs.CD_BeanSelector;
 
 import static org.microbean.bean.InterceptorBindings.Kind.ANY_INTERCEPTOR_BINDING;
 import static org.microbean.bean.InterceptorBindings.Kind.INTERCEPTOR_BINDING;
@@ -58,7 +58,7 @@ import static org.microbean.bean.Qualifiers.Kind.ANY_QUALIFIER;
 import static org.microbean.bean.Qualifiers.Kind.DEFAULT_QUALIFIER;
 import static org.microbean.bean.Qualifiers.Kind.QUALIFIER;
 
-public final class Selector implements Constable {
+public final class BeanSelector implements Constable {
 
 
   /*
@@ -93,35 +93,35 @@ public final class Selector implements Constable {
    */
 
 
-  public Selector(final Type type) {
+  public BeanSelector(final Type type) {
     this(Lang.typeAndElementSource().type(type), defaultQualifiers(), true);
   }
 
-  public Selector(final Type type, final List<? extends NamedAttributeMap<?>> attributes) {
+  public BeanSelector(final Type type, final List<? extends NamedAttributeMap<?>> attributes) {
     this(Lang.typeAndElementSource().type(type), attributes, true);
   }
 
-  public Selector(final TypeMirror type) {
+  public BeanSelector(final TypeMirror type) {
     this(type, defaultQualifiers(), true);
   }
 
-  public Selector(final TypeMirror type, final List<? extends NamedAttributeMap<?>> attributes) {
+  public BeanSelector(final TypeMirror type, final List<? extends NamedAttributeMap<?>> attributes) {
     this(type, attributes, true);
   }
 
-  public Selector(final TypeMirror type, final List<? extends NamedAttributeMap<?>> attributes, final boolean box) {
+  public BeanSelector(final TypeMirror type, final List<? extends NamedAttributeMap<?>> attributes, final boolean box) {
     this(new Assignability(), type, attributes, box);
   }
 
-  public Selector(final Assignability assignability, final TypeMirror type) {
+  public BeanSelector(final Assignability assignability, final TypeMirror type) {
     this(assignability, type, defaultQualifiers(), true);
   }
   
-  public Selector(final Assignability assignability, final TypeMirror type, final List<? extends NamedAttributeMap<?>> attributes) {
+  public BeanSelector(final Assignability assignability, final TypeMirror type, final List<? extends NamedAttributeMap<?>> attributes) {
     this(assignability, type, attributes, true);
   }
 
-  public Selector(final Assignability assignability, final TypeMirror type, final List<? extends NamedAttributeMap<?>> attributes, final boolean box) {
+  public BeanSelector(final Assignability assignability, final TypeMirror type, final List<? extends NamedAttributeMap<?>> attributes, final boolean box) {
     super();
     this.assignability = Objects.requireNonNull(assignability, "assignability");
     this.type = DelegatingTypeMirror.of(validateType(type, box), Lang.typeAndElementSource(), SAME_TYPE_EQUALITY);
@@ -163,7 +163,7 @@ public final class Selector implements Constable {
     return this.selects(bean.id().types().types(), bean.id().attributes());
   }
 
-  public final boolean selects(final Selector selector) {
+  public final boolean selects(final BeanSelector selector) {
     return this.selects(List.of(selector.type()), selector.attributes());
   }
 
@@ -184,25 +184,25 @@ public final class Selector implements Constable {
     return this.selectsQualifiers(attributes) && this.selectsInterceptorBindings(attributes) && this.selectsTypeFrom(types);
   }
 
-  public final Selector withType(final TypeMirror type) {
+  public final BeanSelector withType(final TypeMirror type) {
     if (type == this.type()) {
       return this;
     }
-    return new Selector(this.assignability, type, this.attributes(), this.box());
+    return new BeanSelector(this.assignability, type, this.attributes(), this.box());
   }
 
-  public final Selector withAttributes(final List<? extends NamedAttributeMap<?>> attributes) {
+  public final BeanSelector withAttributes(final List<? extends NamedAttributeMap<?>> attributes) {
     if (attributes == this.attributes()) {
       return this;
     }
-    return new Selector(this.assignability, this.type(), List.copyOf(attributes), this.box());
+    return new BeanSelector(this.assignability, this.type(), List.copyOf(attributes), this.box());
   }
 
-  public final Selector withBox(final boolean box) {
+  public final BeanSelector withBox(final boolean box) {
     if (box == this.box()) {
       return this;
     }
-    return new Selector(this.assignability, this.type(), this.attributes(), box);
+    return new BeanSelector(this.assignability, this.type(), this.attributes(), box);
   }
 
   private final boolean selectsInterceptorBindings(final Collection<? extends NamedAttributeMap<?>> attributes) {
@@ -240,15 +240,15 @@ public final class Selector implements Constable {
   }
 
   @Override // Constable
-  public final Optional<DynamicConstantDesc<Selector>> describeConstable() {
+  public final Optional<DynamicConstantDesc<BeanSelector>> describeConstable() {
     return Constables.describeConstable(this.assignability)
       .flatMap(assignabilityDesc -> Lang.describeConstable(this.type())
                .flatMap(typeDesc -> Constables.describeConstable(this.attributes())
                         .map(attributesDesc -> DynamicConstantDesc.of(BSM_INVOKE,
                                                                       MethodHandleDesc.ofMethod(STATIC,
-                                                                                                CD_Selector,
+                                                                                                CD_BeanSelector,
                                                                                                 "of",
-                                                                                                MethodTypeDesc.of(CD_Selector,
+                                                                                                MethodTypeDesc.of(CD_BeanSelector,
                                                                                                                   CD_Assignability,
                                                                                                                   CD_TypeMirror,
                                                                                                                   CD_Collection,
@@ -273,7 +273,7 @@ public final class Selector implements Constable {
     if (other == this) {
       return true;
     } else if (other != null && other.getClass() == this.getClass()) {
-      final Selector her = (Selector)other;
+      final BeanSelector her = (BeanSelector)other;
       return
         Objects.equals(this.type(), her.type()) &&
         Objects.equals(this.attributes(), her.attributes()) &&
@@ -343,11 +343,11 @@ public final class Selector implements Constable {
   }
 
   // Called by describeConstable().
-  public static final Selector of(final Assignability a,
+  public static final BeanSelector of(final Assignability a,
                                   final TypeMirror type,
                                   final Collection<? extends NamedAttributeMap<?>> attributes,
                                   final boolean box) {
-    return new Selector(a, type, List.copyOf(attributes), box);
+    return new BeanSelector(a, type, List.copyOf(attributes), box);
   }
 
 

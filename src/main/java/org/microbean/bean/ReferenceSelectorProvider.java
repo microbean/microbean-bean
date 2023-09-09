@@ -13,11 +13,10 @@
  */
 package org.microbean.bean;
 
-// After construction and initialization have happened, applies any last-minute operations. This handles the badly-named
-// "@PostConstruct"-type events. Used while assembling a Factory.
+@Deprecated // do we need it?
 @FunctionalInterface
-public interface PostInitializer<I> {
+public interface ReferenceSelectorProvider {
 
-  public I postInitialize(final I i, final Creation<I> c, final ReferenceSelector r);
+  public ReferenceSelector referenceSelector();
   
 }
