@@ -17,66 +17,66 @@ public class ResolutionException extends BeanException {
 
   private static final long serialVersionUID = 1L;
 
-  private transient final BeanSelector selector;
+  private transient final BeanSelectionCriteria beanSelectionCriteria;
 
   public ResolutionException() {
     super();
-    this.selector = null;
+    this.beanSelectionCriteria = null;
   }
 
-  public ResolutionException(final BeanSelector selector) {
+  public ResolutionException(final BeanSelectionCriteria beanSelectionCriteria) {
     super();
-    this.selector = selector;
+    this.beanSelectionCriteria = beanSelectionCriteria;
   }
 
   public ResolutionException(final String message) {
     super(message);
-    this.selector = null;
+    this.beanSelectionCriteria = null;
   }
 
-  public ResolutionException(final BeanSelector selector,
+  public ResolutionException(final BeanSelectionCriteria beanSelectionCriteria,
                              final String message) {
     super(message);
-    this.selector = selector;
+    this.beanSelectionCriteria = beanSelectionCriteria;
   }
 
   public ResolutionException(final Throwable cause) {
     super(cause);
-    this.selector = null;
+    this.beanSelectionCriteria = null;
   }
 
-  public ResolutionException(final BeanSelector selector,
+  public ResolutionException(final BeanSelectionCriteria beanSelectionCriteria,
                              final Throwable cause) {
     super(cause);
-    this.selector = selector;
+    this.beanSelectionCriteria = beanSelectionCriteria;
   }
 
   public ResolutionException(final String message,
                              final Throwable cause) {
     super(message, cause);
-    this.selector = null;
+    this.beanSelectionCriteria = null;
   }
 
-  public ResolutionException(final BeanSelector selector,
+  public ResolutionException(final BeanSelectionCriteria beanSelectionCriteria,
                              final String message,
                              final Throwable cause) {
     super(message, cause);
-    this.selector = selector;
+    this.beanSelectionCriteria = beanSelectionCriteria;
   }
 
-  public final BeanSelector selector() {
-    return this.selector;
+  public final BeanSelectionCriteria beanSelectionCriteria() {
+    return this.beanSelectionCriteria;
   }
 
   @Override
   public String toString() {
-    final BeanSelector selector = this.selector();
-    if (selector == null) {
+    final BeanSelectionCriteria beanSelectionCriteria = this.beanSelectionCriteria();
+    if (beanSelectionCriteria == null) {
       return super.toString();
     } else if (this.getLocalizedMessage() == null) {
-      return super.toString() + ": selector: " + selector;
+      return super.toString() + ": beanSelectionCriteria: " + beanSelectionCriteria;
     } else {
-      return super.toString() + "; selector " + selector;
+      return super.toString() + "; beanSelectionCriteria " + beanSelectionCriteria;
     }
   }
 

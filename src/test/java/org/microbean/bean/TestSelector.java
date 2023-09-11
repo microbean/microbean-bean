@@ -35,32 +35,32 @@ final class TestSelector {
 
   @Test
   final void testSelectorStringSelectsString() {
-    final BeanSelector s = new BeanSelector(declaredType(String.class), List.of());
+    final BeanSelectionCriteria s = new BeanSelectionCriteria(declaredType(String.class), List.of());
     assertTrue(s.selects(declaredType(String.class)));
   }
 
   @Test
   final void testSelectorStringDoesNotSelectObject() {
-    final BeanSelector s = new BeanSelector(declaredType(String.class), List.of());
+    final BeanSelectionCriteria s = new BeanSelectionCriteria(declaredType(String.class), List.of());
     assertFalse(s.selects(declaredType(Object.class)));
   }
 
   @Test
   final void testSelectorIntSelectsInteger() {
-    final BeanSelector s = new BeanSelector(primitiveType(TypeKind.INT), List.of()); // boxing is true by default
+    final BeanSelectionCriteria s = new BeanSelectionCriteria(primitiveType(TypeKind.INT), List.of()); // boxing is true by default
     assertTrue(s.selects(declaredType(Integer.class)));
   }
 
   @Test
   final void testSelectorObjectDoesNotSelectString() {
-    final BeanSelector s = new BeanSelector(declaredType(Object.class), List.of());
+    final BeanSelectionCriteria s = new BeanSelectionCriteria(declaredType(Object.class), List.of());
     assertFalse(s.selects(declaredType(String.class)));
   }
 
   @Test
   final void testSelectorListUnknownExtendsStringSelectsListString() {
-    final BeanSelector s =
-      new BeanSelector(declaredType(null,
+    final BeanSelectionCriteria s =
+      new BeanSelectionCriteria(declaredType(null,
                                 typeElement(List.class),
                                 wildcardType(declaredType(String.class), null)),
                      List.of());

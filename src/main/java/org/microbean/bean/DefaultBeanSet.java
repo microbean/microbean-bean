@@ -93,11 +93,11 @@ public class DefaultBeanSet implements BeanSet, Constable {
 
   private final Set<Bean<?>> beans;
 
-  // A cache of Beans that were selected by a selector
-  private final ConcurrentMap<BeanSelector, Set<Bean<?>>> selectionCache;
+  // A cache of Beans that were selected by a beanSelectionCriteria
+  private final ConcurrentMap<BeanSelectionCriteria, Set<Bean<?>>> selectionCache;
 
   // Guaranteed to be a submap of selectionCache.
-  private final ConcurrentMap<BeanSelector, Bean<?>> resolutionCache;
+  private final ConcurrentMap<BeanSelectionCriteria, Bean<?>> resolutionCache;
 
 
   /*
@@ -118,28 +118,28 @@ public class DefaultBeanSet implements BeanSet, Constable {
   }
 
   public DefaultBeanSet(final Collection<? extends Bean<?>> beans,
-                        final Map<? extends BeanSelector, ? extends Bean<?>> preCalculatedResolutions) {
+                        final Map<? extends BeanSelectionCriteria, ? extends Bean<?>> preCalculatedResolutions) {
     this(beans, preCalculatedResolutions, StockResolver.INSTANCE);
   }
 
-  public DefaultBeanSet(final Map<? extends BeanSelector, ? extends Bean<?>> preCalculatedResolutions,
+  public DefaultBeanSet(final Map<? extends BeanSelectionCriteria, ? extends Bean<?>> preCalculatedResolutions,
                         final Resolver resolver) {
     this(Set.of(), preCalculatedResolutions, resolver);
   }
 
-  public DefaultBeanSet(final Map<? extends BeanSelector, ? extends Bean<?>> preCalculatedResolutions) {
+  public DefaultBeanSet(final Map<? extends BeanSelectionCriteria, ? extends Bean<?>> preCalculatedResolutions) {
     this(Set.of(), preCalculatedResolutions, StockResolver.INSTANCE);
   }
 
   public DefaultBeanSet(final Collection<? extends Bean<?>> beans,
-                        final Map<? extends BeanSelector, ? extends Bean<?>> preCalculatedResolutions,
+                        final Map<? extends BeanSelectionCriteria, ? extends Bean<?>> preCalculatedResolutions,
                         final Resolver resolver) {
     this(new Assignability(typeAndElementSource()), typeAndElementSource(), beans, preCalculatedResolutions, resolver);
   }
 
   public DefaultBeanSet(final TypeAndElementSource tes,
                         final Collection<? extends Bean<?>> beans,
-                        final Map<? extends BeanSelector, ? extends Bean<?>> preCalculatedResolutions,
+                        final Map<? extends BeanSelectionCriteria, ? extends Bean<?>> preCalculatedResolutions,
                         final Resolver resolver) {
     this(new Assignability(tes), tes, beans, preCalculatedResolutions, resolver);
   }
@@ -147,7 +147,7 @@ public class DefaultBeanSet implements BeanSet, Constable {
   public DefaultBeanSet(final Assignability assignability,
                         final TypeAndElementSource tes,
                         final Collection<? extends Bean<?>> beans,
-                        final Map<? extends BeanSelector, ? extends Bean<?>> preCalculatedResolutions,
+                        final Map<? extends BeanSelectionCriteria, ? extends Bean<?>> preCalculatedResolutions,
                         final Resolver resolver) {
     super();
     this.resolver = resolver == null ? StockResolver.INSTANCE : resolver;
@@ -159,11 +159,11 @@ public class DefaultBeanSet implements BeanSet, Constable {
       final Set<Bean<?>> newBeans = new HashSet<>(beans);
       newBeans.add(this.bean());
       newBeans.add(this.resolverBean());
-      for (final Entry<? extends BeanSelector, ? extends Bean<?>> e : preCalculatedResolutions.entrySet()) {
-        final BeanSelector s = e.getKey();
+      for (final Entry<? extends BeanSelectionCriteria, ? extends Bean<?>> e : preCalculatedResolutions.entrySet()) {
+        final BeanSelectionCriteria s = e.getKey();
         final Bean<?> b = e.getValue();
         if (!s.selects(b)) {
-          throw new IllegalArgumentException("preCalculatedResolutions; selector (" + s + ") does not select bean (" + b + ")");
+          throw new IllegalArgumentException("preCalculatedResolutions; beanSelectionCriteria (" + s + ") does not select bean (" + b + ")");
         }
         newBeans.add(b);
         this.beans(s, newBeans); // prime the selection cache
@@ -180,8 +180,8 @@ public class DefaultBeanSet implements BeanSet, Constable {
     }
 
     // Prime the selection and resolution caches.
-    this.bean(new BeanSelector(assignability, tes.declaredType(BeanSet.class), defaultQualifiers()), DefaultBeanSet::returnNull);
-    this.bean(new BeanSelector(assignability, tes.declaredType(Resolver.class), defaultQualifiers()), DefaultBeanSet::returnNull);
+    this.bean(new BeanSelectionCriteria(assignability, tes.declaredType(BeanSet.class), defaultQualifiers()), DefaultBeanSet::returnNull);
+    this.bean(new BeanSelectionCriteria(assignability, tes.declaredType(Resolver.class), defaultQualifiers()), DefaultBeanSet::returnNull);
 
   }
 
@@ -218,14 +218,14 @@ public class DefaultBeanSet implements BeanSet, Constable {
   }
 
   @Override // BeanSet
-  public final Bean<?> bean(final BeanSelector selector) {
-    return this.bean(selector, Resolver::fail);
+  public final Bean<?> bean(final BeanSelectionCriteria beanSelectionCriteria) {
+    return this.bean(beanSelectionCriteria, Resolver::fail);
   }
 
   @Override // BeanSet
-  public final Bean<?> bean(final BeanSelector selector,
-                            final BiFunction<? super BeanSelector, ? super Collection<? extends Bean<?>>, ? extends Bean<?>> op) {
-    return this.resolutionCache.computeIfAbsent(selector, s -> this.resolver.resolve(s, this.beans(s), op)); // volatile read
+  public final Bean<?> bean(final BeanSelectionCriteria beanSelectionCriteria,
+                            final BiFunction<? super BeanSelectionCriteria, ? super Collection<? extends Bean<?>>, ? extends Bean<?>> op) {
+    return this.resolutionCache.computeIfAbsent(beanSelectionCriteria, s -> this.resolver.resolve(s, this.beans(s), op)); // volatile read
   }
 
   @Override // BeanSet
@@ -234,8 +234,8 @@ public class DefaultBeanSet implements BeanSet, Constable {
   }
 
   @Override // BeanSet
-  public final Set<Bean<?>> beans(final BeanSelector selector) {
-    return this.beans(selector, this.beans);
+  public final Set<Bean<?>> beans(final BeanSelectionCriteria beanSelectionCriteria) {
+    return this.beans(beanSelectionCriteria, this.beans);
   }
 
   /*
@@ -255,7 +255,7 @@ public class DefaultBeanSet implements BeanSet, Constable {
     return this.resolutionCache.values().stream().collect(toUnmodifiableSet());
   }
 
-  public final Set<BeanSelector> beanSelectors() {
+  public final Set<BeanSelectionCriteria> beanSelectionCriterias() {
     return this.selectionCache.keySet();
   }
 
@@ -263,8 +263,8 @@ public class DefaultBeanSet implements BeanSet, Constable {
    * Private methods.
    */
 
-  private final Set<Bean<?>> beans(final BeanSelector selector, final Set<? extends Bean<?>> beans) {
-    return this.selectionCache.computeIfAbsent(selector, s -> beans.stream().filter(s::selects).collect(toUnmodifiableSet()));
+  private final Set<Bean<?>> beans(final BeanSelectionCriteria beanSelectionCriteria, final Set<? extends Bean<?>> beans) {
+    return this.selectionCache.computeIfAbsent(beanSelectionCriteria, s -> beans.stream().filter(s::selects).collect(toUnmodifiableSet()));
   }
 
   private final Bean<Resolver> resolverBean() {
@@ -282,7 +282,7 @@ public class DefaultBeanSet implements BeanSet, Constable {
    */
 
 
-  private static final Bean<?> returnNull(final BeanSelector x, final Collection<? extends Bean<?>> xx) {
+  private static final Bean<?> returnNull(final BeanSelectionCriteria x, final Collection<? extends Bean<?>> xx) {
     return null;
   }
 

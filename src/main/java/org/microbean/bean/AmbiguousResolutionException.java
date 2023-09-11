@@ -31,10 +31,10 @@ public class AmbiguousResolutionException extends ResolutionException {
     this(null, alternates, message, null);
   }
 
-  public AmbiguousResolutionException(final BeanSelector selector,
+  public AmbiguousResolutionException(final BeanSelectionCriteria beanSelectionCriteria,
                                       final Collection<? extends Alternate> alternates,
                                       final String message) {
-    this(selector, alternates, message, null);
+    this(beanSelectionCriteria, alternates, message, null);
   }
 
   public AmbiguousResolutionException(final Collection<? extends Alternate> alternates,
@@ -42,10 +42,10 @@ public class AmbiguousResolutionException extends ResolutionException {
     this(null, alternates, null, cause);
   }
 
-  public AmbiguousResolutionException(final BeanSelector selector,
+  public AmbiguousResolutionException(final BeanSelectionCriteria beanSelectionCriteria,
                                       final Collection<? extends Alternate> alternates,
                                       final Throwable cause) {
-    this(selector, alternates, null, cause);
+    this(beanSelectionCriteria, alternates, null, cause);
   }
 
   public AmbiguousResolutionException(final Collection<? extends Alternate> alternates,
@@ -54,11 +54,11 @@ public class AmbiguousResolutionException extends ResolutionException {
     this(null, alternates, message, cause);
   }
 
-  public AmbiguousResolutionException(final BeanSelector selector,
+  public AmbiguousResolutionException(final BeanSelectionCriteria beanSelectionCriteria,
                                       final Collection<? extends Alternate> alternates,
                                       final String message,
                                       final Throwable cause) {
-    super(selector, message, cause);
+    super(beanSelectionCriteria, message, cause);
     if (alternates == null || alternates.isEmpty()) {
       this.alternates = List.of();
     } else {

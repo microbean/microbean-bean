@@ -21,36 +21,36 @@ public class UnsatisfiedResolutionException extends ResolutionException {
     super();
   }
 
-  public UnsatisfiedResolutionException(final BeanSelector selector) {
-    super(selector);
+  public UnsatisfiedResolutionException(final BeanSelectionCriteria beanSelectionCriteria) {
+    super(beanSelectionCriteria);
   }
 
   public UnsatisfiedResolutionException(final String message) {
     super(message);
   }
 
-  public UnsatisfiedResolutionException(final BeanSelector selector,
+  public UnsatisfiedResolutionException(final BeanSelectionCriteria beanSelectionCriteria,
                                         final String message) {
-    super(selector, message);
+    super(beanSelectionCriteria, message);
   }
 
   public UnsatisfiedResolutionException(final Throwable cause) {
     super(cause);
   }
 
-  public UnsatisfiedResolutionException(final BeanSelector selector,
+  public UnsatisfiedResolutionException(final BeanSelectionCriteria beanSelectionCriteria,
                                         final Throwable cause) {
-    super(selector, cause);
+    super(beanSelectionCriteria, cause);
   }
 
   public UnsatisfiedResolutionException(final String message, final Throwable cause) {
     super(message, cause);
   }
 
-  public UnsatisfiedResolutionException(final BeanSelector selector,
+  public UnsatisfiedResolutionException(final BeanSelectionCriteria beanSelectionCriteria,
                                         final String message,
                                         final Throwable cause) {
-    super(selector, message, cause);
+    super(beanSelectionCriteria, message, cause);
   }
 
 }

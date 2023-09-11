@@ -17,19 +17,19 @@ public interface ReferenceSelector extends AutoCloseable, CreationSupplier {
 
   public BeanSet beanSet();
 
-  public <R> R reference(final BeanSelector selector, final Bean<R> bean, final Creation<R> creation);
+  public <R> R reference(final BeanSelectionCriteria beanSelectionCriteria, final Bean<R> bean, final Creation<R> creation);
 
   @Override // AutoCloseable
   public default void close() {
 
   }
 
-  public default <R> R reference(final BeanSelector selector, final Creation<R> creation) {
-    final Bean<?> b = this.beanSet().bean(selector);
+  public default <R> R reference(final BeanSelectionCriteria beanSelectionCriteria, final Creation<R> creation) {
+    final Bean<?> b = this.beanSet().bean(beanSelectionCriteria);
     if (b == null) {
-      throw new UnsatisfiedResolutionException(selector);
+      throw new UnsatisfiedResolutionException(beanSelectionCriteria);
     }
-    return this.reference(selector, b.cast(), creation);
+    return this.reference(beanSelectionCriteria, b.cast(), creation);
   }
 
 }

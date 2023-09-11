@@ -26,15 +26,15 @@ public interface BeanSet {
   public Set<Bean<?>> beans();
 
   // Give me Beans that match
-  public Set<Bean<?>> beans(final BeanSelector selector);
-
-  // Give me the single Bean that matches, or throw an exception
-  public default Bean<?> bean(final BeanSelector selector) {
-    return this.bean(selector, Alternate.Resolver::fail);
-  }
+  public Set<Bean<?>> beans(final BeanSelectionCriteria beanSelectionCriteria);
 
   // Give me the single Bean that matches, or run op on the conflicting bits
-  public Bean<?> bean(final BeanSelector selector,
-                      final BiFunction<? super BeanSelector, ? super Collection<? extends Bean<?>>, ? extends Bean<?>> op);
+  public Bean<?> bean(final BeanSelectionCriteria beanSelectionCriteria,
+                      final BiFunction<? super BeanSelectionCriteria, ? super Collection<? extends Bean<?>>, ? extends Bean<?>> op);
+
+  // Give me the single Bean that matches, or throw an exception
+  public default Bean<?> bean(final BeanSelectionCriteria beanSelectionCriteria) {
+    return this.bean(beanSelectionCriteria, Alternate.Resolver::fail);
+  }
 
 }

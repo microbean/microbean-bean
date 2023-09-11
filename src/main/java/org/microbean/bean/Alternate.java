@@ -33,18 +33,18 @@ public interface Alternate extends Ranked {
       return this.resolve(null, alternates);
     }
 
-    public default <T extends Alternate> T resolve(final BeanSelector selector, final Set<? extends T> alternates) {
-      return this.resolve(selector, alternates, Resolver::fail);
+    public default <T extends Alternate> T resolve(final BeanSelectionCriteria beanSelectionCriteria, final Set<? extends T> alternates) {
+      return this.resolve(beanSelectionCriteria, alternates, Resolver::fail);
     }
 
     public default <T extends Alternate> T resolve(final Set<? extends T> alternates,
-                                                   final BiFunction<? super BeanSelector, ? super Collection<? extends T>, ? extends T> failureHandler) {
+                                                   final BiFunction<? super BeanSelectionCriteria, ? super Collection<? extends T>, ? extends T> failureHandler) {
       return this.resolve(null, alternates, failureHandler);
     }
 
-    public default <T extends Alternate> T resolve(final BeanSelector selector,
+    public default <T extends Alternate> T resolve(final BeanSelectionCriteria beanSelectionCriteria,
                                                    final Set<? extends T> alternates,
-                                                   final BiFunction<? super BeanSelector, ? super Collection<? extends T>, ? extends T> failureHandler) {
+                                                   final BiFunction<? super BeanSelectionCriteria, ? super Collection<? extends T>, ? extends T> failureHandler) {
       if (alternates == null || alternates.isEmpty()) {
         return null;
       } else if (alternates.size() == 1) {
@@ -120,7 +120,7 @@ public interface Alternate extends Ranked {
           unresolved.add(candidate);
         }
         candidate =
-          failureHandler == null ? fail(selector, unmodifiableCollection(unresolved)) : failureHandler.apply(selector, unmodifiableCollection(unresolved));
+          failureHandler == null ? fail(beanSelectionCriteria, unmodifiableCollection(unresolved)) : failureHandler.apply(beanSelectionCriteria, unmodifiableCollection(unresolved));
       }
 
       return candidate;
@@ -133,9 +133,9 @@ public interface Alternate extends Ranked {
     //   the same value from rank() OR
     // * every Alternate in the Collection returns false from isAlternate()
     // No other state of affairs will hold.
-    public static <T extends Alternate> T fail(final BeanSelector selector, final Collection<? extends T> alternates) {
+    public static <T extends Alternate> T fail(final BeanSelectionCriteria beanSelectionCriteria, final Collection<? extends T> alternates) {
       assert assertPreconditions(alternates);
-      throw new AmbiguousResolutionException(selector, alternates, "TODO: this message needs to be better; can't resolve these alternates: " + alternates);
+      throw new AmbiguousResolutionException(beanSelectionCriteria, alternates, "TODO: this message needs to be better; can't resolve these alternates: " + alternates);
     }
 
     private static boolean assertPreconditions(final Collection<? extends Alternate> alternates) {
