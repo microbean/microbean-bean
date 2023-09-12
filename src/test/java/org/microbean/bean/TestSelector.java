@@ -19,52 +19,57 @@ import javax.lang.model.type.TypeKind;
 
 import org.junit.jupiter.api.Test;
 
+import org.microbean.lang.Lang;
+import org.microbean.lang.TypeAndElementSource;
+
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import static org.microbean.lang.Lang.declaredType;
-import static org.microbean.lang.Lang.primitiveType;
-import static org.microbean.lang.Lang.typeElement;
-import static org.microbean.lang.Lang.wildcardType;
-
 final class TestSelector {
 
+private static final TypeAndElementSource tes = Lang.typeAndElementSource();
+
+  private static final Assignability assignability = new Assignability(tes);
+  
   private TestSelector() {
     super();
   }
 
   @Test
   final void testSelectorStringSelectsString() {
-    final BeanSelectionCriteria s = new BeanSelectionCriteria(declaredType(String.class), List.of());
-    assertTrue(s.selects(declaredType(String.class)));
+    final BeanSelectionCriteria s = new BeanSelectionCriteria(tes, assignability, tes.declaredType(String.class), List.of(), true);
+    assertTrue(s.selects(tes.declaredType(String.class)));
   }
 
   @Test
   final void testSelectorStringDoesNotSelectObject() {
-    final BeanSelectionCriteria s = new BeanSelectionCriteria(declaredType(String.class), List.of());
-    assertFalse(s.selects(declaredType(Object.class)));
+    final BeanSelectionCriteria s = new BeanSelectionCriteria(tes, assignability, tes.declaredType(String.class), List.of(), true);
+    assertFalse(s.selects(tes.declaredType(Object.class)));
   }
 
   @Test
   final void testSelectorIntSelectsInteger() {
-    final BeanSelectionCriteria s = new BeanSelectionCriteria(primitiveType(TypeKind.INT), List.of()); // boxing is true by default
-    assertTrue(s.selects(declaredType(Integer.class)));
+    final BeanSelectionCriteria s = new BeanSelectionCriteria(tes, assignability, tes.primitiveType(TypeKind.INT), List.of(), true);
+    assertTrue(s.selects(tes.declaredType(Integer.class)));
   }
 
   @Test
   final void testSelectorObjectDoesNotSelectString() {
-    final BeanSelectionCriteria s = new BeanSelectionCriteria(declaredType(Object.class), List.of());
-    assertFalse(s.selects(declaredType(String.class)));
+    final BeanSelectionCriteria s = new BeanSelectionCriteria(tes, assignability, tes.declaredType(Object.class), List.of(), true);
+    assertFalse(s.selects(tes.declaredType(String.class)));
   }
 
   @Test
   final void testSelectorListUnknownExtendsStringSelectsListString() {
     final BeanSelectionCriteria s =
-      new BeanSelectionCriteria(declaredType(null,
-                                typeElement(List.class),
-                                wildcardType(declaredType(String.class), null)),
-                     List.of());
-    assertTrue(s.selects(declaredType(null, typeElement(List.class), declaredType(String.class))));
+      new BeanSelectionCriteria(tes,
+                                assignability,
+                                tes.declaredType(null,
+                                                 tes.typeElement(List.class),
+                                                 tes.wildcardType(tes.declaredType(String.class), null)),
+                                List.of(),
+                                true);
+    assertTrue(s.selects(tes.declaredType(null, tes.typeElement(List.class), tes.declaredType(String.class))));
   }
 
 }

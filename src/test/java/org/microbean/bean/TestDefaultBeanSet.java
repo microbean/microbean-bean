@@ -37,6 +37,7 @@ import org.junit.jupiter.api.Test;
 import org.microbean.constant.Constables;
 
 import org.microbean.lang.Lang;
+import org.microbean.lang.TypeAndElementSource;
 
 import static java.lang.invoke.MethodHandles.lookup;
 import static java.lang.invoke.MethodHandles.privateLookupIn;
@@ -54,9 +55,13 @@ import static org.microbean.scope.Scope.SINGLETON_ID;
 
 final class TestDefaultBeanSet {
 
+  private static final TypeAndElementSource tes = Lang.typeAndElementSource();
+
+  private static final Assignability assignability = new Assignability(tes);
+  
   private static Bean<String> hello;
   
-  private static Set<Bean<?>> beanSet;  
+  private static Set<Bean<?>> beanSet;
 
   private DefaultBeanSet beans;
   
@@ -95,9 +100,9 @@ final class TestDefaultBeanSet {
 
     // 3 == Bean<String>, Bean<DefaultBeanSet>, Bean<Alternate.Resolver>
     assertEquals(3, set.size());
-    hello = beans.bean(new BeanSelectionCriteria(Lang.declaredType(String.class), List.of(defaultQualifier()))).cast();
+    hello = beans.bean(new BeanSelectionCriteria(tes, assignability, tes.declaredType(String.class), List.of(defaultQualifier()), true)).cast();
     assertSame("Hello", hello.factory().create(null, null));
-    hello = beans.bean(new BeanSelectionCriteria(Lang.declaredType(Object.class), List.of(defaultQualifier()))).cast();
+    hello = beans.bean(new BeanSelectionCriteria(tes, assignability, tes.declaredType(Object.class), List.of(defaultQualifier()), true)).cast();
     assertSame("Hello", hello.factory().create(null, null));
   }
 
@@ -117,9 +122,9 @@ final class TestDefaultBeanSet {
 
     // 3 == Bean<String>, Bean<DefaultBeanSet>, Bean<Alternate.Resolver>
     assertEquals(1, set.size());
-    hello = beans.bean(new BeanSelectionCriteria(Lang.declaredType(String.class), List.of(defaultQualifier()))).cast();
+    hello = beans.bean(new BeanSelectionCriteria(tes, assignability, tes.declaredType(String.class), List.of(defaultQualifier()), true)).cast();
     assertSame("Hello", hello.factory().create(null, null));
-    hello = beans.bean(new BeanSelectionCriteria(Lang.declaredType(Object.class), List.of(defaultQualifier()))).cast();
+    hello = beans.bean(new BeanSelectionCriteria(tes, assignability, tes.declaredType(Object.class), List.of(defaultQualifier()), true)).cast();
     assertSame("Hello", hello.factory().create(null, null));
   }
 

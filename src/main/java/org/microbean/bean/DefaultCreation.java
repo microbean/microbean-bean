@@ -17,12 +17,24 @@ import java.util.Objects;
 
 public class DefaultCreation<I> implements AutoCloseableRegistry, Creation<I> {
 
-  // Treat as effectively final, please
-  private AutoCloseableRegistry registry;
+  private final AutoCloseableRegistry registry;
+
+  private final BeanSelectionCriteria beanSelectionCriteria;
 
   public DefaultCreation(final AutoCloseableRegistry registry) {
+    this(registry, null);
+  }
+  
+  public DefaultCreation(final AutoCloseableRegistry registry,
+                         final BeanSelectionCriteria beanSelectionCriteria) {
     super();
     this.registry = Objects.requireNonNull(registry, "registry");
+    this.beanSelectionCriteria = beanSelectionCriteria;
+  }
+
+  @Override // Creation<I>
+  public BeanSelectionCriteria beanSelectionCriteria() {
+    return beanSelectionCriteria;
   }
 
   @Override // Creation<I>
@@ -30,17 +42,15 @@ public class DefaultCreation<I> implements AutoCloseableRegistry, Creation<I> {
     // TODO:
   }
 
+  @Override // AutoCloseableRegistry
+  public DefaultCreation<I> clone() {
+    return this.clone(this.beanSelectionCriteria());
+  }
+  
   @Override // Creation<I>
   @SuppressWarnings("unchecked")
-  public DefaultCreation<I> clone() {
-    final DefaultCreation<I> dc;
-    try {
-      dc = (DefaultCreation<I>)super.clone();
-    } catch (final CloneNotSupportedException e) {
-      throw new AssertionError(e.getMessage(), e);
-    }
-    dc.registry = this.registry.clone();
-    return dc;
+  public DefaultCreation<I> clone(final BeanSelectionCriteria beanSelectionCriteria) {
+    return new DefaultCreation<>(this.registry.clone(), beanSelectionCriteria);
   }
 
   @Override

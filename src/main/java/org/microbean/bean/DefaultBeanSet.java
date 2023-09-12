@@ -180,8 +180,8 @@ public class DefaultBeanSet implements BeanSet, Constable {
     }
 
     // Prime the selection and resolution caches.
-    this.bean(new BeanSelectionCriteria(assignability, tes.declaredType(BeanSet.class), defaultQualifiers()), DefaultBeanSet::returnNull);
-    this.bean(new BeanSelectionCriteria(assignability, tes.declaredType(Resolver.class), defaultQualifiers()), DefaultBeanSet::returnNull);
+    this.bean(new BeanSelectionCriteria(tes, assignability, tes.declaredType(BeanSet.class), defaultQualifiers(), true), DefaultBeanSet::returnNull);
+    this.bean(new BeanSelectionCriteria(tes, assignability, tes.declaredType(Resolver.class), defaultQualifiers(), true), DefaultBeanSet::returnNull);
 
   }
 

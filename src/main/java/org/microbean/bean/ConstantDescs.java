@@ -17,7 +17,11 @@ import java.lang.constant.ClassDesc;
 
 public final class ConstantDescs {
 
+  public static final ClassDesc CD_Assignability = ClassDesc.of("org.microbean.bean.Assignability");
+
   public static final ClassDesc CD_Bean = ClassDesc.of("org.microbean.bean.Bean");
+
+  public static final ClassDesc CD_BeanSelectionCriteria = ClassDesc.of("org.microbean.bean.BeanSelectionCriteria");
 
   public static final ClassDesc CD_BeanTypeList = ClassDesc.of("org.microbean.bean.BeanTypeList");
 
@@ -30,8 +34,6 @@ public final class ConstantDescs {
   public static final ClassDesc CD_ReferenceTypeList = ClassDesc.of("org.microbean.bean.ReferenceTypeList");
 
   public static final ClassDesc CD_Resolver = ClassDesc.of("org.microbean.bean.Alternate$Resolver");
-
-  public static final ClassDesc CD_BeanSelectionCriteria = ClassDesc.of("org.microbean.bean.BeanSelectionCriteria");
 
   private ConstantDescs() {
     super();

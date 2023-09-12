@@ -24,8 +24,19 @@ package org.microbean.bean;
 public interface Creation<I> extends AutoCloseable, Cloneable {
 
   /**
-   * Clones this {@link Creation} and, critically, if this {@link Creation} implementation implements {@link
-   * AutoCloseableRegistry}, arranges to have the resulting clone {@linkplain
+   * Returns the {@link BeanSelectionCriteria} that is in effect (and that is the reason for which this {@link Creation}
+   * has been created), if known, or {@code null} if not.
+   *
+   * @return the {@link BeanSelectionCriteria} that is in effect, or {@code null}
+   *
+   * @nullability Implementations of this method may return {@code null}.
+   */
+  public BeanSelectionCriteria beanSelectionCriteria();
+
+  /**
+   * Clones this {@link Creation} such that the resulting clone will return the supplied {@link BeanSelectionCriteria}
+   * from any invocation of its {@link #beanSelectionCriteria()} method, and, critically, if this {@link Creation}
+   * implementation implements {@link AutoCloseableRegistry}, arranges to have the resulting clone {@linkplain
    * AutoCloseableRegistry#register(AutoCloseable) registered with} its immediate ancestor (this {@link Creation}) such
    * that {@linkplain #close() closing} the ancestor (this {@link Creation}) will also {@linkplain #close() close} the
    * clone.
@@ -33,7 +44,12 @@ public interface Creation<I> extends AutoCloseable, Cloneable {
    * <p>If an implementation of this method does not adhere to these requirements, undefined behavior, and possibly
    * memory leaks, will occur.</p>
    *
+   * @param beanSelectionCriteria the {@link BeanSelectionCriteria} that is the reason for which the resulting clone is
+   * being requested; may be {@code null}
+   *
    * @return a clone of this {@link Creation}; never {@code null}
+   *
+   * @see #beanSelectionCriteria()
    *
    * @see #close()
    *
@@ -43,7 +59,7 @@ public interface Creation<I> extends AutoCloseable, Cloneable {
    *
    * @threadsafety Implementations of this method must be safe for concurrent use by multiple threads.
    */
-  public Creation<I> clone();
+  public Creation<I> clone(final BeanSelectionCriteria beanSelectionCriteria);
 
   /**
    * Closes this {@link Creation}, and, if this {@link Creation} implementation implements {@link
@@ -108,6 +124,12 @@ public interface Creation<I> extends AutoCloseable, Cloneable {
   public default void created(final I instance) {
 
   }
+
+
+  /*
+   * Static methods.
+   */
+
 
   /**
    * Casts the supplied {@link Creation} to the inferred return type and returns it.
