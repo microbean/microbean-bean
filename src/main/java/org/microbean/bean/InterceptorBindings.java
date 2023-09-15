@@ -46,6 +46,14 @@ public final class InterceptorBindings {
     return Kind.ANY_INTERCEPTOR_BINDING.of();
   }
 
+  public static final NamedAttributeMap<?> interceptorBinding() {
+    return Kind.INTERCEPTOR_BINDING.of();
+  }
+
+  public static final boolean interceptorBinding(final NamedAttributeMap<?> a) {
+    return Kind.INTERCEPTOR_BINDING.describes(a);
+  }
+
   public enum Kind {
 
     INTERCEPTOR_BINDING() {
@@ -98,11 +106,11 @@ public final class InterceptorBindings {
         return INSTANCE;
       }
     },
-    
+
     TARGET_CLASS_INTERCEPTOR_BINDING() {
       private static final NamedAttributeMap<?> INSTANCE =
         new NamedAttributeMap<>("TargetClass", Map.of(), Map.of(), List.of(INTERCEPTOR_BINDING.of()));
-      
+
       @Override
       public final boolean describes(final NamedAttributeMap<?> a) {
         return a != null && a.equals(INSTANCE) && INTERCEPTOR_BINDING.describes(a);
