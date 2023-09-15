@@ -17,6 +17,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.EnumSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -34,6 +35,10 @@ public final class Qualifiers {
     super();
   }
 
+  public static final List<NamedAttributeMap<?>> anyAndDefaultQualifiers() {
+    return ANY_AND_DEFAULT;
+  }
+
   public static final NamedAttributeMap<?> anyQualifier() {
     return Kind.ANY_QUALIFIER.of();
   }
@@ -46,16 +51,16 @@ public final class Qualifiers {
     return Kind.DEFAULT_QUALIFIER.of();
   }
 
-  public static final List<NamedAttributeMap<?>> anyAndDefaultQualifiers() {
-    return ANY_AND_DEFAULT;
-  }
-
   public static final List<NamedAttributeMap<?>> defaultQualifiers() {
     return DEFAULT;
   }
 
   public static final NamedAttributeMap<?> qualifier() {
     return Kind.QUALIFIER.of();
+  }
+
+  public static final boolean qualifier(final NamedAttributeMap<?> q) {
+    return q != null && Kind.QUALIFIER.describes(q);
   }
 
   public static final List<NamedAttributeMap<?>> qualifiers(final Collection<? extends NamedAttributeMap<?>> c) {
@@ -72,19 +77,34 @@ public final class Qualifiers {
     return Collections.unmodifiableList(list);
   }
 
+  // TODO: this blends descriptive concerns ("is this arbitrary thing a kind of qualifier?") with very specific concerns
+  // ("is this thing the 'Default' qualifier?"). That feels wrong.
   public enum Kind {
 
     QUALIFIER() {
-      private static final NamedAttributeMap<?> INSTANCE = new NamedAttributeMap<>("Qualifier");
+      private static final NamedAttributeMap<?> DESIGNATOR = new NamedAttributeMap<>("Qualifier");
 
+      /**
+       * Returns {@code true} if {@code a} is non-{@code null}, and if an element of its {@linkplain
+       * NamedAttributeMap#metadata() metadata} is itself the qualifier designator, or if its {@linkplain
+       * NamedAttributeMap#metadata() metadata} contains a {@link NamedAttributeMap} that meets these conditions.
+       *
+       * @param a {@link NamedAttributeMap}; may be {@code null} in which case {@code false} will be returned
+       *
+       * @return {@code true} if {@code a} is non-{@code null} and is either the qualifier designator itself, or if its
+       * {@linkplain NamedAttributeMap#metadata() metadata} contains a {@link NamedAttributeMap} that meets these
+       * conditions
+       *
+       * @see NamedAttributeMap
+       */
       @Override
       public final boolean describes(final NamedAttributeMap<?> a) {
         return a != null && this.describes(a.metadata());
       }
 
-      private final boolean describes(final Iterable<? extends NamedAttributeMap<?>> mds) {
+      public final boolean describes(final Iterable<? extends NamedAttributeMap<?>> mds) {
         for (final NamedAttributeMap<?> md : mds) {
-          if (md.name().equalsIgnoreCase("Qualifier") || this.describes(md)) {
+          if ((md.equals(DESIGNATOR) && md.metadata().isEmpty()) || this.describes(md)) {
             return true;
           }
         }
@@ -93,7 +113,7 @@ public final class Qualifiers {
 
       @Override
       public final NamedAttributeMap<?> of() {
-        return INSTANCE;
+        return DESIGNATOR;
       }
     },
 
@@ -103,16 +123,7 @@ public final class Qualifiers {
 
       @Override
       public final boolean describes(final NamedAttributeMap<?> a) {
-        return a != null && this.describes(a.metadata());
-      }
-
-      private final boolean describes(final Iterable<? extends NamedAttributeMap<?>> mds) {
-        for (final NamedAttributeMap<?> md : mds) {
-          if (md.name().equalsIgnoreCase("Any") && QUALIFIER.describes(md)) {
-            return true;
-          }
-        }
-        return false;
+        return a != null && a.equals(INSTANCE) && QUALIFIER.describes(a);
       }
 
       @Override
@@ -127,36 +138,12 @@ public final class Qualifiers {
 
       @Override
       public final boolean describes(final NamedAttributeMap<?> a) {
-        return a != null && this.describes(a.metadata());
-      }
-
-      private final boolean describes(final Iterable<? extends NamedAttributeMap<?>> mds) {
-        for (final NamedAttributeMap<?> md : mds) {
-          if (md.name().equalsIgnoreCase("Default") && QUALIFIER.describes(md)) {
-            return true;
-          }
-        }
-        return false;
+        return a != null && a.equals(INSTANCE) && QUALIFIER.describes(a);
       }
 
       @Override
       public final NamedAttributeMap<?> of() {
         return INSTANCE;
-      }
-    },
-
-    OTHER() {
-      @Override
-      public final boolean describes(final NamedAttributeMap<?> a) {
-        if (a == null) {
-          return false;
-        }
-        for (final Kind k : nonOther) {
-          if (k.describes(a)) {
-            return false;
-          }
-        }
-        return true;
       }
     };
 
@@ -165,11 +152,7 @@ public final class Qualifiers {
 
     public abstract boolean describes(final NamedAttributeMap<?> a);
 
-    public NamedAttributeMap<?> of() {
-      throw new UnsupportedOperationException();
-    }
-
-    private static final EnumSet<Kind> nonOther = EnumSet.complementOf(EnumSet.of(OTHER));
+    public abstract NamedAttributeMap<?> of();
 
   }
 

@@ -41,7 +41,7 @@ public final class InterceptorBindings {
     list.trimToSize();
     return Collections.unmodifiableList(list);
   }
-  
+
   public static final NamedAttributeMap<?> anyInterceptorBinding() {
     return Kind.ANY_INTERCEPTOR_BINDING.of();
   }
@@ -49,19 +49,48 @@ public final class InterceptorBindings {
   public enum Kind {
 
     INTERCEPTOR_BINDING() {
-      private static final NamedAttributeMap<?> INSTANCE = new NamedAttributeMap<>("InterceptorBinding");
+      private static final NamedAttributeMap<?> DESIGNATOR = new NamedAttributeMap<>("InterceptorBinding");
 
+      /**
+       * Returns {@code true} if {@code a} is non-{@code null}, and if an element of its {@linkplain
+       * NamedAttributeMap#metadata() metadata} is itself the interceptor binding designator, or if its {@linkplain
+       * NamedAttributeMap#metadata() metadata} contains a {@link NamedAttributeMap} that meets these conditions.
+       *
+       * @param a {@link NamedAttributeMap}; may be {@code null} in which case {@code false} will be returned
+       *
+       * @return {@code true} if {@code a} is non-{@code null} and is either the qualifier designator itself, or if its
+       * {@linkplain NamedAttributeMap#metadata() metadata} contains a {@link NamedAttributeMap} that meets these
+       * conditions
+       *
+       * @see NamedAttributeMap
+       */
       @Override
-        public final boolean describes(final NamedAttributeMap<?> a) {
-        if (a == null) {
-          return false;
-        }
-        for (final NamedAttributeMap<?> m : a.metadata()) {
-          if (m.containsKey("InterceptorBinding")) {
+      public final boolean describes(final NamedAttributeMap<?> a) {
+        return a != null && this.describes(a.metadata());
+      }
+
+      public final boolean describes(final Iterable<? extends NamedAttributeMap<?>> mds) {
+        for (final NamedAttributeMap<?> md : mds) {
+          if ((md.equals(DESIGNATOR) && md.metadata().isEmpty()) || this.describes(md)) {
             return true;
           }
         }
         return false;
+      }
+
+      @Override
+      public final NamedAttributeMap<?> of() {
+        return DESIGNATOR;
+      }
+    },
+
+    ANY_INTERCEPTOR_BINDING() {
+      private static final NamedAttributeMap<?> INSTANCE =
+        new NamedAttributeMap<>("Any", Map.of(), Map.of(), List.of(INTERCEPTOR_BINDING.of()));
+
+      @Override
+      public final boolean describes(final NamedAttributeMap<?> a) {
+        return a != null && a.equals(INSTANCE) && INTERCEPTOR_BINDING.describes(a);
       }
 
       @Override
@@ -70,41 +99,17 @@ public final class InterceptorBindings {
       }
     },
     
-    ANY_INTERCEPTOR_BINDING() {
+    TARGET_CLASS_INTERCEPTOR_BINDING() {
       private static final NamedAttributeMap<?> INSTANCE =
-        new NamedAttributeMap<>("Any", Map.of(), Map.of(), List.of(INTERCEPTOR_BINDING.of()));
-
+        new NamedAttributeMap<>("TargetClass", Map.of(), Map.of(), List.of(INTERCEPTOR_BINDING.of()));
+      
       @Override
       public final boolean describes(final NamedAttributeMap<?> a) {
-        if (a == null) {
-          return false;
-        }
-        for (final NamedAttributeMap<?> m : a.metadata()) {
-          if (m.name().equalsIgnoreCase("Any") && m.containsKey("InterceptorBinding")) {
-            return true;
-          }
-        }
-        return false;
+        return a != null && a.equals(INSTANCE) && INTERCEPTOR_BINDING.describes(a);
       }
 
-      @Override
       public final NamedAttributeMap<?> of() {
         return INSTANCE;
-      }
-    },
-
-    OTHER() {
-      @Override
-      public final boolean describes(final NamedAttributeMap<?> a) {
-        if (a == null) {
-          return false;
-        }
-        for (final Kind k : nonOther) {
-          if (k.describes(a)) {
-            return false;
-          }
-        }
-        return true;
       }
     };
 
@@ -113,11 +118,7 @@ public final class InterceptorBindings {
 
     public abstract boolean describes(final NamedAttributeMap<?> a);
 
-    public NamedAttributeMap<?> of() {
-      throw new UnsupportedOperationException();
-    }
-
-    private static final EnumSet<Kind> nonOther = EnumSet.complementOf(EnumSet.of(OTHER));
+    public abstract NamedAttributeMap<?> of();
 
   }
 

@@ -61,6 +61,7 @@ import static org.microbean.bean.Qualifiers.Kind.QUALIFIER;
 
 import static org.microbean.lang.ConstantDescs.CD_TypeAndElementSource;
 import static org.microbean.lang.ConstantDescs.CD_TypeMirror;
+import static org.microbean.lang.Lang.typeAndElementSource;
 
 public final class BeanSelectionCriteria implements Constable {
 
@@ -95,6 +96,28 @@ public final class BeanSelectionCriteria implements Constable {
    * Constructors.
    */
 
+
+  public BeanSelectionCriteria(final TypeMirror type) {
+    this(type, defaultQualifiers());
+  }
+
+  public BeanSelectionCriteria(final TypeMirror type,
+                               final List<? extends NamedAttributeMap<?>> attributes) {
+    this(typeAndElementSource(), type, attributes);
+  }
+
+  public BeanSelectionCriteria(final TypeAndElementSource tes,
+                               final TypeMirror type,
+                               final List<? extends NamedAttributeMap<?>> attributes) {
+    this(tes, new Assignability(tes), type, attributes);
+  }
+
+  public BeanSelectionCriteria(final TypeAndElementSource tes,
+                               final Assignability assignability,
+                               final TypeMirror type,
+                               final List<? extends NamedAttributeMap<?>> attributes) {
+    this(tes, assignability, type, attributes, true);
+  }
 
   public BeanSelectionCriteria(final TypeAndElementSource tes,
                                final Assignability assignability,
@@ -216,7 +239,7 @@ public final class BeanSelectionCriteria implements Constable {
   }
 
   final boolean selectsTypeFrom(final Collection<? extends TypeMirror> types) {
-    return this.assignability.matchesOne(this.type(), types);
+    return this.assignability.oneMatches(this.type(), types);
   }
 
   @Override // Constable

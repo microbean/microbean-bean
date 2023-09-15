@@ -90,7 +90,9 @@ public final class Assignability {
    */
 
 
-  public final boolean matchesOne(final TypeMirror receiver, final Iterable<? extends TypeMirror> payloads) {
+  // Is at least one payload assignable to the receiver? That is, does at least one payload "match the receiver" in CDI
+  // parlance?
+  public final boolean oneMatches(final TypeMirror receiver, final Iterable<? extends TypeMirror> payloads) {
     for (final TypeMirror payload : payloads) {
       if (matches(receiver, payload)) {
         return true;
@@ -99,6 +101,7 @@ public final class Assignability {
     return false;
   }
 
+  // Is the payload assignable to the receiver? That is, does the payload "match the receiver", in CDI parlance?
   public final boolean matches(final TypeMirror receiver, final TypeMirror payload) {
     // "A bean [an object, not a type] is assignable to a given injection point if:
     //
@@ -367,10 +370,9 @@ public final class Assignability {
   // assignable to it using Java, not CDI, assignability semantics?
   //
   // Throws ClassCastException if, after condensing, any encountered bound is not either an ArrayType or a DeclaredType.
-  private final boolean covariantlyAssignable(List<? extends TypeMirror> receiverBounds, List<? extends TypeMirror> payloadBounds) {
-    receiverBounds = condense(receiverBounds); // eliminate type variables
+  private final boolean covariantlyAssignable(final List<? extends TypeMirror> receiverBounds, List<? extends TypeMirror> payloadBounds) {
     payloadBounds = condense(payloadBounds);
-    for (final TypeMirror receiver : receiverBounds) {
+    for (final TypeMirror receiver : condense(receiverBounds)) { // eliminate type variables via condense() call
       if (!covariantlyAssignable((ReferenceType)receiver, payloadBounds)) {
         return false;
       }
@@ -384,16 +386,17 @@ public final class Assignability {
   // Throws ClassCastException or IllegalArgumentException if any encountered type is not either an ArrayType or a
   // DeclaredType.
   private final boolean covariantlyAssignable(final ReferenceType classOrArrayTypeReceiver, final List<? extends TypeMirror> condensedPayloadBounds) {
-    switch (classOrArrayTypeReceiver.getKind()) {
-    case ARRAY, DECLARED -> {}
-    default -> throw new IllegalArgumentException("t: " + classOrArrayTypeReceiver + "; kind: " + classOrArrayTypeReceiver.getKind());
-    }
-    for (final TypeMirror payload : condensedPayloadBounds) {
-      if (covariantlyAssignable(classOrArrayTypeReceiver, (ReferenceType)payload)) {
-        return true;
+    return switch (classOrArrayTypeReceiver.getKind()) {
+    case ARRAY, DECLARED -> {
+      for (final TypeMirror payload : condensedPayloadBounds) {
+        if (covariantlyAssignable(classOrArrayTypeReceiver, (ReferenceType)payload)) {
+          yield true;
+        }
       }
+      yield false;
     }
-    return false;
+    default -> throw new IllegalArgumentException("t: " + classOrArrayTypeReceiver + "; kind: " + classOrArrayTypeReceiver.getKind());
+    };
   }
 
   private final boolean covariantlyAssignable(final ReferenceType classOrArrayTypeReceiver, final ReferenceType classOrArrayTypePayload) {
@@ -460,21 +463,22 @@ public final class Assignability {
   //
   // No other type yields a raw type.
   private final TypeMirror rawType(final TypeMirror t) {
-    switch (t.getKind()) {
-    case ARRAY:
+    return switch (t.getKind()) {
+    case ARRAY -> {
       final TypeMirror et = elementType(t);
       if (!parameterized(et)) {
         throw new IllegalArgumentException("t is an array type whose element type is not parameterized so cannot yield a raw type");
       }
-      return arrayType(erasure(et));
-    case DECLARED:
+      yield arrayType(erasure(et));
+    }
+    case DECLARED -> {
       if (!parameterized(t)) {
         throw new IllegalArgumentException("t is a declared type that is not parameterized so cannot yield a raw type");
       }
-      return erasure(t);
-    default:
-      throw new IllegalArgumentException("t is a " + t.getKind() + " type and so cannot yield a raw type");
+      yield erasure(t);
     }
+    default -> throw new IllegalArgumentException("t is a " + t.getKind() + " type and so cannot yield a raw type");
+    };
   }
 
   // Return t if its element declares a non-generic class, or if it is the raw type usage of a generic class.

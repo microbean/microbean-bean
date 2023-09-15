@@ -29,21 +29,23 @@ public interface Alternate extends Ranked {
 
   public static interface Resolver {
 
-    public default <T extends Alternate> T resolve(final Set<? extends T> alternates) {
+    public static final Resolver DEFAULT = new Resolver() {};
+
+    public default <T extends Alternate> T resolve(final Collection<? extends T> alternates) {
       return this.resolve(null, alternates);
     }
 
-    public default <T extends Alternate> T resolve(final BeanSelectionCriteria beanSelectionCriteria, final Set<? extends T> alternates) {
+    public default <T extends Alternate> T resolve(final BeanSelectionCriteria beanSelectionCriteria, final Collection<? extends T> alternates) {
       return this.resolve(beanSelectionCriteria, alternates, Resolver::fail);
     }
 
-    public default <T extends Alternate> T resolve(final Set<? extends T> alternates,
+    public default <T extends Alternate> T resolve(final Collection<? extends T> alternates,
                                                    final BiFunction<? super BeanSelectionCriteria, ? super Collection<? extends T>, ? extends T> failureHandler) {
       return this.resolve(null, alternates, failureHandler);
     }
 
     public default <T extends Alternate> T resolve(final BeanSelectionCriteria beanSelectionCriteria,
-                                                   final Set<? extends T> alternates,
+                                                   final Collection<? extends T> alternates,
                                                    final BiFunction<? super BeanSelectionCriteria, ? super Collection<? extends T>, ? extends T> failureHandler) {
       if (alternates == null || alternates.isEmpty()) {
         return null;
