@@ -22,7 +22,7 @@ public interface ReferenceSelector extends AutoCloseable, CreationSupplier {
   @Override // AutoCloseable
   public default void close() {
 
-  }
+  }  
 
   public default <R> R reference(final BeanSelectionCriteria beanSelectionCriteria, final Creation<R> creation) {
     final Bean<?> b = this.beanSet().bean(beanSelectionCriteria);

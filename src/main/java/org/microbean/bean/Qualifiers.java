@@ -25,42 +25,67 @@ import org.microbean.qualifier.NamedAttributeMap;
 
 public final class Qualifiers {
 
-  private static final List<NamedAttributeMap<?>> ANY = List.of(Kind.ANY_QUALIFIER.of());
+  private static final NamedAttributeMap<String> QUALIFIER = new NamedAttributeMap<>("Qualifier");
 
-  private static final List<NamedAttributeMap<?>> ANY_AND_DEFAULT = List.of(Kind.ANY_QUALIFIER.of(), Kind.DEFAULT_QUALIFIER.of());
+  private static final List<NamedAttributeMap<String>> QUALIFIER_LIST = List.of(QUALIFIER);
 
-  private static final List<NamedAttributeMap<?>> DEFAULT = List.of(Kind.DEFAULT_QUALIFIER.of());
+  private static final NamedAttributeMap<?> ANY_QUALIFIER = new NamedAttributeMap<>("Any", Map.of(), Map.of(), QUALIFIER_LIST);
 
+  private static final List<NamedAttributeMap<?>> ANY_QUALIFIERS = List.of(ANY_QUALIFIER);
+
+  private static final NamedAttributeMap<?> DEFAULT_QUALIFIER = new NamedAttributeMap<>("Default", Map.of(), Map.of(), QUALIFIER_LIST);
+
+  private static final List<NamedAttributeMap<?>> DEFAULT_QUALIFIERS = List.of(DEFAULT_QUALIFIER);
+
+  private static final List<NamedAttributeMap<?>> ANY_AND_DEFAULT_QUALIFIERS = List.of(ANY_QUALIFIER, DEFAULT_QUALIFIER);
+  
   private Qualifiers() {
     super();
   }
 
-  public static final List<NamedAttributeMap<?>> anyAndDefaultQualifiers() {
-    return ANY_AND_DEFAULT;
+  public static final NamedAttributeMap<?> anyQualifier() {
+    return ANY_QUALIFIER;
   }
 
-  public static final NamedAttributeMap<?> anyQualifier() {
-    return Kind.ANY_QUALIFIER.of();
+  public static final boolean anyQualifier(final NamedAttributeMap<?> nam) {
+    return ANY_QUALIFIER.equals(nam) && qualifier(nam);
   }
 
   public static final List<NamedAttributeMap<?>> anyQualifiers() {
-    return ANY;
+    return ANY_QUALIFIERS;
+  }
+
+  public static final List<NamedAttributeMap<?>> anyAndDefaultQualifiers() {
+    return ANY_AND_DEFAULT_QUALIFIERS;
   }
 
   public static final NamedAttributeMap<?> defaultQualifier() {
-    return Kind.DEFAULT_QUALIFIER.of();
+    return DEFAULT_QUALIFIER;
+  }
+
+  public static final boolean defaultQualifier(final NamedAttributeMap<?> nam) {
+    return DEFAULT_QUALIFIER.equals(nam) && qualifier(nam);
   }
 
   public static final List<NamedAttributeMap<?>> defaultQualifiers() {
-    return DEFAULT;
+    return DEFAULT_QUALIFIERS;
   }
 
   public static final NamedAttributeMap<?> qualifier() {
-    return Kind.QUALIFIER.of();
+    return QUALIFIER;
   }
 
   public static final boolean qualifier(final NamedAttributeMap<?> q) {
-    return q != null && Kind.QUALIFIER.describes(q);
+    return q != null && qualifier(q.metadata());
+  }
+
+  private static final boolean qualifier(final Iterable<? extends NamedAttributeMap<?>> mds) {
+    for (final NamedAttributeMap<?> md : mds) {
+      if (QUALIFIER.equals(md) && md.metadata().isEmpty() || qualifier(md)) {
+        return true;
+      }
+    }
+    return false;
   }
 
   public static final List<NamedAttributeMap<?>> qualifiers(final Collection<? extends NamedAttributeMap<?>> c) {
@@ -69,7 +94,7 @@ public final class Qualifiers {
     }
     final ArrayList<NamedAttributeMap<?>> list = new ArrayList<>(c.size());
     for (final NamedAttributeMap<?> a : c) {
-      if (Kind.QUALIFIER.describes(a)) {
+      if (qualifier(a)) {
         list.add(a);
       }
     }
@@ -77,83 +102,24 @@ public final class Qualifiers {
     return Collections.unmodifiableList(list);
   }
 
-  // TODO: this blends descriptive concerns ("is this arbitrary thing a kind of qualifier?") with very specific concerns
-  // ("is this thing the 'Default' qualifier?"). That feels wrong.
-  public enum Kind {
-
-    QUALIFIER() {
-      private static final NamedAttributeMap<?> DESIGNATOR = new NamedAttributeMap<>("Qualifier");
-
-      /**
-       * Returns {@code true} if {@code a} is non-{@code null}, and if an element of its {@linkplain
-       * NamedAttributeMap#metadata() metadata} is itself the qualifier designator, or if its {@linkplain
-       * NamedAttributeMap#metadata() metadata} contains a {@link NamedAttributeMap} that meets these conditions.
-       *
-       * @param a {@link NamedAttributeMap}; may be {@code null} in which case {@code false} will be returned
-       *
-       * @return {@code true} if {@code a} is non-{@code null} and is either the qualifier designator itself, or if its
-       * {@linkplain NamedAttributeMap#metadata() metadata} contains a {@link NamedAttributeMap} that meets these
-       * conditions
-       *
-       * @see NamedAttributeMap
-       */
-      @Override
-      public final boolean describes(final NamedAttributeMap<?> a) {
-        return a != null && this.describes(a.metadata());
-      }
-
-      public final boolean describes(final Iterable<? extends NamedAttributeMap<?>> mds) {
-        for (final NamedAttributeMap<?> md : mds) {
-          if ((md.equals(DESIGNATOR) && md.metadata().isEmpty()) || this.describes(md)) {
-            return true;
-          }
-        }
-        return false;
-      }
-
-      @Override
-      public final NamedAttributeMap<?> of() {
-        return DESIGNATOR;
-      }
-    },
-
-    ANY_QUALIFIER() {
-      private static final NamedAttributeMap<?> INSTANCE =
-        new NamedAttributeMap<>("Any", Map.of(), Map.of(), List.of(QUALIFIER.of()));
-
-      @Override
-      public final boolean describes(final NamedAttributeMap<?> a) {
-        return a != null && a.equals(INSTANCE) && QUALIFIER.describes(a);
-      }
-
-      @Override
-      public final NamedAttributeMap<?> of() {
-        return INSTANCE;
-      }
-    },
-
-    DEFAULT_QUALIFIER() {
-      private static final NamedAttributeMap<?> INSTANCE =
-        new NamedAttributeMap<>("Default", Map.of(), Map.of(), List.of(QUALIFIER.of()));
-
-      @Override
-      public final boolean describes(final NamedAttributeMap<?> a) {
-        return a != null && a.equals(INSTANCE) && QUALIFIER.describes(a);
-      }
-
-      @Override
-      public final NamedAttributeMap<?> of() {
-        return INSTANCE;
-      }
+  public static final NamedAttributeMap<?> of(final NamedAttributeMap<?> nam) {
+    return switch (nam) {
+    case null -> throw new NullPointerException("nam");
+    case NamedAttributeMap<?> q when anyQualifier(q) -> anyQualifier();
+    case NamedAttributeMap<?> q when defaultQualifier(q) -> defaultQualifier();
+    case NamedAttributeMap<?> q when QUALIFIER.equals(q) && q.metadata().isEmpty() -> qualifier();
+    default -> nam;
     };
+  }
 
-    private Kind() {
-    }
-
-    public abstract boolean describes(final NamedAttributeMap<?> a);
-
-    public abstract NamedAttributeMap<?> of();
-
+  public static final List<NamedAttributeMap<?>> of(final List<NamedAttributeMap<?>> list) {
+    return switch (list) {
+    case null -> throw new NullPointerException("list");
+    case List<NamedAttributeMap<?>> l when l.size() == 1 && anyQualifier(l.get(0)) -> anyQualifiers();
+    case List<NamedAttributeMap<?>> l when l.size() == 1 && defaultQualifier(l.get(0)) -> defaultQualifiers();
+    case List<NamedAttributeMap<?>> l when l.size() == 2 && anyQualifier(l.get(0)) && defaultQualifier(l.get(1)) -> anyAndDefaultQualifiers();
+    default -> list;
+    };
   }
 
 }

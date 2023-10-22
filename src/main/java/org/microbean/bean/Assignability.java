@@ -13,13 +13,17 @@
  */
 package org.microbean.bean;
 
+import java.lang.constant.Constable;
+import java.lang.constant.ConstantDesc;
+import java.lang.constant.DynamicConstantDesc;
+import java.lang.constant.MethodHandleDesc;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 
-import java.util.function.BiPredicate;
-import java.util.function.Function;
 import java.util.function.Predicate;
 
 import javax.lang.model.element.Element;
@@ -39,8 +43,14 @@ import javax.lang.model.type.WildcardType;
 import org.microbean.lang.Lang;
 import org.microbean.lang.TypeAndElementSource;
 
+import static java.lang.constant.ConstantDescs.BSM_INVOKE;
+
+import static org.microbean.bean.ConstantDescs.CD_Assignability;
+
+import static org.microbean.lang.ConstantDescs.CD_TypeAndElementSource;
+
 // Applies CDI assignability semantics to types.
-public final class Assignability {
+public final class Assignability implements Constable {
 
 
   /*
@@ -48,13 +58,7 @@ public final class Assignability {
    */
 
 
-  private final BiPredicate<? super TypeMirror, ? super TypeMirror> sameType;
-
-  private final Function<? super TypeMirror, ? extends TypeMirror> erasure;
-
-  private final Function<? super TypeMirror, ? extends ArrayType> arrayType;
-
-  private final BiPredicate<? super ReferenceType, ? super ReferenceType> covariantlyAssignable;
+  private final TypeAndElementSource tes;
 
 
   /*
@@ -63,25 +67,13 @@ public final class Assignability {
 
 
   public Assignability() {
-    this(Lang.typeAndElementSource());
+    super();
+    this.tes = Lang.typeAndElementSource();
   }
 
   public Assignability(final TypeAndElementSource tes) {
-    this(tes::sameType,
-         tes::erasure,
-         tes::arrayTypeOf,
-         (r, p) -> tes.assignable(p, r)); // yes, backwards
-  }
-
-  private Assignability(final BiPredicate<? super TypeMirror, ? super TypeMirror> sameType,
-                        final Function<? super TypeMirror, ? extends TypeMirror> erasure,
-                        final Function<? super TypeMirror, ? extends ArrayType> arrayType,
-                        final BiPredicate<? super ReferenceType, ? super ReferenceType> covariantlyAssignable) {
     super();
-    this.sameType = Objects.requireNonNull(sameType, "sameType");
-    this.erasure = Objects.requireNonNull(erasure, "erasure");
-    this.arrayType = Objects.requireNonNull(arrayType, "arrayType");
-    this.covariantlyAssignable = Objects.requireNonNull(covariantlyAssignable, "covariantlyAssignable");
+    this.tes = tes == null ? Lang.typeAndElementSource() : tes;
   }
 
 
@@ -89,6 +81,18 @@ public final class Assignability {
    * Instance methods.
    */
 
+
+  @Override // Constable
+  public final Optional<? extends ConstantDesc> describeConstable() {
+    if (this.tes instanceof Constable c) {
+      return c.describeConstable()
+        .map(tesDesc -> DynamicConstantDesc.of(BSM_INVOKE,
+                                               MethodHandleDesc.ofConstructor(CD_Assignability,
+                                                                              CD_TypeAndElementSource),
+                                               tesDesc));
+    }
+    return Optional.empty();
+  }
 
   // Is at least one payload assignable to the receiver? That is, does at least one payload "match the receiver" in CDI
   // parlance?
@@ -139,6 +143,10 @@ public final class Assignability {
       };
       default -> throw new IllegalArgumentException("Illegal receiver kind: " + receiver.getKind() + "; receiver: " + receiver);
     };
+  }
+
+  public final TypeAndElementSource typeAndElementSource() {
+    return this.tes;
   }
 
   /*
@@ -315,7 +323,7 @@ public final class Assignability {
   private final boolean identical(final TypeMirror receiver, final TypeMirror payload) {
     // CDI has an undefined notion of "identical to".  This method attempts to interpret that.  Recall that
     // javax.lang.model.* compares types with "sameType" semantics.
-    return receiver == payload || this.sameType.test(receiver, payload);
+    return receiver == payload || this.tes.sameType(receiver, payload);
   }
 
   // This test asks: is the *required type* assignable to the *bean type*'s bounds?
@@ -404,7 +412,7 @@ public final class Assignability {
     assert actual(classOrArrayTypePayload);
     return
       classOrArrayTypeReceiver == classOrArrayTypePayload || // Optimization
-      this.covariantlyAssignable.test(classOrArrayTypeReceiver, classOrArrayTypePayload);
+      this.tes.assignable(classOrArrayTypePayload, classOrArrayTypeReceiver); // yes, backwards
   }
 
   private final boolean condensedTypeVariableBoundsAssignableToExtendsBound(final WildcardType receiver, final TypeVariable payload) {
@@ -488,12 +496,12 @@ public final class Assignability {
 
   // Erase t and return its erasure. Erasing is a complex business that can involve the creation of new types.
   private final TypeMirror erasure(final TypeMirror t) {
-    return this.erasure.apply(t);
+    return this.tes.erasure(t);
   }
 
   // Return a possibly new ArrayType whose component type is the supplied componentType.
   private final ArrayType arrayType(final TypeMirror componentType) {
-    return this.arrayType.apply(componentType);
+    return this.tes.arrayTypeOf(componentType);
   }
 
 

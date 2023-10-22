@@ -14,6 +14,7 @@
 package org.microbean.bean;
 
 import java.util.Collection;
+import java.util.SequencedSet;
 import java.util.Set;
 
 import java.util.function.BiFunction;
@@ -23,10 +24,10 @@ import org.microbean.bean.Alternate.Resolver;
 public interface BeanSet {
 
   // Give me all the Beans
-  public Set<Bean<?>> beans();
+  public SequencedSet<Bean<?>> beans();
 
   // Give me Beans that match
-  public Set<Bean<?>> beans(final BeanSelectionCriteria beanSelectionCriteria);
+  public SequencedSet<Bean<?>> beans(final BeanSelectionCriteria beanSelectionCriteria);
 
   // Give me the single Bean that matches, or run op on the conflicting bits
   public Bean<?> bean(final BeanSelectionCriteria beanSelectionCriteria,

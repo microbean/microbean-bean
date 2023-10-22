@@ -52,12 +52,11 @@ import static java.lang.constant.DirectMethodHandleDesc.Kind.STATIC;
 
 import static org.microbean.bean.ConstantDescs.CD_Assignability;
 import static org.microbean.bean.ConstantDescs.CD_BeanSelectionCriteria;
-import static org.microbean.bean.InterceptorBindings.Kind.ANY_INTERCEPTOR_BINDING;
-import static org.microbean.bean.InterceptorBindings.Kind.INTERCEPTOR_BINDING;
+import static org.microbean.bean.InterceptorBindings.anyInterceptorBinding;
+import static org.microbean.bean.Qualifiers.anyQualifier;
+import static org.microbean.bean.Qualifiers.defaultQualifier;
+import static org.microbean.bean.Qualifiers.qualifier;
 import static org.microbean.bean.Qualifiers.defaultQualifiers;
-import static org.microbean.bean.Qualifiers.Kind.ANY_QUALIFIER;
-import static org.microbean.bean.Qualifiers.Kind.DEFAULT_QUALIFIER;
-import static org.microbean.bean.Qualifiers.Kind.QUALIFIER;
 
 import static org.microbean.lang.ConstantDescs.CD_TypeAndElementSource;
 import static org.microbean.lang.ConstantDescs.CD_TypeMirror;
@@ -81,11 +80,9 @@ public final class BeanSelectionCriteria implements Constable {
    */
 
 
-  private final TypeAndElementSource tes;
-
   private final Assignability assignability;
 
-  private final TypeMirror type;
+  private final DelegatingTypeMirror type;
 
   private final List<NamedAttributeMap<?>> attributes;
 
@@ -98,36 +95,30 @@ public final class BeanSelectionCriteria implements Constable {
 
 
   public BeanSelectionCriteria(final TypeMirror type) {
-    this(type, defaultQualifiers());
+    this(new Assignability(), type);
   }
 
-  public BeanSelectionCriteria(final TypeMirror type,
-                               final List<? extends NamedAttributeMap<?>> attributes) {
-    this(typeAndElementSource(), type, attributes);
+  public BeanSelectionCriteria(final TypeMirror type, final List<? extends NamedAttributeMap<?>> attributes) {
+    this(new Assignability(), type, attributes);
   }
 
-  public BeanSelectionCriteria(final TypeAndElementSource tes,
+  public BeanSelectionCriteria(final Assignability assignability, final TypeMirror type) {
+    this(assignability, type, defaultQualifiers());
+  }
+
+  public BeanSelectionCriteria(final Assignability assignability,
                                final TypeMirror type,
                                final List<? extends NamedAttributeMap<?>> attributes) {
-    this(tes, new Assignability(tes), type, attributes);
+    this(assignability, type, attributes, true);
   }
 
-  public BeanSelectionCriteria(final TypeAndElementSource tes,
-                               final Assignability assignability,
-                               final TypeMirror type,
-                               final List<? extends NamedAttributeMap<?>> attributes) {
-    this(tes, assignability, type, attributes, true);
-  }
-
-  public BeanSelectionCriteria(final TypeAndElementSource tes,
-                               final Assignability assignability,
+  public BeanSelectionCriteria(final Assignability assignability,
                                final TypeMirror type,
                                final List<? extends NamedAttributeMap<?>> attributes,
                                final boolean box) {
     super();
-    this.tes = Objects.requireNonNullElse(tes, Lang.typeAndElementSource());
-    this.assignability = Objects.requireNonNullElse(assignability, new Assignability(this.tes));
-    this.type = DelegatingTypeMirror.of(validateType(type, box), this.tes, SAME_TYPE_EQUALITY);
+    this.assignability = assignability == null ? new Assignability() : assignability;
+    this.type = DelegatingTypeMirror.of(validateType(type, box), this.assignability.typeAndElementSource(), SAME_TYPE_EQUALITY);
     this.attributes = List.copyOf(attributes);
     this.box = box;
   }
@@ -191,28 +182,28 @@ public final class BeanSelectionCriteria implements Constable {
     if (type == this.type()) {
       return this;
     }
-    return new BeanSelectionCriteria(this.tes, this.assignability, type, this.attributes(), this.box());
+    return new BeanSelectionCriteria(this.assignability, type, this.attributes(), this.box());
   }
 
   public final BeanSelectionCriteria withAttributes(final List<? extends NamedAttributeMap<?>> attributes) {
     if (attributes == this.attributes()) {
       return this;
     }
-    return new BeanSelectionCriteria(this.tes, this.assignability, this.type(), List.copyOf(attributes), this.box());
+    return new BeanSelectionCriteria(this.assignability, this.type(), List.copyOf(attributes), this.box());
   }
 
   public final BeanSelectionCriteria withBox(final boolean box) {
     if (box == this.box()) {
       return this;
     }
-    return new BeanSelectionCriteria(this.tes, this.assignability, this.type(), this.attributes(), box);
+    return new BeanSelectionCriteria(this.assignability, this.type(), this.attributes(), box);
   }
 
   private final boolean selectsInterceptorBindings(final Collection<? extends NamedAttributeMap<?>> attributes) {
-    final List<? extends NamedAttributeMap<?>> herBindings = attributes.stream().filter(INTERCEPTOR_BINDING::describes).toList();
+    final List<? extends NamedAttributeMap<?>> herBindings = InterceptorBindings.interceptorBindings(attributes);
     if (herBindings.isEmpty()) {
       return this.interceptorBindings().isEmpty();
-    } else if (herBindings.size() == 1 && ANY_INTERCEPTOR_BINDING.describes(herBindings.iterator().next())) {
+    } else if (herBindings.size() == 1 && anyInterceptorBinding(herBindings.iterator().next())) {
       return true;
     }
     final List<NamedAttributeMap<?>> ibs = this.interceptorBindings();
@@ -221,13 +212,14 @@ public final class BeanSelectionCriteria implements Constable {
 
   private final boolean selectsQualifiers(final Collection<? extends NamedAttributeMap<?>> attributes) {
     final Collection<? extends NamedAttributeMap<?>> myQualifiers = this.qualifiers();
-    final List<? extends NamedAttributeMap<?>> herQualifiers = attributes.stream().filter(QUALIFIER::describes).toList();
+    // final List<? extends NamedAttributeMap<?>> herQualifiers = attributes.stream().filter(QUALIFIER::describes).toList();
+    final List<? extends NamedAttributeMap<?>> herQualifiers = Qualifiers.qualifiers(attributes);
     if (myQualifiers.isEmpty()) {
       // Pretend I had [@Default] and she had [@Default, @Any].
       return herQualifiers.isEmpty() || containsAll(herQualifiers::contains, defaultQualifiers());
     } else if (herQualifiers.isEmpty()) {
       for (final NamedAttributeMap<?> myQualifier : myQualifiers) {
-        if (ANY_QUALIFIER.describes(myQualifier) || DEFAULT_QUALIFIER.describes(myQualifier)) {
+        if (anyQualifier(myQualifier) || defaultQualifier(myQualifier)) {
           // I had [@Default] or [@Any] or [@Default, @Any]; pretend she had [@Default, @Any].
           return true;
         }
@@ -244,25 +236,22 @@ public final class BeanSelectionCriteria implements Constable {
 
   @Override // Constable
   public final Optional<DynamicConstantDesc<BeanSelectionCriteria>> describeConstable() {
-    return Constables.describeConstable(this.tes)
-      .flatMap(tesDesc -> Constables.describeConstable(this.assignability)
-               .flatMap(assignabilityDesc -> Lang.describeConstable(this.type())
-                        .flatMap(typeDesc -> Constables.describeConstable(this.attributes())
-                                 .map(attributesDesc -> DynamicConstantDesc.of(BSM_INVOKE,
-                                                                               MethodHandleDesc.ofMethod(STATIC,
-                                                                                                         CD_BeanSelectionCriteria,
-                                                                                                         "of",
-                                                                                                         MethodTypeDesc.of(CD_BeanSelectionCriteria,
-                                                                                                                           CD_TypeAndElementSource,
-                                                                                                                           CD_Assignability,
-                                                                                                                           CD_TypeMirror,
-                                                                                                                           CD_Collection,
-                                                                                                                           CD_boolean)),
-                                                                               tesDesc,
-                                                                               assignabilityDesc,
-                                                                               typeDesc,
-                                                                               attributesDesc,
-                                                                               this.box ? TRUE : FALSE)))));
+    return this.assignability.describeConstable()
+      .flatMap(assignabilityDesc -> Lang.describeConstable(this.type())
+               .flatMap(typeDesc -> Constables.describeConstable(this.attributes())
+                        .map(attributesDesc -> DynamicConstantDesc.of(BSM_INVOKE,
+                                                                      MethodHandleDesc.ofMethod(STATIC,
+                                                                                                CD_BeanSelectionCriteria,
+                                                                                                "of",
+                                                                                                MethodTypeDesc.of(CD_BeanSelectionCriteria,
+                                                                                                                  CD_Assignability,
+                                                                                                                  CD_TypeMirror,
+                                                                                                                  CD_Collection,
+                                                                                                                  CD_boolean)),
+                                                                      assignabilityDesc,
+                                                                      typeDesc,
+                                                                      attributesDesc,
+                                                                      this.box ? TRUE : FALSE))));
   }
 
   @Override // Object
@@ -305,13 +294,8 @@ public final class BeanSelectionCriteria implements Constable {
    */
 
 
-  @Deprecated
-  private static final TypeKind kind(final TypeMirror t) {
-    return t.getKind();
-  }
-
   private static final TypeMirror validateType(final TypeMirror type, final boolean box) {
-    final TypeKind k = kind(type);
+    final TypeKind k = type.getKind();
     if (box && k.isPrimitive()) {
       return Lang.boxedClass((PrimitiveType)type).asType();
     }
@@ -324,18 +308,12 @@ public final class BeanSelectionCriteria implements Constable {
 
   // Returns the component type of t if is an array type. Returns t in all other cases.
   private static final TypeMirror componentType(final TypeMirror t) {
-    return switch (kind(t)) {
-    case ARRAY -> ((ArrayType)t).getComponentType();
-    default -> t;
-    };
+    return t.getKind() == TypeKind.ARRAY ? ((ArrayType)t).getComponentType() : t;
   }
 
   // Returns the element type of t if t is an array type. Returns t in all other cases.
   private static final TypeMirror elementType(final TypeMirror t) {
-    return switch (kind(t)) {
-    case ARRAY -> elementType(componentType(t));
-    default -> t;
-    };
+    return t.getKind() == TypeKind.ARRAY ? elementType(componentType(t)) : t;
   }
 
   private static final boolean containsAll(final Predicate<? super Object> p, final Iterable<?> i) {
@@ -349,12 +327,11 @@ public final class BeanSelectionCriteria implements Constable {
   }
 
   // Called by describeConstable().
-  public static final BeanSelectionCriteria of(final TypeAndElementSource tes,
-                                               final Assignability a,
+  public static final BeanSelectionCriteria of(final Assignability a,
                                                final TypeMirror type,
                                                final Collection<? extends NamedAttributeMap<?>> attributes,
                                                final boolean box) {
-    return new BeanSelectionCriteria(tes, a, type, List.copyOf(attributes), box);
+    return new BeanSelectionCriteria(a, type, List.copyOf(attributes), box);
   }
 
 

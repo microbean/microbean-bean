@@ -74,7 +74,7 @@ public interface Creation<I> extends AutoCloseable, Cloneable {
    *
    * @exception IllegalStateException if it is not legal yet to close this {@link Creation}
    *
-   * @see #clone()
+   * @see #clone(BeanSelectionCriteria)
    *
    * @see AutoCloseableRegistry
    *

@@ -24,6 +24,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import static org.microbean.bean.Qualifiers.defaultQualifier;
+import static org.microbean.bean.Qualifiers.qualifier;
 
 final class TestQualifiers {
 
@@ -40,8 +41,8 @@ final class TestQualifiers {
     final NamedAttributeMap<?> q = md.iterator().next();
     assertEquals("Qualifier", q.name());
     assertTrue(q.isEmpty());
-    assertTrue(Qualifiers.Kind.QUALIFIER.describes(dq));
-    assertFalse(Qualifiers.Kind.QUALIFIER.describes(q));
+    assertTrue(qualifier(dq));
+    assertFalse(qualifier(q));
   }
   
 }

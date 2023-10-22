@@ -24,6 +24,7 @@ import java.lang.reflect.Modifier;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
@@ -82,7 +83,7 @@ final class TestDefaultBeanSet {
 
   @BeforeEach
   final void setup() {
-    this.beans = new DefaultBeanSet(beanSet);
+    this.beans = new DefaultBeanSet(assignability, beanSet, Map.of(), null);
   }
 
   @Test
@@ -100,9 +101,9 @@ final class TestDefaultBeanSet {
 
     // 3 == Bean<String>, Bean<DefaultBeanSet>, Bean<Alternate.Resolver>
     assertEquals(3, set.size());
-    hello = beans.bean(new BeanSelectionCriteria(tes, assignability, tes.declaredType(String.class), List.of(defaultQualifier()), true)).cast();
+    hello = beans.bean(new BeanSelectionCriteria(assignability, tes.declaredType(String.class), List.of(defaultQualifier()), true)).cast();
     assertSame("Hello", hello.factory().create(null, null));
-    hello = beans.bean(new BeanSelectionCriteria(tes, assignability, tes.declaredType(Object.class), List.of(defaultQualifier()), true)).cast();
+    hello = beans.bean(new BeanSelectionCriteria(assignability, tes.declaredType(Object.class), List.of(defaultQualifier()), true)).cast();
     assertSame("Hello", hello.factory().create(null, null));
   }
 
@@ -114,7 +115,7 @@ final class TestDefaultBeanSet {
     Set<Bean<?>> set = cd.resolveConstantDesc(privateLookupIn(ReferenceTypeList.class, lookup()));
     final class ConstantDefaultBeanSet extends DefaultBeanSet {
       public ConstantDefaultBeanSet() throws ReflectiveOperationException {
-        super((Collection<Bean<?>>)cd.resolveConstantDesc(privateLookupIn(ReferenceTypeList.class, lookup())));
+        super(assignability, (Collection<Bean<?>>)cd.resolveConstantDesc(privateLookupIn(ReferenceTypeList.class, lookup())), Map.of(), null);
       }
     }
     final DefaultBeanSet beans = new ConstantDefaultBeanSet();
@@ -122,9 +123,9 @@ final class TestDefaultBeanSet {
 
     // 3 == Bean<String>, Bean<DefaultBeanSet>, Bean<Alternate.Resolver>
     assertEquals(1, set.size());
-    hello = beans.bean(new BeanSelectionCriteria(tes, assignability, tes.declaredType(String.class), List.of(defaultQualifier()), true)).cast();
+    hello = beans.bean(new BeanSelectionCriteria(assignability, tes.declaredType(String.class), List.of(defaultQualifier()), true)).cast();
     assertSame("Hello", hello.factory().create(null, null));
-    hello = beans.bean(new BeanSelectionCriteria(tes, assignability, tes.declaredType(Object.class), List.of(defaultQualifier()), true)).cast();
+    hello = beans.bean(new BeanSelectionCriteria(assignability, tes.declaredType(Object.class), List.of(defaultQualifier()), true)).cast();
     assertSame("Hello", hello.factory().create(null, null));
   }
 

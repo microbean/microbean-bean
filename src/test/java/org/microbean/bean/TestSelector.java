@@ -37,33 +37,32 @@ private static final TypeAndElementSource tes = Lang.typeAndElementSource();
 
   @Test
   final void testSelectorStringSelectsString() {
-    final BeanSelectionCriteria s = new BeanSelectionCriteria(tes, assignability, tes.declaredType(String.class), List.of(), true);
+    final BeanSelectionCriteria s = new BeanSelectionCriteria(assignability, tes.declaredType(String.class), List.of(), true);
     assertTrue(s.selects(tes.declaredType(String.class)));
   }
 
   @Test
   final void testSelectorStringDoesNotSelectObject() {
-    final BeanSelectionCriteria s = new BeanSelectionCriteria(tes, assignability, tes.declaredType(String.class), List.of(), true);
+    final BeanSelectionCriteria s = new BeanSelectionCriteria(assignability, tes.declaredType(String.class), List.of(), true);
     assertFalse(s.selects(tes.declaredType(Object.class)));
   }
 
   @Test
   final void testSelectorIntSelectsInteger() {
-    final BeanSelectionCriteria s = new BeanSelectionCriteria(tes, assignability, tes.primitiveType(TypeKind.INT), List.of(), true);
+    final BeanSelectionCriteria s = new BeanSelectionCriteria(assignability, tes.primitiveType(TypeKind.INT), List.of(), true);
     assertTrue(s.selects(tes.declaredType(Integer.class)));
   }
 
   @Test
   final void testSelectorObjectDoesNotSelectString() {
-    final BeanSelectionCriteria s = new BeanSelectionCriteria(tes, assignability, tes.declaredType(Object.class), List.of(), true);
+    final BeanSelectionCriteria s = new BeanSelectionCriteria(assignability, tes.declaredType(Object.class), List.of(), true);
     assertFalse(s.selects(tes.declaredType(String.class)));
   }
 
   @Test
   final void testSelectorListUnknownExtendsStringSelectsListString() {
     final BeanSelectionCriteria s =
-      new BeanSelectionCriteria(tes,
-                                assignability,
+      new BeanSelectionCriteria(assignability,
                                 tes.declaredType(null,
                                                  tes.typeElement(List.class),
                                                  tes.wildcardType(tes.declaredType(String.class), null)),
