@@ -14,8 +14,6 @@
 package org.microbean.bean;
 
 import java.lang.constant.ClassDesc;
-import java.lang.constant.Constable;
-import java.lang.constant.ConstantDesc;
 import java.lang.constant.DynamicConstantDesc;
 import java.lang.constant.MethodHandleDesc;
 
@@ -28,7 +26,6 @@ import static java.lang.constant.ConstantDescs.BSM_INVOKE;
 import static java.lang.constant.ConstantDescs.CD_Object;
 import static java.lang.constant.ConstantDescs.CD_boolean;
 import static java.lang.constant.ConstantDescs.FALSE;
-import static java.lang.constant.ConstantDescs.NULL;
 import static java.lang.constant.ConstantDescs.TRUE;
 
 public final class Singleton<I> implements Factory<I> {

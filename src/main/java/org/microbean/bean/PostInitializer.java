@@ -19,5 +19,5 @@ package org.microbean.bean;
 public interface PostInitializer<I> {
 
   public I postInitialize(final I i, final Creation<I> c, final ReferenceSelector r);
-  
+
 }

@@ -24,7 +24,7 @@ public class DefaultCreation<I> implements AutoCloseableRegistry, Creation<I> {
   public DefaultCreation(final AutoCloseableRegistry registry) {
     this(registry, null);
   }
-  
+
   public DefaultCreation(final AutoCloseableRegistry registry,
                          final BeanSelectionCriteria beanSelectionCriteria) {
     super();
@@ -46,7 +46,7 @@ public class DefaultCreation<I> implements AutoCloseableRegistry, Creation<I> {
   public DefaultCreation<I> clone() {
     return this.clone(this.beanSelectionCriteria());
   }
-  
+
   @Override // Creation<I>
   @SuppressWarnings("unchecked")
   public DefaultCreation<I> clone(final BeanSelectionCriteria beanSelectionCriteria) {

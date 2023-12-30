@@ -13,10 +13,8 @@
  */
 package org.microbean.bean;
 
-import org.microbean.bean.Creation;
-
 public interface CreationSupplier {
 
   public <I> Creation<I> creation();
-  
+
 }

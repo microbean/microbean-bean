@@ -15,11 +15,8 @@ package org.microbean.bean;
 
 import java.util.Collection;
 import java.util.SequencedSet;
-import java.util.Set;
 
 import java.util.function.BiFunction;
-
-import org.microbean.bean.Alternate.Resolver;
 
 public interface BeanSet {
 

@@ -13,13 +13,11 @@
  */
 package org.microbean.bean;
 
-import java.util.function.BiFunction;
-
 // An applicator of business method interceptions. This is used during assembly of a Factory implementation and should
 // be used probably only when "around-invoke" interceptions are in effect.
 @FunctionalInterface
 public interface InterceptionsApplicator<I> {
 
   public I apply(final I i, final Creation<I> c, final ReferenceSelector r);
-  
+
 }

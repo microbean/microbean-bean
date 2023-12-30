@@ -21,24 +21,15 @@ import java.lang.constant.MethodHandleDesc;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
-import java.util.function.BiPredicate;
 import java.util.function.Predicate;
 
-import javax.lang.model.element.Element;
-import javax.lang.model.element.ElementKind;
-import javax.lang.model.element.QualifiedNameable;
-
-import javax.lang.model.type.ArrayType;
 import javax.lang.model.type.DeclaredType;
-import javax.lang.model.type.PrimitiveType;
 import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
-import javax.lang.model.type.TypeVariable;
 
 import org.microbean.constant.Constables;
 
@@ -57,23 +48,19 @@ import static java.lang.constant.ConstantDescs.BSM_INVOKE;
 import static java.lang.constant.ConstantDescs.CD_int;
 import static java.lang.constant.ConstantDescs.CD_List;
 
-import static org.microbean.bean.ConstantDescs.CD_ReferenceTypeList;
-
-import static org.microbean.lang.Lang.sameTypeEquality;
-
 class ReferenceTypeList implements Constable {
 
   static final ClassDesc CD_Equality = ClassDesc.of(Equality.class.getName());
 
   final Equality equality;
 
-  private final List<DelegatingTypeMirror> types;
-
   final int classesIndex;
 
   final int arraysIndex;
 
   final int interfacesIndex;
+
+  private final List<DelegatingTypeMirror> types;
 
   public ReferenceTypeList(final TypeMirror type) {
     this(List.of(type), null, Lang.typeAndElementSource(), Lang.sameTypeEquality());
@@ -243,8 +230,7 @@ class ReferenceTypeList implements Constable {
 
   @Override // Object
   public int hashCode() {
-    int hashCode = 17;
-    return 31 * hashCode + this.types().hashCode(); // each TypeMirror will be a DelegatingTypeMirror using value-based hashCode semantics
+    return 31 * 17 + this.types().hashCode(); // each TypeMirror will be a DelegatingTypeMirror using value-based hashCode semantics
   }
 
   @Override // Object
@@ -288,13 +274,13 @@ class ReferenceTypeList implements Constable {
   }
 
   public static ReferenceTypeList closure(final TypeMirror t,
-                                          Predicate<? super TypeMirror> typeFilter,
+                                          final Predicate<? super TypeMirror> typeFilter,
                                           final TypeAndElementSource typeAndElementSource) {
     return closure(t, typeFilter, new Visitors(typeAndElementSource));
   }
 
   public static ReferenceTypeList closure(final TypeMirror t,
-                                          Predicate<? super TypeMirror> typeFilter,
+                                          final Predicate<? super TypeMirror> typeFilter,
                                           final Visitors visitors) {
     return new ReferenceTypeList(visitors.typeClosureVisitor().visit(t).toList(),
                                  typeFilter,

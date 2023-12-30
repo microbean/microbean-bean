@@ -16,8 +16,6 @@ package org.microbean.bean;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.EnumSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -38,7 +36,7 @@ public final class Qualifiers {
   private static final List<NamedAttributeMap<?>> DEFAULT_QUALIFIERS = List.of(DEFAULT_QUALIFIER);
 
   private static final List<NamedAttributeMap<?>> ANY_AND_DEFAULT_QUALIFIERS = List.of(ANY_QUALIFIER, DEFAULT_QUALIFIER);
-  
+
   private Qualifiers() {
     super();
   }
