@@ -18,5 +18,5 @@ package org.microbean.bean;
 public interface ReferenceSelectorProvider {
 
   public ReferenceSelector referenceSelector();
-  
+
 }

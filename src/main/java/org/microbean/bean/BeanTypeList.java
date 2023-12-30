@@ -14,7 +14,6 @@
 package org.microbean.bean;
 
 import java.lang.constant.ClassDesc;
-import java.lang.constant.Constable;
 import java.lang.constant.DynamicConstantDesc;
 import java.lang.constant.MethodHandleDesc;
 
@@ -117,13 +116,13 @@ public final class BeanTypeList extends ReferenceTypeList {
   }
 
   public static final BeanTypeList closure(final TypeMirror t,
-                                           Predicate<? super TypeMirror> typeFilter,
+                                           final Predicate<? super TypeMirror> typeFilter,
                                            final TypeAndElementSource typeAndElementSource) {
     return closure(t, typeFilter, new Visitors(typeAndElementSource));
   }
 
   public static final BeanTypeList closure(final TypeMirror t,
-                                           Predicate<? super TypeMirror> typeFilter,
+                                           final Predicate<? super TypeMirror> typeFilter,
                                            final Visitors visitors) {
     return new BeanTypeList(visitors.typeClosureVisitor().visit(t).toList(),
                             typeFilter,
@@ -144,10 +143,10 @@ public final class BeanTypeList extends ReferenceTypeList {
     // https://jakarta.ee/specifications/cdi/4.0/jakarta-cdi-spec-4.0.html#assignable_parameters
     switch (t.getKind()) {
 
-      // "A bean type may be an array type."
-      //
-      // "However, some Java types are not legal bean types: [...] An array type whose component type is not a legal
-      // bean type"
+    // "A bean type may be an array type."
+    //
+    // "However, some Java types are not legal bean types: [...] An array type whose component type is not a legal bean
+    // type"
     case ARRAY:
       if (!legalBeanType(((ArrayType)t).getComponentType())) {
         if (LOGGER.isLoggable(WARNING)) {

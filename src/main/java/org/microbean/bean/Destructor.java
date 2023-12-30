@@ -29,14 +29,13 @@ public class Destructor<I> {
     this.preDestructor = preDestructor == null ? Destructor::noopDestroying : preDestructor;
   }
 
-  public synchronized final void destroy(final I i, final AutoCloseable destructionRegistry, final ReferenceSelector r) {
+  public final synchronized void destroy(final I i, final AutoCloseable destructionRegistry, final ReferenceSelector r) {
     if (this.destroyed) {
       return;
     }
     if (destructionRegistry == null) {
       this.preDestructor.destroying(i, r);
     } else {
-      Throwable t = null;
       try (destructionRegistry) {
         this.destroy(this.preDestructor.destroying(i, r));
       } catch (final RuntimeException | Error e) {

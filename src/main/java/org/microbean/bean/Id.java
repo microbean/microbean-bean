@@ -13,7 +13,6 @@
  */
 package org.microbean.bean;
 
-import java.lang.constant.ClassDesc;
 import java.lang.constant.Constable;
 import java.lang.constant.DynamicConstantDesc;
 import java.lang.constant.MethodHandleDesc;

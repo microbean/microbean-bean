@@ -30,7 +30,6 @@ import java.util.function.Supplier;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Comparator;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -46,8 +45,6 @@ import java.util.concurrent.ConcurrentMap;
 import java.util.stream.Collector;
 import java.util.stream.Collector.Characteristics;
 
-import javax.lang.model.type.TypeMirror;
-
 import org.microbean.bean.Alternate.Resolver;
 
 import org.microbean.constant.Constables;
@@ -61,11 +58,8 @@ import static java.lang.constant.ConstantDescs.CD_Collection;
 import static java.lang.constant.ConstantDescs.CD_Map;
 
 import static java.util.Collections.unmodifiableSequencedSet;
-import static java.util.Collections.unmodifiableSet;
 
 import static java.util.function.Predicate.not;
-
-import static java.util.stream.Collectors.toUnmodifiableSet;
 
 import static org.microbean.bean.ConstantDescs.CD_Assignability;
 import static org.microbean.bean.ConstantDescs.CD_DefaultBeanSet;
@@ -73,8 +67,6 @@ import static org.microbean.bean.ConstantDescs.CD_Resolver;
 import static org.microbean.bean.Qualifiers.anyAndDefaultQualifiers;
 import static org.microbean.bean.Qualifiers.defaultQualifiers;
 import static org.microbean.bean.Ranked.DEFAULT_RANK;
-
-import static org.microbean.lang.Lang.typeAndElementSource;
 
 import static org.microbean.scope.Scope.SINGLETON_ID;
 

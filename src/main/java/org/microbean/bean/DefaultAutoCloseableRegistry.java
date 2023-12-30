@@ -79,7 +79,7 @@ public class DefaultAutoCloseableRegistry implements AutoCloseableRegistry {
   }
 
   @Override // AutoCloseable
-  public synchronized final boolean closed() {
+  public final synchronized boolean closed() {
     return this.closeables == Set.<AutoCloseable>of();
   }
 
@@ -96,7 +96,7 @@ public class DefaultAutoCloseableRegistry implements AutoCloseableRegistry {
     }
   }
 
-  public synchronized final int size() {
+  public final synchronized int size() {
     return this.closeables == null ? 0 : this.closeables.size();
   }
 

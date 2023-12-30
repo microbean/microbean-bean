@@ -17,7 +17,7 @@ public class ResolutionException extends BeanException {
 
   private static final long serialVersionUID = 1L;
 
-  private transient final BeanSelectionCriteria beanSelectionCriteria;
+  private final transient BeanSelectionCriteria beanSelectionCriteria;
 
   public ResolutionException() {
     super();

@@ -18,5 +18,5 @@ package org.microbean.bean;
 public interface Producer<I> {
 
   public I produce(final Creation<I> c, final ReferenceSelector r);
-  
+
 }

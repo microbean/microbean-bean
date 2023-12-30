@@ -20,7 +20,7 @@ public class AmbiguousResolutionException extends ResolutionException {
 
   private static final long serialVersionUID = 1L;
 
-  private transient final Collection<Alternate> alternates;
+  private final transient Collection<Alternate> alternates;
 
   public AmbiguousResolutionException() {
     this(null, null, null, null);

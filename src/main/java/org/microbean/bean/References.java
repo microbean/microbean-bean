@@ -17,13 +17,11 @@ import java.util.Iterator;
 
 import java.util.function.Supplier;
 
-import javax.lang.model.type.TypeMirror;
-
 public interface References<R> extends AutoCloseable, Iterable<R>, Supplier<R> {
 
   // Destroys r if and only if it is (a) dependent and (b) supplied by get()
-  public boolean destroy(final R r);  
-  
+  public boolean destroy(final R r);
+
   public default Cardinality cardinality() {
     final Iterator<?> i = this.iterator();
     if (i.hasNext()) {
@@ -54,11 +52,11 @@ public interface References<R> extends AutoCloseable, Iterable<R>, Supplier<R> {
     }
   }
 
-  public enum Cardinality {
+  public static enum Cardinality {
 
     ZERO,
     ONE,
-    MANY;
+    MANY
 
   }
 

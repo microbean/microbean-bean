@@ -13,8 +13,6 @@
  */
 package org.microbean.bean;
 
-import java.util.Objects;
-
 // A Producer that applies constructor interceptions, so useful only when constructor interception is supposed to be
 // happening. Used, like all Producers, as part of implementing a Factory.
 //
@@ -22,7 +20,7 @@ import java.util.Objects;
 public abstract class InterceptingProducer<I> implements Producer<I> {
 
   protected final Object[] EMPTY_OBJECT_ARRAY = new Object[0];
-  
+
   protected InterceptingProducer() {
     super();
   }
@@ -35,7 +33,7 @@ public abstract class InterceptingProducer<I> implements Producer<I> {
   protected Object[] parameters(final Creation<I> c, final ReferenceSelector r) {
     return EMPTY_OBJECT_ARRAY;
   }
-  
+
   protected abstract I produce(final Object[] parameters);
-  
+
 }

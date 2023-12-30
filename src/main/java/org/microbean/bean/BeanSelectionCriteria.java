@@ -13,13 +13,10 @@
  */
 package org.microbean.bean;
 
-import java.lang.constant.ClassDesc;
 import java.lang.constant.Constable;
 import java.lang.constant.DynamicConstantDesc;
 import java.lang.constant.MethodHandleDesc;
 import java.lang.constant.MethodTypeDesc;
-
-import java.lang.reflect.Type;
 
 import java.util.Collection;
 import java.util.List;
@@ -37,7 +34,6 @@ import org.microbean.constant.Constables;
 
 import org.microbean.lang.Equality;
 import org.microbean.lang.Lang;
-import org.microbean.lang.TypeAndElementSource;
 
 import org.microbean.lang.type.DelegatingTypeMirror;
 
@@ -55,12 +51,9 @@ import static org.microbean.bean.ConstantDescs.CD_BeanSelectionCriteria;
 import static org.microbean.bean.InterceptorBindings.anyInterceptorBinding;
 import static org.microbean.bean.Qualifiers.anyQualifier;
 import static org.microbean.bean.Qualifiers.defaultQualifier;
-import static org.microbean.bean.Qualifiers.qualifier;
 import static org.microbean.bean.Qualifiers.defaultQualifiers;
 
-import static org.microbean.lang.ConstantDescs.CD_TypeAndElementSource;
 import static org.microbean.lang.ConstantDescs.CD_TypeMirror;
-import static org.microbean.lang.Lang.typeAndElementSource;
 
 public final class BeanSelectionCriteria implements Constable {
 
