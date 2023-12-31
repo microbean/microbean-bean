@@ -36,8 +36,8 @@ jobs:
           distribution: 'temurin'
           gpg-passphrase: 'GPG_PASSPHRASE'
           gpg-private-key: '${{ secrets.GPG_PRIVATE_KEY }}'
-          java-version: '11'
-          mvn-toolchain-id: 'Temurin 11'
+          java-version: '21'
+          mvn-toolchain-id: 'Temurin 21'
           mvn-toolchain-vendor: 'openjdk' # see ../../pom.xml
           server-id: 'sonatype-oss-repository-hosting' # see https://github.com/microbean/microbean-parent/blob/master/pom.xml#L38
           server-password: 'SONATYPE_OSSRH_PASSWORD'
