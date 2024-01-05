@@ -14,7 +14,7 @@
 <div class="source-container">
 <pre><span class="source-line-no">001</span><span id="line-1">/* -*- mode: Java; c-basic-offset: 2; indent-tabs-mode: nil; coding: utf-8-unix -*-</span>
 <span class="source-line-no">002</span><span id="line-2"> *</span>
-<span class="source-line-no">003</span><span id="line-3"> * Copyright © 2023 microBean™.</span>
+<span class="source-line-no">003</span><span id="line-3"> * Copyright © 2023–2024 microBean™.</span>
 <span class="source-line-no">004</span><span id="line-4"> *</span>
 <span class="source-line-no">005</span><span id="line-5"> * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with</span>
 <span class="source-line-no">006</span><span id="line-6"> * the License.  You may obtain a copy of the License at</span>
@@ -32,24 +32,82 @@
 <span class="source-line-no">018</span><span id="line-18"></span>
 <span class="source-line-no">019</span><span id="line-19">import java.util.function.BiFunction;</span>
 <span class="source-line-no">020</span><span id="line-20"></span>
-<span class="source-line-no">021</span><span id="line-21">public interface BeanSet {</span>
-<span class="source-line-no">022</span><span id="line-22"></span>
-<span class="source-line-no">023</span><span id="line-23">  // Give me all the Beans</span>
-<span class="source-line-no">024</span><span id="line-24">  public SequencedSet&lt;Bean&lt;?&gt;&gt; beans();</span>
-<span class="source-line-no">025</span><span id="line-25"></span>
-<span class="source-line-no">026</span><span id="line-26">  // Give me Beans that match</span>
-<span class="source-line-no">027</span><span id="line-27">  public SequencedSet&lt;Bean&lt;?&gt;&gt; beans(final BeanSelectionCriteria beanSelectionCriteria);</span>
-<span class="source-line-no">028</span><span id="line-28"></span>
-<span class="source-line-no">029</span><span id="line-29">  // Give me the single Bean that matches, or run op on the conflicting bits</span>
-<span class="source-line-no">030</span><span id="line-30">  public Bean&lt;?&gt; bean(final BeanSelectionCriteria beanSelectionCriteria,</span>
-<span class="source-line-no">031</span><span id="line-31">                      final BiFunction&lt;? super BeanSelectionCriteria, ? super Collection&lt;? extends Bean&lt;?&gt;&gt;, ? extends Bean&lt;?&gt;&gt; op);</span>
-<span class="source-line-no">032</span><span id="line-32"></span>
-<span class="source-line-no">033</span><span id="line-33">  // Give me the single Bean that matches, or throw an exception</span>
-<span class="source-line-no">034</span><span id="line-34">  public default Bean&lt;?&gt; bean(final BeanSelectionCriteria beanSelectionCriteria) {</span>
-<span class="source-line-no">035</span><span id="line-35">    return this.bean(beanSelectionCriteria, Alternate.Resolver::fail);</span>
-<span class="source-line-no">036</span><span id="line-36">  }</span>
+<span class="source-line-no">021</span><span id="line-21">/**</span>
+<span class="source-line-no">022</span><span id="line-22"> * A notional, immutable, and threadsafe set of {@link Bean}s that permits certain kinds of querying and resolution.</span>
+<span class="source-line-no">023</span><span id="line-23"> *</span>
+<span class="source-line-no">024</span><span id="line-24"> * @author &lt;a href="https://about.me/lairdnelson/" target="_top"&gt;Laird Nelson&lt;/a&gt;</span>
+<span class="source-line-no">025</span><span id="line-25"> */</span>
+<span class="source-line-no">026</span><span id="line-26">public interface BeanSet {</span>
+<span class="source-line-no">027</span><span id="line-27"></span>
+<span class="source-line-no">028</span><span id="line-28">  /**</span>
+<span class="source-line-no">029</span><span id="line-29">   * Returns an entirely immutable {@link SequencedSet} of {@link Bean}s containing all {@link Bean}s known to this</span>
+<span class="source-line-no">030</span><span id="line-30">   * {@link BeanSet} implementation.</span>
+<span class="source-line-no">031</span><span id="line-31">   *</span>
+<span class="source-line-no">032</span><span id="line-32">   * @return an entirely immutable {@link SequencedSet} of {@link Bean}s containing all {@link Bean}s known to this</span>
+<span class="source-line-no">033</span><span id="line-33">   * {@link BeanSet} implementation; never {@code null}</span>
+<span class="source-line-no">034</span><span id="line-34">   */</span>
+<span class="source-line-no">035</span><span id="line-35">  // Give me all the Beans</span>
+<span class="source-line-no">036</span><span id="line-36">  public SequencedSet&lt;Bean&lt;?&gt;&gt; beans();</span>
 <span class="source-line-no">037</span><span id="line-37"></span>
-<span class="source-line-no">038</span><span id="line-38">}</span>
+<span class="source-line-no">038</span><span id="line-38">  /**</span>
+<span class="source-line-no">039</span><span id="line-39">   * Returns an entirely immutable {@link SequencedSet} of {@link Bean}s {@linkplain BeanSelectionCriteria#selects(Bean)</span>
+<span class="source-line-no">040</span><span id="line-40">   * selected by the supplied &lt;code&gt;beanSelectionCriteria&lt;/code&gt;}.</span>
+<span class="source-line-no">041</span><span id="line-41">   *</span>
+<span class="source-line-no">042</span><span id="line-42">   * @param beanSelectionCriteria a {@link BeanSelectionCriteria}; must not be {@code null}</span>
+<span class="source-line-no">043</span><span id="line-43">   *</span>
+<span class="source-line-no">044</span><span id="line-44">   * @return an entirely immutable {@link SequencedSet} of {@link Bean}s {@linkplain BeanSelectionCriteria#selects(Bean)</span>
+<span class="source-line-no">045</span><span id="line-45">   * selected by the supplied &lt;code&gt;beanSelectionCriteria&lt;/code&gt;}; never {@code null}</span>
+<span class="source-line-no">046</span><span id="line-46">   *</span>
+<span class="source-line-no">047</span><span id="line-47">   * @exception NullPointerException if {@code beanSelectionCriteria} is {@code null}</span>
+<span class="source-line-no">048</span><span id="line-48">   */</span>
+<span class="source-line-no">049</span><span id="line-49">  // Give me Beans that match</span>
+<span class="source-line-no">050</span><span id="line-50">  public SequencedSet&lt;Bean&lt;?&gt;&gt; beans(final BeanSelectionCriteria beanSelectionCriteria);</span>
+<span class="source-line-no">051</span><span id="line-51"></span>
+<span class="source-line-no">052</span><span id="line-52">  /**</span>
+<span class="source-line-no">053</span><span id="line-53">   * Returns the sole {@link Bean} {@linkplain BeanSelectionCriteria#selects(Bean) selected by the supplied</span>
+<span class="source-line-no">054</span><span id="line-54">   * &lt;code&gt;beanSelectionCriteria&lt;/code&gt;}, or {@code null} if there is no such {@link Bean}.</span>
+<span class="source-line-no">055</span><span id="line-55">   *</span>
+<span class="source-line-no">056</span><span id="line-56">   * &lt;p&gt;If there is more than one {@link Bean} {@linkplain BeanSelectionCriteria#selects(Bean) selected by the supplied</span>
+<span class="source-line-no">057</span><span id="line-57">   * &lt;code&gt;beanSelectionCriteria&lt;/code&gt;}, then the supplied {@link BiFunction} is invoked with the supplied {@code</span>
+<span class="source-line-no">058</span><span id="line-58">   * beanSelectionCriteria} and the selected {@link Bean}s and its result is returned.&lt;/p&gt;</span>
+<span class="source-line-no">059</span><span id="line-59">   *</span>
+<span class="source-line-no">060</span><span id="line-60">   * @param beanSelectionCriteria a {@link BeanSelectionCriteria}; must not be {@code null}</span>
+<span class="source-line-no">061</span><span id="line-61">   *</span>
+<span class="source-line-no">062</span><span id="line-62">   * @param op a disambiguating {@link BiFunction} that can further resolve a {@link Collection} of {@link Bean}s to a</span>
+<span class="source-line-no">063</span><span id="line-63">   * single {@link Bean}; must not be {@code null}</span>
+<span class="source-line-no">064</span><span id="line-64">   *</span>
+<span class="source-line-no">065</span><span id="line-65">   * @return the resolved {@link Bean}, or {@code null}</span>
+<span class="source-line-no">066</span><span id="line-66">   *</span>
+<span class="source-line-no">067</span><span id="line-67">   * @exception NullPointerException if any argument is {@code null}</span>
+<span class="source-line-no">068</span><span id="line-68">   *</span>
+<span class="source-line-no">069</span><span id="line-69">   * @exception RuntimeException if the supplied {@code op} throws a {@link RuntimeException}</span>
+<span class="source-line-no">070</span><span id="line-70">   */</span>
+<span class="source-line-no">071</span><span id="line-71">  // Give me the single Bean that matches, null if none match, or run op on the conflicting bits</span>
+<span class="source-line-no">072</span><span id="line-72">  public Bean&lt;?&gt; bean(final BeanSelectionCriteria beanSelectionCriteria,</span>
+<span class="source-line-no">073</span><span id="line-73">                      final BiFunction&lt;? super BeanSelectionCriteria, ? super Collection&lt;? extends Bean&lt;?&gt;&gt;, ? extends Bean&lt;?&gt;&gt; op);</span>
+<span class="source-line-no">074</span><span id="line-74"></span>
+<span class="source-line-no">075</span><span id="line-75">  /**</span>
+<span class="source-line-no">076</span><span id="line-76">   * Returns the sole {@link Bean} {@linkplain BeanSelectionCriteria#selects(Bean) selected by the supplied</span>
+<span class="source-line-no">077</span><span id="line-77">   * &lt;code&gt;beanSelectionCriteria&lt;/code&gt;}, or {@code null} if there is no such {@link Bean}.</span>
+<span class="source-line-no">078</span><span id="line-78">   *</span>
+<span class="source-line-no">079</span><span id="line-79">   * &lt;p&gt;If there is more than one {@link Bean} {@linkplain BeanSelectionCriteria#selects(Bean) selected by the supplied</span>
+<span class="source-line-no">080</span><span id="line-80">   * &lt;code&gt;beanSelectionCriteria&lt;/code&gt;}, then an {@link AmbiguousResolutionException} is thrown.&lt;/p&gt;</span>
+<span class="source-line-no">081</span><span id="line-81">   *</span>
+<span class="source-line-no">082</span><span id="line-82">   * @param beanSelectionCriteria a {@link BeanSelectionCriteria}; must not be {@code null}</span>
+<span class="source-line-no">083</span><span id="line-83">   *</span>
+<span class="source-line-no">084</span><span id="line-84">   * @return the resolved {@link Bean}, or {@code null}</span>
+<span class="source-line-no">085</span><span id="line-85">   *</span>
+<span class="source-line-no">086</span><span id="line-86">   * @exception NullPointerException if any argument is {@code null}</span>
+<span class="source-line-no">087</span><span id="line-87">   *</span>
+<span class="source-line-no">088</span><span id="line-88">   * @exception AmbiguousResolutionException if the supplied {@code beanSelectionCriteria} selects more than one {@link</span>
+<span class="source-line-no">089</span><span id="line-89">   * Bean}</span>
+<span class="source-line-no">090</span><span id="line-90">   */</span>
+<span class="source-line-no">091</span><span id="line-91">  // Give me the single Bean that matches, null if none match, or throw an exception</span>
+<span class="source-line-no">092</span><span id="line-92">  public default Bean&lt;?&gt; bean(final BeanSelectionCriteria beanSelectionCriteria) {</span>
+<span class="source-line-no">093</span><span id="line-93">    return this.bean(beanSelectionCriteria, Alternate.Resolver::fail);</span>
+<span class="source-line-no">094</span><span id="line-94">  }</span>
+<span class="source-line-no">095</span><span id="line-95"></span>
+<span class="source-line-no">096</span><span id="line-96">}</span>
 
 
 

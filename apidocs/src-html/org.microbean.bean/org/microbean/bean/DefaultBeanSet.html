@@ -14,7 +14,7 @@
 <div class="source-container">
 <pre><span class="source-line-no">001</span><span id="line-1">/* -*- mode: Java; c-basic-offset: 2; indent-tabs-mode: nil; coding: utf-8-unix -*-</span>
 <span class="source-line-no">002</span><span id="line-2"> *</span>
-<span class="source-line-no">003</span><span id="line-3"> * Copyright © 2023 microBean™.</span>
+<span class="source-line-no">003</span><span id="line-3"> * Copyright © 2023–2024 microBean™.</span>
 <span class="source-line-no">004</span><span id="line-4"> *</span>
 <span class="source-line-no">005</span><span id="line-5"> * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with</span>
 <span class="source-line-no">006</span><span id="line-6"> * the License.  You may obtain a copy of the License at</span>
@@ -31,325 +31,358 @@
 <span class="source-line-no">017</span><span id="line-17">import java.lang.constant.DynamicConstantDesc;</span>
 <span class="source-line-no">018</span><span id="line-18">import java.lang.constant.MethodHandleDesc;</span>
 <span class="source-line-no">019</span><span id="line-19"></span>
-<span class="source-line-no">020</span><span id="line-20">import java.lang.invoke.MethodHandles;</span>
-<span class="source-line-no">021</span><span id="line-21">import java.lang.invoke.VarHandle;</span>
-<span class="source-line-no">022</span><span id="line-22"></span>
-<span class="source-line-no">023</span><span id="line-23">import java.util.Collections;</span>
-<span class="source-line-no">024</span><span id="line-24"></span>
-<span class="source-line-no">025</span><span id="line-25">import java.util.function.BiConsumer;</span>
-<span class="source-line-no">026</span><span id="line-26">import java.util.function.BiFunction;</span>
-<span class="source-line-no">027</span><span id="line-27">import java.util.function.BinaryOperator;</span>
-<span class="source-line-no">028</span><span id="line-28">import java.util.function.Function;</span>
-<span class="source-line-no">029</span><span id="line-29">import java.util.function.Supplier;</span>
-<span class="source-line-no">030</span><span id="line-30"></span>
-<span class="source-line-no">031</span><span id="line-31">import java.util.ArrayList;</span>
-<span class="source-line-no">032</span><span id="line-32">import java.util.Collection;</span>
-<span class="source-line-no">033</span><span id="line-33">import java.util.LinkedHashSet;</span>
-<span class="source-line-no">034</span><span id="line-34">import java.util.List;</span>
-<span class="source-line-no">035</span><span id="line-35">import java.util.Map;</span>
-<span class="source-line-no">036</span><span id="line-36">import java.util.Map.Entry;</span>
-<span class="source-line-no">037</span><span id="line-37">import java.util.Objects;</span>
-<span class="source-line-no">038</span><span id="line-38">import java.util.Optional;</span>
-<span class="source-line-no">039</span><span id="line-39">import java.util.SequencedSet;</span>
-<span class="source-line-no">040</span><span id="line-40">import java.util.Set;</span>
-<span class="source-line-no">041</span><span id="line-41"></span>
-<span class="source-line-no">042</span><span id="line-42">import java.util.concurrent.ConcurrentHashMap;</span>
-<span class="source-line-no">043</span><span id="line-43">import java.util.concurrent.ConcurrentMap;</span>
-<span class="source-line-no">044</span><span id="line-44"></span>
-<span class="source-line-no">045</span><span id="line-45">import java.util.stream.Collector;</span>
-<span class="source-line-no">046</span><span id="line-46">import java.util.stream.Collector.Characteristics;</span>
+<span class="source-line-no">020</span><span id="line-20">import java.util.Collections;</span>
+<span class="source-line-no">021</span><span id="line-21"></span>
+<span class="source-line-no">022</span><span id="line-22">import java.util.function.BiConsumer;</span>
+<span class="source-line-no">023</span><span id="line-23">import java.util.function.BiFunction;</span>
+<span class="source-line-no">024</span><span id="line-24">import java.util.function.BinaryOperator;</span>
+<span class="source-line-no">025</span><span id="line-25">import java.util.function.Function;</span>
+<span class="source-line-no">026</span><span id="line-26">import java.util.function.Supplier;</span>
+<span class="source-line-no">027</span><span id="line-27"></span>
+<span class="source-line-no">028</span><span id="line-28">import java.util.ArrayList;</span>
+<span class="source-line-no">029</span><span id="line-29">import java.util.Collection;</span>
+<span class="source-line-no">030</span><span id="line-30">import java.util.LinkedHashSet;</span>
+<span class="source-line-no">031</span><span id="line-31">import java.util.List;</span>
+<span class="source-line-no">032</span><span id="line-32">import java.util.Map;</span>
+<span class="source-line-no">033</span><span id="line-33">import java.util.Map.Entry;</span>
+<span class="source-line-no">034</span><span id="line-34">import java.util.Optional;</span>
+<span class="source-line-no">035</span><span id="line-35">import java.util.SequencedSet;</span>
+<span class="source-line-no">036</span><span id="line-36">import java.util.Set;</span>
+<span class="source-line-no">037</span><span id="line-37"></span>
+<span class="source-line-no">038</span><span id="line-38">import java.util.concurrent.ConcurrentHashMap;</span>
+<span class="source-line-no">039</span><span id="line-39">import java.util.concurrent.ConcurrentMap;</span>
+<span class="source-line-no">040</span><span id="line-40"></span>
+<span class="source-line-no">041</span><span id="line-41">import java.util.stream.Collector;</span>
+<span class="source-line-no">042</span><span id="line-42">import java.util.stream.Collector.Characteristics;</span>
+<span class="source-line-no">043</span><span id="line-43"></span>
+<span class="source-line-no">044</span><span id="line-44">import org.microbean.bean.Alternate.Resolver;</span>
+<span class="source-line-no">045</span><span id="line-45"></span>
+<span class="source-line-no">046</span><span id="line-46">import org.microbean.constant.Constables;</span>
 <span class="source-line-no">047</span><span id="line-47"></span>
-<span class="source-line-no">048</span><span id="line-48">import org.microbean.bean.Alternate.Resolver;</span>
+<span class="source-line-no">048</span><span id="line-48">import org.microbean.lang.TypeAndElementSource;</span>
 <span class="source-line-no">049</span><span id="line-49"></span>
-<span class="source-line-no">050</span><span id="line-50">import org.microbean.constant.Constables;</span>
+<span class="source-line-no">050</span><span id="line-50">import static java.lang.Integer.signum;</span>
 <span class="source-line-no">051</span><span id="line-51"></span>
-<span class="source-line-no">052</span><span id="line-52">import org.microbean.lang.TypeAndElementSource;</span>
-<span class="source-line-no">053</span><span id="line-53"></span>
-<span class="source-line-no">054</span><span id="line-54">import static java.lang.Integer.signum;</span>
+<span class="source-line-no">052</span><span id="line-52">import static java.lang.constant.ConstantDescs.BSM_INVOKE;</span>
+<span class="source-line-no">053</span><span id="line-53">import static java.lang.constant.ConstantDescs.CD_Collection;</span>
+<span class="source-line-no">054</span><span id="line-54">import static java.lang.constant.ConstantDescs.CD_Map;</span>
 <span class="source-line-no">055</span><span id="line-55"></span>
-<span class="source-line-no">056</span><span id="line-56">import static java.lang.constant.ConstantDescs.BSM_INVOKE;</span>
-<span class="source-line-no">057</span><span id="line-57">import static java.lang.constant.ConstantDescs.CD_Collection;</span>
-<span class="source-line-no">058</span><span id="line-58">import static java.lang.constant.ConstantDescs.CD_Map;</span>
+<span class="source-line-no">056</span><span id="line-56">import static java.util.Collections.unmodifiableSequencedSet;</span>
+<span class="source-line-no">057</span><span id="line-57"></span>
+<span class="source-line-no">058</span><span id="line-58">import static java.util.function.Predicate.not;</span>
 <span class="source-line-no">059</span><span id="line-59"></span>
-<span class="source-line-no">060</span><span id="line-60">import static java.util.Collections.unmodifiableSequencedSet;</span>
-<span class="source-line-no">061</span><span id="line-61"></span>
-<span class="source-line-no">062</span><span id="line-62">import static java.util.function.Predicate.not;</span>
-<span class="source-line-no">063</span><span id="line-63"></span>
-<span class="source-line-no">064</span><span id="line-64">import static org.microbean.bean.ConstantDescs.CD_Assignability;</span>
-<span class="source-line-no">065</span><span id="line-65">import static org.microbean.bean.ConstantDescs.CD_DefaultBeanSet;</span>
-<span class="source-line-no">066</span><span id="line-66">import static org.microbean.bean.ConstantDescs.CD_Resolver;</span>
-<span class="source-line-no">067</span><span id="line-67">import static org.microbean.bean.Qualifiers.anyAndDefaultQualifiers;</span>
-<span class="source-line-no">068</span><span id="line-68">import static org.microbean.bean.Qualifiers.defaultQualifiers;</span>
-<span class="source-line-no">069</span><span id="line-69">import static org.microbean.bean.Ranked.DEFAULT_RANK;</span>
-<span class="source-line-no">070</span><span id="line-70"></span>
-<span class="source-line-no">071</span><span id="line-71">import static org.microbean.scope.Scope.SINGLETON_ID;</span>
-<span class="source-line-no">072</span><span id="line-72"></span>
-<span class="source-line-no">073</span><span id="line-73">// Experimenting with making this non-final so the no-arg constructor can supply its own beans via some other</span>
-<span class="source-line-no">074</span><span id="line-74">// mechanism. Think ldc.</span>
-<span class="source-line-no">075</span><span id="line-75">public class DefaultBeanSet implements BeanSet, Constable {</span>
-<span class="source-line-no">076</span><span id="line-76"></span>
+<span class="source-line-no">060</span><span id="line-60">import static org.microbean.bean.ConstantDescs.CD_Assignability;</span>
+<span class="source-line-no">061</span><span id="line-61">import static org.microbean.bean.ConstantDescs.CD_DefaultBeanSet;</span>
+<span class="source-line-no">062</span><span id="line-62">import static org.microbean.bean.ConstantDescs.CD_Resolver;</span>
+<span class="source-line-no">063</span><span id="line-63">import static org.microbean.bean.Qualifiers.anyAndDefaultQualifiers;</span>
+<span class="source-line-no">064</span><span id="line-64">import static org.microbean.bean.Qualifiers.defaultQualifiers;</span>
+<span class="source-line-no">065</span><span id="line-65">import static org.microbean.bean.Ranked.DEFAULT_RANK;</span>
+<span class="source-line-no">066</span><span id="line-66"></span>
+<span class="source-line-no">067</span><span id="line-67">import static org.microbean.scope.Scope.SINGLETON_ID;</span>
+<span class="source-line-no">068</span><span id="line-68"></span>
+<span class="source-line-no">069</span><span id="line-69">/**</span>
+<span class="source-line-no">070</span><span id="line-70"> * A straightforward {@link BeanSet} implementation.</span>
+<span class="source-line-no">071</span><span id="line-71"> *</span>
+<span class="source-line-no">072</span><span id="line-72"> * @author &lt;a href="https://about.me/lairdnelson/" target="_top"&gt;Laird Nelson&lt;/a&gt;</span>
+<span class="source-line-no">073</span><span id="line-73"> */</span>
+<span class="source-line-no">074</span><span id="line-74">// Experimenting with making this non-final so the no-arg constructor can supply its own beans via some other</span>
+<span class="source-line-no">075</span><span id="line-75">// mechanism. Think ldc.</span>
+<span class="source-line-no">076</span><span id="line-76">public class DefaultBeanSet implements BeanSet, Constable {</span>
 <span class="source-line-no">077</span><span id="line-77"></span>
-<span class="source-line-no">078</span><span id="line-78">  /*</span>
-<span class="source-line-no">079</span><span id="line-79">   * Static fields.</span>
-<span class="source-line-no">080</span><span id="line-80">   */</span>
-<span class="source-line-no">081</span><span id="line-81"></span>
+<span class="source-line-no">078</span><span id="line-78"></span>
+<span class="source-line-no">079</span><span id="line-79">  /*</span>
+<span class="source-line-no">080</span><span id="line-80">   * Instance fields.</span>
+<span class="source-line-no">081</span><span id="line-81">   */</span>
 <span class="source-line-no">082</span><span id="line-82"></span>
-<span class="source-line-no">083</span><span id="line-83">  private static final VarHandle RESOLVER;</span>
-<span class="source-line-no">084</span><span id="line-84"></span>
-<span class="source-line-no">085</span><span id="line-85">  static {</span>
-<span class="source-line-no">086</span><span id="line-86">    try {</span>
-<span class="source-line-no">087</span><span id="line-87">      RESOLVER = MethodHandles.lookup().findVarHandle(DefaultBeanSet.class, "resolver", Resolver.class);</span>
-<span class="source-line-no">088</span><span id="line-88">    } catch (final IllegalAccessException | NoSuchFieldException e) {</span>
-<span class="source-line-no">089</span><span id="line-89">      throw (Error)new ExceptionInInitializerError(e.getMessage()).initCause(e);</span>
-<span class="source-line-no">090</span><span id="line-90">    }</span>
-<span class="source-line-no">091</span><span id="line-91">  }</span>
+<span class="source-line-no">083</span><span id="line-83"></span>
+<span class="source-line-no">084</span><span id="line-84">  private final Resolver resolver;</span>
+<span class="source-line-no">085</span><span id="line-85"></span>
+<span class="source-line-no">086</span><span id="line-86">  private final Assignability assignability;</span>
+<span class="source-line-no">087</span><span id="line-87"></span>
+<span class="source-line-no">088</span><span id="line-88">  private final SequencedSet&lt;Bean&lt;?&gt;&gt; beansView;</span>
+<span class="source-line-no">089</span><span id="line-89"></span>
+<span class="source-line-no">090</span><span id="line-90">  // A cache of Beans that were selected by a BeanSelectionCriteria</span>
+<span class="source-line-no">091</span><span id="line-91">  private final ConcurrentMap&lt;BeanSelectionCriteria, SequencedSet&lt;Bean&lt;?&gt;&gt;&gt; selectionCache;</span>
 <span class="source-line-no">092</span><span id="line-92"></span>
-<span class="source-line-no">093</span><span id="line-93"></span>
-<span class="source-line-no">094</span><span id="line-94">  /*</span>
-<span class="source-line-no">095</span><span id="line-95">   * Instance fields.</span>
-<span class="source-line-no">096</span><span id="line-96">   */</span>
-<span class="source-line-no">097</span><span id="line-97"></span>
-<span class="source-line-no">098</span><span id="line-98"></span>
-<span class="source-line-no">099</span><span id="line-99">  private volatile Resolver resolver;</span>
+<span class="source-line-no">093</span><span id="line-93">  // Guaranteed to be a submap of selectionCache.</span>
+<span class="source-line-no">094</span><span id="line-94">  private final ConcurrentMap&lt;BeanSelectionCriteria, Bean&lt;?&gt;&gt; resolutionCache;</span>
+<span class="source-line-no">095</span><span id="line-95"></span>
+<span class="source-line-no">096</span><span id="line-96"></span>
+<span class="source-line-no">097</span><span id="line-97">  /*</span>
+<span class="source-line-no">098</span><span id="line-98">   * Constructors.</span>
+<span class="source-line-no">099</span><span id="line-99">   */</span>
 <span class="source-line-no">100</span><span id="line-100"></span>
-<span class="source-line-no">101</span><span id="line-101">  private final Assignability assignability;</span>
-<span class="source-line-no">102</span><span id="line-102"></span>
-<span class="source-line-no">103</span><span id="line-103">  private final SequencedSet&lt;Bean&lt;?&gt;&gt; beans;</span>
-<span class="source-line-no">104</span><span id="line-104"></span>
-<span class="source-line-no">105</span><span id="line-105">  // A cache of Beans that were selected by a BeanSelectionCriteria</span>
-<span class="source-line-no">106</span><span id="line-106">  private final ConcurrentMap&lt;BeanSelectionCriteria, SequencedSet&lt;Bean&lt;?&gt;&gt;&gt; selectionCache;</span>
-<span class="source-line-no">107</span><span id="line-107"></span>
-<span class="source-line-no">108</span><span id="line-108">  // Guaranteed to be a submap of selectionCache.</span>
-<span class="source-line-no">109</span><span id="line-109">  private final ConcurrentMap&lt;BeanSelectionCriteria, Bean&lt;?&gt;&gt; resolutionCache;</span>
-<span class="source-line-no">110</span><span id="line-110"></span>
-<span class="source-line-no">111</span><span id="line-111"></span>
-<span class="source-line-no">112</span><span id="line-112">  /*</span>
-<span class="source-line-no">113</span><span id="line-113">   * Constructors.</span>
-<span class="source-line-no">114</span><span id="line-114">   */</span>
-<span class="source-line-no">115</span><span id="line-115"></span>
-<span class="source-line-no">116</span><span id="line-116"></span>
-<span class="source-line-no">117</span><span id="line-117">  public DefaultBeanSet(final Collection&lt;? extends Bean&lt;?&gt;&gt; beans) {</span>
-<span class="source-line-no">118</span><span id="line-118">    this(new Assignability(), beans, Map.of(), StockResolver.INSTANCE);</span>
-<span class="source-line-no">119</span><span id="line-119">  }</span>
-<span class="source-line-no">120</span><span id="line-120"></span>
-<span class="source-line-no">121</span><span id="line-121">  public DefaultBeanSet(final Assignability assignability, final Collection&lt;? extends Bean&lt;?&gt;&gt; beans) {</span>
-<span class="source-line-no">122</span><span id="line-122">    this(assignability, beans, Map.of(), StockResolver.INSTANCE);</span>
-<span class="source-line-no">123</span><span id="line-123">  }</span>
-<span class="source-line-no">124</span><span id="line-124"></span>
-<span class="source-line-no">125</span><span id="line-125">  @SuppressWarnings("this-escape")</span>
-<span class="source-line-no">126</span><span id="line-126">  public DefaultBeanSet(final Assignability assignability,</span>
-<span class="source-line-no">127</span><span id="line-127">                        final Collection&lt;? extends Bean&lt;?&gt;&gt; beans,</span>
-<span class="source-line-no">128</span><span id="line-128">                        final Map&lt;? extends BeanSelectionCriteria, ? extends Bean&lt;?&gt;&gt; preCalculatedResolutions,</span>
-<span class="source-line-no">129</span><span id="line-129">                        final Resolver resolver) {</span>
-<span class="source-line-no">130</span><span id="line-130">    super();</span>
-<span class="source-line-no">131</span><span id="line-131">    this.assignability = assignability == null ? new Assignability() : assignability;</span>
-<span class="source-line-no">132</span><span id="line-132">    this.resolver = resolver == null ? StockResolver.INSTANCE : resolver;</span>
-<span class="source-line-no">133</span><span id="line-133">    this.resolutionCache = new ConcurrentHashMap&lt;&gt;();</span>
-<span class="source-line-no">134</span><span id="line-134">    this.selectionCache = new ConcurrentHashMap&lt;&gt;();</span>
-<span class="source-line-no">135</span><span id="line-135"></span>
-<span class="source-line-no">136</span><span id="line-136">    final List&lt;Bean&lt;?&gt;&gt; newBeans = new ArrayList&lt;&gt;(beans.size() + 2 + preCalculatedResolutions.size());</span>
-<span class="source-line-no">137</span><span id="line-137">    newBeans.addAll(beans);</span>
-<span class="source-line-no">138</span><span id="line-138">    for (final Entry&lt;? extends BeanSelectionCriteria, ? extends Bean&lt;?&gt;&gt; e : preCalculatedResolutions.entrySet()) {</span>
-<span class="source-line-no">139</span><span id="line-139">      final BeanSelectionCriteria bsc = e.getKey();</span>
-<span class="source-line-no">140</span><span id="line-140">      final Bean&lt;?&gt; b = e.getValue();</span>
-<span class="source-line-no">141</span><span id="line-141">      if (!bsc.selects(b)) {</span>
-<span class="source-line-no">142</span><span id="line-142">        throw new IllegalArgumentException("preCalculatedResolutions; beanSelectionCriteria (" + bsc + ") does not select bean (" + b + ")");</span>
-<span class="source-line-no">143</span><span id="line-143">      }</span>
-<span class="source-line-no">144</span><span id="line-144">      newBeans.add(b);</span>
-<span class="source-line-no">145</span><span id="line-145">      this.resolutionCache.put(bsc, b);</span>
-<span class="source-line-no">146</span><span id="line-146">    }</span>
-<span class="source-line-no">147</span><span id="line-147">    newBeans.add(this.resolverBean());</span>
-<span class="source-line-no">148</span><span id="line-148">    newBeans.add(this.bean());</span>
-<span class="source-line-no">149</span><span id="line-149">    Collections.sort(newBeans, DefaultBeanSet::compareRanks);</span>
-<span class="source-line-no">150</span><span id="line-150">    // Second pass to efficiently prime the selection cache now that validation has happened.</span>
-<span class="source-line-no">151</span><span id="line-151">    for (final BeanSelectionCriteria bsc : preCalculatedResolutions.keySet()) {</span>
-<span class="source-line-no">152</span><span id="line-152">      this.beans(bsc, newBeans);</span>
-<span class="source-line-no">153</span><span id="line-153">    }</span>
-<span class="source-line-no">154</span><span id="line-154">    this.beans = unmodifiableSequencedSet(new LinkedHashSet&lt;&gt;(newBeans));</span>
-<span class="source-line-no">155</span><span id="line-155"></span>
-<span class="source-line-no">156</span><span id="line-156">    // Prime the selection and resolution caches with our beans.</span>
-<span class="source-line-no">157</span><span id="line-157">    final TypeAndElementSource tes = assignability.typeAndElementSource();</span>
-<span class="source-line-no">158</span><span id="line-158">    this.bean(new BeanSelectionCriteria(assignability, tes.declaredType(BeanSet.class), defaultQualifiers(), true), DefaultBeanSet::returnNull);</span>
-<span class="source-line-no">159</span><span id="line-159">    this.bean(new BeanSelectionCriteria(assignability, tes.declaredType(Resolver.class), defaultQualifiers(), true), DefaultBeanSet::returnNull);</span>
-<span class="source-line-no">160</span><span id="line-160">  }</span>
-<span class="source-line-no">161</span><span id="line-161"></span>
-<span class="source-line-no">162</span><span id="line-162"></span>
-<span class="source-line-no">163</span><span id="line-163">  /*</span>
-<span class="source-line-no">164</span><span id="line-164">   * Instance methods.</span>
-<span class="source-line-no">165</span><span id="line-165">   */</span>
-<span class="source-line-no">166</span><span id="line-166"></span>
-<span class="source-line-no">167</span><span id="line-167"></span>
-<span class="source-line-no">168</span><span id="line-168">  @Override // BeanSet</span>
-<span class="source-line-no">169</span><span id="line-169">  public final Bean&lt;?&gt; bean(final BeanSelectionCriteria beanSelectionCriteria) {</span>
-<span class="source-line-no">170</span><span id="line-170">    return this.bean(beanSelectionCriteria, Resolver::fail);</span>
-<span class="source-line-no">171</span><span id="line-171">  }</span>
-<span class="source-line-no">172</span><span id="line-172"></span>
-<span class="source-line-no">173</span><span id="line-173">  @Override // BeanSet</span>
-<span class="source-line-no">174</span><span id="line-174">  public final Bean&lt;?&gt; bean(final BeanSelectionCriteria beanSelectionCriteria,</span>
-<span class="source-line-no">175</span><span id="line-175">                            final BiFunction&lt;? super BeanSelectionCriteria, ? super Collection&lt;? extends Bean&lt;?&gt;&gt;, ? extends Bean&lt;?&gt;&gt; op) {</span>
-<span class="source-line-no">176</span><span id="line-176">    return this.resolutionCache.computeIfAbsent(beanSelectionCriteria, s -&gt; this.resolver.resolve(s, this.beans(s), op)); // volatile read</span>
-<span class="source-line-no">177</span><span id="line-177">  }</span>
-<span class="source-line-no">178</span><span id="line-178"></span>
-<span class="source-line-no">179</span><span id="line-179">  @Override // BeanSet</span>
-<span class="source-line-no">180</span><span id="line-180">  public final SequencedSet&lt;Bean&lt;?&gt;&gt; beans() {</span>
-<span class="source-line-no">181</span><span id="line-181">    return this.beans;</span>
-<span class="source-line-no">182</span><span id="line-182">  }</span>
-<span class="source-line-no">183</span><span id="line-183"></span>
-<span class="source-line-no">184</span><span id="line-184">  @Override // BeanSet</span>
-<span class="source-line-no">185</span><span id="line-185">  public final SequencedSet&lt;Bean&lt;?&gt;&gt; beans(final BeanSelectionCriteria beanSelectionCriteria) {</span>
-<span class="source-line-no">186</span><span id="line-186">    return this.beans(beanSelectionCriteria, this.beans);</span>
-<span class="source-line-no">187</span><span id="line-187">  }</span>
-<span class="source-line-no">188</span><span id="line-188"></span>
-<span class="source-line-no">189</span><span id="line-189">  @Override // Constable</span>
-<span class="source-line-no">190</span><span id="line-190">  public Optional&lt;DynamicConstantDesc&lt;DefaultBeanSet&gt;&gt; describeConstable() {</span>
-<span class="source-line-no">191</span><span id="line-191">    return this.assignability.describeConstable()</span>
-<span class="source-line-no">192</span><span id="line-192">      .flatMap(aDesc -&gt; Constables.describeConstable(this.beans)</span>
-<span class="source-line-no">193</span><span id="line-193">               .flatMap(beansDesc -&gt; Constables.describeConstable(this.resolutionCache)</span>
-<span class="source-line-no">194</span><span id="line-194">                        .flatMap(pcrDesc -&gt; Constables.describeConstable(this.resolver)</span>
-<span class="source-line-no">195</span><span id="line-195">                                 .map(resolverDesc -&gt; DynamicConstantDesc.of(BSM_INVOKE,</span>
-<span class="source-line-no">196</span><span id="line-196">                                                                             MethodHandleDesc.ofConstructor(CD_DefaultBeanSet,</span>
-<span class="source-line-no">197</span><span id="line-197">                                                                                                            CD_Assignability,</span>
-<span class="source-line-no">198</span><span id="line-198">                                                                                                            CD_Collection,</span>
-<span class="source-line-no">199</span><span id="line-199">                                                                                                            CD_Map,</span>
-<span class="source-line-no">200</span><span id="line-200">                                                                                                            CD_Resolver),</span>
-<span class="source-line-no">201</span><span id="line-201">                                                                             aDesc,</span>
-<span class="source-line-no">202</span><span id="line-202">                                                                             beansDesc,</span>
-<span class="source-line-no">203</span><span id="line-203">                                                                             pcrDesc,</span>
-<span class="source-line-no">204</span><span id="line-204">                                                                             resolverDesc)))));</span>
-<span class="source-line-no">205</span><span id="line-205">  }</span>
-<span class="source-line-no">206</span><span id="line-206"></span>
-<span class="source-line-no">207</span><span id="line-207">  public final Resolver resolver(final Resolver r) {</span>
-<span class="source-line-no">208</span><span id="line-208">    return (Resolver)RESOLVER.getAndSet(this, Objects.requireNonNullElse(r, StockResolver.INSTANCE));</span>
-<span class="source-line-no">209</span><span id="line-209">  }</span>
-<span class="source-line-no">210</span><span id="line-210"></span>
-<span class="source-line-no">211</span><span id="line-211">  /*</span>
-<span class="source-line-no">212</span><span id="line-212">   * Reporting- and snapshot-oriented methods.</span>
-<span class="source-line-no">213</span><span id="line-213">   */</span>
-<span class="source-line-no">214</span><span id="line-214"></span>
-<span class="source-line-no">215</span><span id="line-215">  public final Set&lt;BeanSelectionCriteria&gt; beanSelectionCriterias() {</span>
-<span class="source-line-no">216</span><span id="line-216">    return this.selectionCache.keySet();</span>
-<span class="source-line-no">217</span><span id="line-217">  }</span>
-<span class="source-line-no">218</span><span id="line-218"></span>
-<span class="source-line-no">219</span><span id="line-219">  public final SequencedSet&lt;Bean&lt;?&gt;&gt; resolvedBeans() {</span>
-<span class="source-line-no">220</span><span id="line-220">    return this.resolutionCache.values().stream().collect(new BeanCollector());</span>
-<span class="source-line-no">221</span><span id="line-221">  }</span>
-<span class="source-line-no">222</span><span id="line-222"></span>
-<span class="source-line-no">223</span><span id="line-223">  public final SequencedSet&lt;Bean&lt;?&gt;&gt; selectedBeans() {</span>
-<span class="source-line-no">224</span><span id="line-224">    return this.selectionCache.values().stream().flatMap(Set::stream).collect(new BeanCollector());</span>
-<span class="source-line-no">225</span><span id="line-225">  }</span>
-<span class="source-line-no">226</span><span id="line-226"></span>
-<span class="source-line-no">227</span><span id="line-227">  public final SequencedSet&lt;Bean&lt;?&gt;&gt; unselectedBeans() {</span>
-<span class="source-line-no">228</span><span id="line-228">    final SequencedSet&lt;Bean&lt;?&gt;&gt; selectedBeans = this.selectedBeans();</span>
-<span class="source-line-no">229</span><span id="line-229">    return this.beans().stream().filter(not(selectedBeans::contains)).collect(new BeanCollector());</span>
-<span class="source-line-no">230</span><span id="line-230">  }</span>
-<span class="source-line-no">231</span><span id="line-231"></span>
-<span class="source-line-no">232</span><span id="line-232">  /*</span>
-<span class="source-line-no">233</span><span id="line-233">   * Private methods.</span>
-<span class="source-line-no">234</span><span id="line-234">   */</span>
-<span class="source-line-no">235</span><span id="line-235"></span>
-<span class="source-line-no">236</span><span id="line-236">  private final Bean&lt;DefaultBeanSet&gt; bean() {</span>
-<span class="source-line-no">237</span><span id="line-237">    final TypeAndElementSource tes = this.assignability.typeAndElementSource();</span>
-<span class="source-line-no">238</span><span id="line-238">    return</span>
-<span class="source-line-no">239</span><span id="line-239">      new Bean&lt;&gt;(new Id(new BeanTypeList(List.of(tes.declaredType(DefaultBeanSet.class),</span>
-<span class="source-line-no">240</span><span id="line-240">                                                 tes.declaredType(BeanSet.class))),</span>
-<span class="source-line-no">241</span><span id="line-241">                        anyAndDefaultQualifiers(),</span>
-<span class="source-line-no">242</span><span id="line-242">                        SINGLETON_ID,</span>
-<span class="source-line-no">243</span><span id="line-243">                        DEFAULT_RANK - 100),</span>
-<span class="source-line-no">244</span><span id="line-244">                 new Singleton&lt;&gt;(this));</span>
-<span class="source-line-no">245</span><span id="line-245">  }</span>
-<span class="source-line-no">246</span><span id="line-246"></span>
-<span class="source-line-no">247</span><span id="line-247">  private final SequencedSet&lt;Bean&lt;?&gt;&gt; beans(final BeanSelectionCriteria beanSelectionCriteria,</span>
-<span class="source-line-no">248</span><span id="line-248">                                            final Collection&lt;? extends Bean&lt;?&gt;&gt; beans) {</span>
-<span class="source-line-no">249</span><span id="line-249">    return</span>
-<span class="source-line-no">250</span><span id="line-250">      this.selectionCache.computeIfAbsent(beanSelectionCriteria,</span>
-<span class="source-line-no">251</span><span id="line-251">                                          bsc -&gt; beans.stream().filter(bsc::selects).collect(new BeanCollector()));</span>
-<span class="source-line-no">252</span><span id="line-252">  }</span>
-<span class="source-line-no">253</span><span id="line-253"></span>
-<span class="source-line-no">254</span><span id="line-254">  private final Bean&lt;Resolver&gt; resolverBean() {</span>
-<span class="source-line-no">255</span><span id="line-255">    final TypeAndElementSource tes = this.assignability.typeAndElementSource();</span>
-<span class="source-line-no">256</span><span id="line-256">    return</span>
-<span class="source-line-no">257</span><span id="line-257">      new Bean&lt;&gt;(new Id(new BeanTypeList(List.of(tes.declaredType(null, tes.typeElement(Resolver.class)))),</span>
-<span class="source-line-no">258</span><span id="line-258">                        anyAndDefaultQualifiers(),</span>
-<span class="source-line-no">259</span><span id="line-259">                        SINGLETON_ID,</span>
-<span class="source-line-no">260</span><span id="line-260">                        DEFAULT_RANK),</span>
-<span class="source-line-no">261</span><span id="line-261">                 new Singleton&lt;&gt;(this.resolver)); // volatile read</span>
-<span class="source-line-no">262</span><span id="line-262">  }</span>
-<span class="source-line-no">263</span><span id="line-263"></span>
-<span class="source-line-no">264</span><span id="line-264"></span>
-<span class="source-line-no">265</span><span id="line-265">  /*</span>
-<span class="source-line-no">266</span><span id="line-266">   * Static methods.</span>
-<span class="source-line-no">267</span><span id="line-267">   */</span>
-<span class="source-line-no">268</span><span id="line-268"></span>
-<span class="source-line-no">269</span><span id="line-269"></span>
-<span class="source-line-no">270</span><span id="line-270">  private static final int compareRanks(final Ranked b0, final Ranked b1) {</span>
-<span class="source-line-no">271</span><span id="line-271">    return signum(b0.rank() - b1.rank());</span>
-<span class="source-line-no">272</span><span id="line-272">  }</span>
-<span class="source-line-no">273</span><span id="line-273"></span>
-<span class="source-line-no">274</span><span id="line-274">  private static final Bean&lt;?&gt; returnNull(final BeanSelectionCriteria x, final Collection&lt;? extends Bean&lt;?&gt;&gt; xx) {</span>
-<span class="source-line-no">275</span><span id="line-275">    return null;</span>
-<span class="source-line-no">276</span><span id="line-276">  }</span>
-<span class="source-line-no">277</span><span id="line-277"></span>
-<span class="source-line-no">278</span><span id="line-278"></span>
-<span class="source-line-no">279</span><span id="line-279">  /*</span>
-<span class="source-line-no">280</span><span id="line-280">   * Inner and nested classes.</span>
-<span class="source-line-no">281</span><span id="line-281">   */</span>
-<span class="source-line-no">282</span><span id="line-282"></span>
-<span class="source-line-no">283</span><span id="line-283"></span>
-<span class="source-line-no">284</span><span id="line-284">  private static final class StockResolver implements Constable, Resolver {</span>
-<span class="source-line-no">285</span><span id="line-285"></span>
-<span class="source-line-no">286</span><span id="line-286">    private static final Resolver INSTANCE = new StockResolver();</span>
-<span class="source-line-no">287</span><span id="line-287"></span>
-<span class="source-line-no">288</span><span id="line-288">    private StockResolver() {</span>
-<span class="source-line-no">289</span><span id="line-289">      super();</span>
-<span class="source-line-no">290</span><span id="line-290">    }</span>
-<span class="source-line-no">291</span><span id="line-291"></span>
-<span class="source-line-no">292</span><span id="line-292">    @Override // Constable</span>
-<span class="source-line-no">293</span><span id="line-293">    public final Optional&lt;DynamicConstantDesc&lt;StockResolver&gt;&gt; describeConstable() {</span>
-<span class="source-line-no">294</span><span id="line-294">      return Optional.empty();</span>
-<span class="source-line-no">295</span><span id="line-295">    }</span>
+<span class="source-line-no">101</span><span id="line-101"></span>
+<span class="source-line-no">102</span><span id="line-102">  /**</span>
+<span class="source-line-no">103</span><span id="line-103">   * Creates a new, essentially useless, {@link DefaultBeanSet}.</span>
+<span class="source-line-no">104</span><span id="line-104">   *</span>
+<span class="source-line-no">105</span><span id="line-105">   * &lt;p&gt;Using this constructor will result in a {@link DefaultBeanSet} that contains only self-referential {@link</span>
+<span class="source-line-no">106</span><span id="line-106">   * Bean}s. It is probably useful only for proxying purposes.&lt;/p&gt;</span>
+<span class="source-line-no">107</span><span id="line-107">   *</span>
+<span class="source-line-no">108</span><span id="line-108">   * @see #DefaultBeanSet(Assignability, Collection, Map, Resolver)</span>
+<span class="source-line-no">109</span><span id="line-109">   *</span>
+<span class="source-line-no">110</span><span id="line-110">   * @deprecated This constructor is for very specialized use cases only. Please use one of the other constructors</span>
+<span class="source-line-no">111</span><span id="line-111">   * instead.</span>
+<span class="source-line-no">112</span><span id="line-112">   */</span>
+<span class="source-line-no">113</span><span id="line-113">  @Deprecated</span>
+<span class="source-line-no">114</span><span id="line-114">  public DefaultBeanSet() {</span>
+<span class="source-line-no">115</span><span id="line-115">    this(new Assignability(), List.of(), Map.of(), StockResolver.INSTANCE);</span>
+<span class="source-line-no">116</span><span id="line-116">  }</span>
+<span class="source-line-no">117</span><span id="line-117"></span>
+<span class="source-line-no">118</span><span id="line-118">  /**</span>
+<span class="source-line-no">119</span><span id="line-119">   * Creates a new {@link DefaultBeanSet}.</span>
+<span class="source-line-no">120</span><span id="line-120">   *</span>
+<span class="source-line-no">121</span><span id="line-121">   * @param beans a {@link Collection} of {@link Bean}s; may be {@code null}; no reference to this object is</span>
+<span class="source-line-no">122</span><span id="line-122">   * retained</span>
+<span class="source-line-no">123</span><span id="line-123">   *</span>
+<span class="source-line-no">124</span><span id="line-124">   * @see #DefaultBeanSet(Assignability, Collection, Map, Resolver)</span>
+<span class="source-line-no">125</span><span id="line-125">   */</span>
+<span class="source-line-no">126</span><span id="line-126">  public DefaultBeanSet(final Collection&lt;? extends Bean&lt;?&gt;&gt; beans) {</span>
+<span class="source-line-no">127</span><span id="line-127">    this(new Assignability(), beans, Map.of(), StockResolver.INSTANCE);</span>
+<span class="source-line-no">128</span><span id="line-128">  }</span>
+<span class="source-line-no">129</span><span id="line-129"></span>
+<span class="source-line-no">130</span><span id="line-130">  /**</span>
+<span class="source-line-no">131</span><span id="line-131">   * Creates a new {@link DefaultBeanSet}.</span>
+<span class="source-line-no">132</span><span id="line-132">   *</span>
+<span class="source-line-no">133</span><span id="line-133">   * @param assignability an {@link Assignability}; may be {@code null} in which case a default one will be used</span>
+<span class="source-line-no">134</span><span id="line-134">   *</span>
+<span class="source-line-no">135</span><span id="line-135">   * @param beans a {@link Collection} of {@link Bean}s; may be {@code null}; no reference to this object is</span>
+<span class="source-line-no">136</span><span id="line-136">   * retained</span>
+<span class="source-line-no">137</span><span id="line-137">   *</span>
+<span class="source-line-no">138</span><span id="line-138">   * @see #DefaultBeanSet(Assignability, Collection, Map, Resolver)</span>
+<span class="source-line-no">139</span><span id="line-139">   */</span>
+<span class="source-line-no">140</span><span id="line-140">  public DefaultBeanSet(final Assignability assignability, final Collection&lt;? extends Bean&lt;?&gt;&gt; beans) {</span>
+<span class="source-line-no">141</span><span id="line-141">    this(assignability, beans, Map.of(), StockResolver.INSTANCE);</span>
+<span class="source-line-no">142</span><span id="line-142">  }</span>
+<span class="source-line-no">143</span><span id="line-143"></span>
+<span class="source-line-no">144</span><span id="line-144">  /**</span>
+<span class="source-line-no">145</span><span id="line-145">   * Creates a new {@link DefaultBeanSet}.</span>
+<span class="source-line-no">146</span><span id="line-146">   *</span>
+<span class="source-line-no">147</span><span id="line-147">   * @param assignability an {@link Assignability}; may be {@code null} in which case a default one will be used</span>
+<span class="source-line-no">148</span><span id="line-148">   *</span>
+<span class="source-line-no">149</span><span id="line-149">   * @param beans a {@link Collection} of {@link Bean}s; may be {@code null}; no reference to this object is</span>
+<span class="source-line-no">150</span><span id="line-150">   * retained</span>
+<span class="source-line-no">151</span><span id="line-151">   *</span>
+<span class="source-line-no">152</span><span id="line-152">   * @param preCalculatedResolutions a {@link Map} of {@link BeanSelectionCriteria} to {@link Bean}s representing</span>
+<span class="source-line-no">153</span><span id="line-153">   * already-resolved {@link Bean}s; may be {@code null}; no reference to this object is retained</span>
+<span class="source-line-no">154</span><span id="line-154">   *</span>
+<span class="source-line-no">155</span><span id="line-155">   * @param resolver a {@link Resolver}; may be {@code null} in which case a default one will be used</span>
+<span class="source-line-no">156</span><span id="line-156">   *</span>
+<span class="source-line-no">157</span><span id="line-157">   * @exception IllegalArgumentException if {@code preCalculatedResolutions} contains any {@link BeanSelectionCriteria}</span>
+<span class="source-line-no">158</span><span id="line-158">   * that does not {@linkplain BeanSelectionCriteria#selects(Bean) select its corresponding &lt;code&gt;Bean&lt;/code&gt;}</span>
+<span class="source-line-no">159</span><span id="line-159">   */</span>
+<span class="source-line-no">160</span><span id="line-160">  @SuppressWarnings("this-escape")</span>
+<span class="source-line-no">161</span><span id="line-161">  public DefaultBeanSet(final Assignability assignability,</span>
+<span class="source-line-no">162</span><span id="line-162">                        Collection&lt;? extends Bean&lt;?&gt;&gt; beans,</span>
+<span class="source-line-no">163</span><span id="line-163">                        Map&lt;? extends BeanSelectionCriteria, ? extends Bean&lt;?&gt;&gt; preCalculatedResolutions,</span>
+<span class="source-line-no">164</span><span id="line-164">                        final Resolver resolver) {</span>
+<span class="source-line-no">165</span><span id="line-165">    super();</span>
+<span class="source-line-no">166</span><span id="line-166">    this.assignability = assignability == null ? new Assignability() : assignability;</span>
+<span class="source-line-no">167</span><span id="line-167">    this.resolver = resolver == null ? StockResolver.INSTANCE : resolver;</span>
+<span class="source-line-no">168</span><span id="line-168">    this.resolutionCache = new ConcurrentHashMap&lt;&gt;();</span>
+<span class="source-line-no">169</span><span id="line-169">    this.selectionCache = new ConcurrentHashMap&lt;&gt;();</span>
+<span class="source-line-no">170</span><span id="line-170"></span>
+<span class="source-line-no">171</span><span id="line-171">    beans = beans == null ? List.of() : beans;</span>
+<span class="source-line-no">172</span><span id="line-172">    preCalculatedResolutions = preCalculatedResolutions == null ? Map.of() : preCalculatedResolutions;</span>
+<span class="source-line-no">173</span><span id="line-173">    final List&lt;Bean&lt;?&gt;&gt; newBeans = new ArrayList&lt;&gt;(beans.size() + 2 + preCalculatedResolutions.size());</span>
+<span class="source-line-no">174</span><span id="line-174">    newBeans.addAll(beans);</span>
+<span class="source-line-no">175</span><span id="line-175">    for (final Entry&lt;? extends BeanSelectionCriteria, ? extends Bean&lt;?&gt;&gt; e : preCalculatedResolutions.entrySet()) {</span>
+<span class="source-line-no">176</span><span id="line-176">      final BeanSelectionCriteria bsc = e.getKey();</span>
+<span class="source-line-no">177</span><span id="line-177">      final Bean&lt;?&gt; b = e.getValue();</span>
+<span class="source-line-no">178</span><span id="line-178">      if (!bsc.selects(b)) {</span>
+<span class="source-line-no">179</span><span id="line-179">        throw new IllegalArgumentException("preCalculatedResolutions; beanSelectionCriteria (" + bsc + ") does not select bean (" + b + ")");</span>
+<span class="source-line-no">180</span><span id="line-180">      }</span>
+<span class="source-line-no">181</span><span id="line-181">      newBeans.add(b);</span>
+<span class="source-line-no">182</span><span id="line-182">      this.resolutionCache.put(bsc, b);</span>
+<span class="source-line-no">183</span><span id="line-183">    }</span>
+<span class="source-line-no">184</span><span id="line-184">    newBeans.add(this.resolverBean());</span>
+<span class="source-line-no">185</span><span id="line-185">    newBeans.add(this.bean());</span>
+<span class="source-line-no">186</span><span id="line-186">    Collections.sort(newBeans, DefaultBeanSet::compareRanks);</span>
+<span class="source-line-no">187</span><span id="line-187">    // Second pass to efficiently prime the selection cache now that validation has happened.</span>
+<span class="source-line-no">188</span><span id="line-188">    for (final BeanSelectionCriteria bsc : preCalculatedResolutions.keySet()) {</span>
+<span class="source-line-no">189</span><span id="line-189">      this.beans(bsc, newBeans);</span>
+<span class="source-line-no">190</span><span id="line-190">    }</span>
+<span class="source-line-no">191</span><span id="line-191">    this.beansView = unmodifiableSequencedSet(new LinkedHashSet&lt;&gt;(newBeans));</span>
+<span class="source-line-no">192</span><span id="line-192"></span>
+<span class="source-line-no">193</span><span id="line-193">    // Prime the selection and resolution caches with our beans.</span>
+<span class="source-line-no">194</span><span id="line-194">    final TypeAndElementSource tes = assignability.typeAndElementSource();</span>
+<span class="source-line-no">195</span><span id="line-195">    this.bean(new BeanSelectionCriteria(assignability, tes.declaredType(BeanSet.class), defaultQualifiers(), true), DefaultBeanSet::returnNull);</span>
+<span class="source-line-no">196</span><span id="line-196">    this.bean(new BeanSelectionCriteria(assignability, tes.declaredType(Resolver.class), defaultQualifiers(), true), DefaultBeanSet::returnNull);</span>
+<span class="source-line-no">197</span><span id="line-197">  }</span>
+<span class="source-line-no">198</span><span id="line-198"></span>
+<span class="source-line-no">199</span><span id="line-199"></span>
+<span class="source-line-no">200</span><span id="line-200">  /*</span>
+<span class="source-line-no">201</span><span id="line-201">   * Instance methods.</span>
+<span class="source-line-no">202</span><span id="line-202">   */</span>
+<span class="source-line-no">203</span><span id="line-203"></span>
+<span class="source-line-no">204</span><span id="line-204"></span>
+<span class="source-line-no">205</span><span id="line-205">  @Override // BeanSet</span>
+<span class="source-line-no">206</span><span id="line-206">  public final Bean&lt;?&gt; bean(final BeanSelectionCriteria beanSelectionCriteria) {</span>
+<span class="source-line-no">207</span><span id="line-207">    return this.bean(beanSelectionCriteria, Resolver::fail);</span>
+<span class="source-line-no">208</span><span id="line-208">  }</span>
+<span class="source-line-no">209</span><span id="line-209"></span>
+<span class="source-line-no">210</span><span id="line-210">  @Override // BeanSet</span>
+<span class="source-line-no">211</span><span id="line-211">  public final Bean&lt;?&gt; bean(final BeanSelectionCriteria beanSelectionCriteria,</span>
+<span class="source-line-no">212</span><span id="line-212">                            final BiFunction&lt;? super BeanSelectionCriteria, ? super Collection&lt;? extends Bean&lt;?&gt;&gt;, ? extends Bean&lt;?&gt;&gt; op) {</span>
+<span class="source-line-no">213</span><span id="line-213">    return this.resolutionCache.computeIfAbsent(beanSelectionCriteria, s -&gt; this.resolver.resolve(s, this.beans(s), op));</span>
+<span class="source-line-no">214</span><span id="line-214">  }</span>
+<span class="source-line-no">215</span><span id="line-215"></span>
+<span class="source-line-no">216</span><span id="line-216">  @Override // BeanSet</span>
+<span class="source-line-no">217</span><span id="line-217">  public final SequencedSet&lt;Bean&lt;?&gt;&gt; beans() {</span>
+<span class="source-line-no">218</span><span id="line-218">    return this.beansView;</span>
+<span class="source-line-no">219</span><span id="line-219">  }</span>
+<span class="source-line-no">220</span><span id="line-220"></span>
+<span class="source-line-no">221</span><span id="line-221">  @Override // BeanSet</span>
+<span class="source-line-no">222</span><span id="line-222">  public final SequencedSet&lt;Bean&lt;?&gt;&gt; beans(final BeanSelectionCriteria beanSelectionCriteria) {</span>
+<span class="source-line-no">223</span><span id="line-223">    return this.beans(beanSelectionCriteria, this.beansView);</span>
+<span class="source-line-no">224</span><span id="line-224">  }</span>
+<span class="source-line-no">225</span><span id="line-225"></span>
+<span class="source-line-no">226</span><span id="line-226">  private final SequencedSet&lt;Bean&lt;?&gt;&gt; beans(final BeanSelectionCriteria beanSelectionCriteria,</span>
+<span class="source-line-no">227</span><span id="line-227">                                            final Collection&lt;? extends Bean&lt;?&gt;&gt; beans) {</span>
+<span class="source-line-no">228</span><span id="line-228">    return</span>
+<span class="source-line-no">229</span><span id="line-229">      this.selectionCache.computeIfAbsent(beanSelectionCriteria,</span>
+<span class="source-line-no">230</span><span id="line-230">                                          bsc -&gt; beans.stream().filter(bsc::selects).collect(new BeanCollector()));</span>
+<span class="source-line-no">231</span><span id="line-231">  }</span>
+<span class="source-line-no">232</span><span id="line-232"></span>
+<span class="source-line-no">233</span><span id="line-233">  @Override // Constable</span>
+<span class="source-line-no">234</span><span id="line-234">  public Optional&lt;DynamicConstantDesc&lt;DefaultBeanSet&gt;&gt; describeConstable() {</span>
+<span class="source-line-no">235</span><span id="line-235">    return this.assignability.describeConstable()</span>
+<span class="source-line-no">236</span><span id="line-236">      .flatMap(aDesc -&gt; Constables.describeConstable(this.beansView)</span>
+<span class="source-line-no">237</span><span id="line-237">               .flatMap(beansDesc -&gt; Constables.describeConstable(this.resolutionCache)</span>
+<span class="source-line-no">238</span><span id="line-238">                        .flatMap(pcrDesc -&gt; Constables.describeConstable(this.resolver)</span>
+<span class="source-line-no">239</span><span id="line-239">                                 .map(resolverDesc -&gt; DynamicConstantDesc.of(BSM_INVOKE,</span>
+<span class="source-line-no">240</span><span id="line-240">                                                                             MethodHandleDesc.ofConstructor(CD_DefaultBeanSet,</span>
+<span class="source-line-no">241</span><span id="line-241">                                                                                                            CD_Assignability,</span>
+<span class="source-line-no">242</span><span id="line-242">                                                                                                            CD_Collection,</span>
+<span class="source-line-no">243</span><span id="line-243">                                                                                                            CD_Map,</span>
+<span class="source-line-no">244</span><span id="line-244">                                                                                                            CD_Resolver),</span>
+<span class="source-line-no">245</span><span id="line-245">                                                                             aDesc,</span>
+<span class="source-line-no">246</span><span id="line-246">                                                                             beansDesc,</span>
+<span class="source-line-no">247</span><span id="line-247">                                                                             pcrDesc,</span>
+<span class="source-line-no">248</span><span id="line-248">                                                                             resolverDesc)))));</span>
+<span class="source-line-no">249</span><span id="line-249">  }</span>
+<span class="source-line-no">250</span><span id="line-250"></span>
+<span class="source-line-no">251</span><span id="line-251">  /*</span>
+<span class="source-line-no">252</span><span id="line-252">   * Reporting- and snapshot-oriented methods.</span>
+<span class="source-line-no">253</span><span id="line-253">   */</span>
+<span class="source-line-no">254</span><span id="line-254"></span>
+<span class="source-line-no">255</span><span id="line-255">  public final Set&lt;BeanSelectionCriteria&gt; beanSelectionCriterias() {</span>
+<span class="source-line-no">256</span><span id="line-256">    return this.selectionCache.keySet();</span>
+<span class="source-line-no">257</span><span id="line-257">  }</span>
+<span class="source-line-no">258</span><span id="line-258"></span>
+<span class="source-line-no">259</span><span id="line-259">  public final SequencedSet&lt;Bean&lt;?&gt;&gt; resolvedBeans() {</span>
+<span class="source-line-no">260</span><span id="line-260">    return this.resolutionCache.values().stream().collect(new BeanCollector());</span>
+<span class="source-line-no">261</span><span id="line-261">  }</span>
+<span class="source-line-no">262</span><span id="line-262"></span>
+<span class="source-line-no">263</span><span id="line-263">  public final SequencedSet&lt;Bean&lt;?&gt;&gt; selectedBeans() {</span>
+<span class="source-line-no">264</span><span id="line-264">    return this.selectionCache.values().stream().flatMap(Set::stream).collect(new BeanCollector());</span>
+<span class="source-line-no">265</span><span id="line-265">  }</span>
+<span class="source-line-no">266</span><span id="line-266"></span>
+<span class="source-line-no">267</span><span id="line-267">  public final SequencedSet&lt;Bean&lt;?&gt;&gt; unselectedBeans() {</span>
+<span class="source-line-no">268</span><span id="line-268">    final SequencedSet&lt;Bean&lt;?&gt;&gt; selectedBeans = this.selectedBeans();</span>
+<span class="source-line-no">269</span><span id="line-269">    return this.beans().stream().filter(not(selectedBeans::contains)).collect(new BeanCollector());</span>
+<span class="source-line-no">270</span><span id="line-270">  }</span>
+<span class="source-line-no">271</span><span id="line-271"></span>
+<span class="source-line-no">272</span><span id="line-272">  /*</span>
+<span class="source-line-no">273</span><span id="line-273">   * Methods returning Beans for foundational constructs in this class.</span>
+<span class="source-line-no">274</span><span id="line-274">   */</span>
+<span class="source-line-no">275</span><span id="line-275"></span>
+<span class="source-line-no">276</span><span id="line-276">  private final Bean&lt;DefaultBeanSet&gt; bean() {</span>
+<span class="source-line-no">277</span><span id="line-277">    final TypeAndElementSource tes = this.assignability.typeAndElementSource();</span>
+<span class="source-line-no">278</span><span id="line-278">    return</span>
+<span class="source-line-no">279</span><span id="line-279">      new Bean&lt;&gt;(new Id(new BeanTypeList(List.of(tes.declaredType(DefaultBeanSet.class),</span>
+<span class="source-line-no">280</span><span id="line-280">                                                 tes.declaredType(BeanSet.class))),</span>
+<span class="source-line-no">281</span><span id="line-281">                        anyAndDefaultQualifiers(),</span>
+<span class="source-line-no">282</span><span id="line-282">                        SINGLETON_ID,</span>
+<span class="source-line-no">283</span><span id="line-283">                        DEFAULT_RANK - 100),</span>
+<span class="source-line-no">284</span><span id="line-284">                 new Singleton&lt;&gt;(this));</span>
+<span class="source-line-no">285</span><span id="line-285">  }</span>
+<span class="source-line-no">286</span><span id="line-286"></span>
+<span class="source-line-no">287</span><span id="line-287">  private final Bean&lt;Resolver&gt; resolverBean() {</span>
+<span class="source-line-no">288</span><span id="line-288">    final TypeAndElementSource tes = this.assignability.typeAndElementSource();</span>
+<span class="source-line-no">289</span><span id="line-289">    return</span>
+<span class="source-line-no">290</span><span id="line-290">      new Bean&lt;&gt;(new Id(new BeanTypeList(List.of(tes.declaredType(null, tes.typeElement(Resolver.class)))),</span>
+<span class="source-line-no">291</span><span id="line-291">                        anyAndDefaultQualifiers(),</span>
+<span class="source-line-no">292</span><span id="line-292">                        SINGLETON_ID,</span>
+<span class="source-line-no">293</span><span id="line-293">                        DEFAULT_RANK),</span>
+<span class="source-line-no">294</span><span id="line-294">                 new Singleton&lt;&gt;(this.resolver));</span>
+<span class="source-line-no">295</span><span id="line-295">  }</span>
 <span class="source-line-no">296</span><span id="line-296"></span>
-<span class="source-line-no">297</span><span id="line-297">  }</span>
-<span class="source-line-no">298</span><span id="line-298"></span>
-<span class="source-line-no">299</span><span id="line-299">  private static final class BeanCollector implements Collector&lt;Bean&lt;?&gt;, LinkedHashSet&lt;Bean&lt;?&gt;&gt;, SequencedSet&lt;Bean&lt;?&gt;&gt;&gt; {</span>
-<span class="source-line-no">300</span><span id="line-300"></span>
-<span class="source-line-no">301</span><span id="line-301">    private BeanCollector() {</span>
-<span class="source-line-no">302</span><span id="line-302">      super();</span>
-<span class="source-line-no">303</span><span id="line-303">    }</span>
-<span class="source-line-no">304</span><span id="line-304"></span>
-<span class="source-line-no">305</span><span id="line-305">    @Override // Collector&lt;Bean&lt;?&gt;, LinkedHashSet&lt;Bean&lt;?&gt;&gt;, SequencedSet&lt;Bean&lt;?&gt;&gt;&gt;</span>
-<span class="source-line-no">306</span><span id="line-306">    public final BiConsumer&lt;LinkedHashSet&lt;Bean&lt;?&gt;&gt;, Bean&lt;?&gt;&gt; accumulator() {</span>
-<span class="source-line-no">307</span><span id="line-307">      return LinkedHashSet::add;</span>
-<span class="source-line-no">308</span><span id="line-308">    }</span>
-<span class="source-line-no">309</span><span id="line-309"></span>
-<span class="source-line-no">310</span><span id="line-310">    @Override // Collector&lt;Bean&lt;?&gt;, LinkedHashSet&lt;Bean&lt;?&gt;&gt;, SequencedSet&lt;Bean&lt;?&gt;&gt;&gt;</span>
-<span class="source-line-no">311</span><span id="line-311">    public final Set&lt;Characteristics&gt; characteristics() {</span>
-<span class="source-line-no">312</span><span id="line-312">      return Set.of();</span>
-<span class="source-line-no">313</span><span id="line-313">    }</span>
-<span class="source-line-no">314</span><span id="line-314"></span>
-<span class="source-line-no">315</span><span id="line-315">    @Override // Collector&lt;Bean&lt;?&gt;, LinkedHashSet&lt;Bean&lt;?&gt;&gt;, SequencedSet&lt;Bean&lt;?&gt;&gt;&gt;</span>
-<span class="source-line-no">316</span><span id="line-316">    public final BinaryOperator&lt;LinkedHashSet&lt;Bean&lt;?&gt;&gt;&gt; combiner() {</span>
-<span class="source-line-no">317</span><span id="line-317">      return BeanCollector::merge;</span>
-<span class="source-line-no">318</span><span id="line-318">    }</span>
-<span class="source-line-no">319</span><span id="line-319"></span>
-<span class="source-line-no">320</span><span id="line-320">    @Override // Collector&lt;Bean&lt;?&gt;, LinkedHashSet&lt;Bean&lt;?&gt;&gt;, SequencedSet&lt;Bean&lt;?&gt;&gt;&gt;</span>
-<span class="source-line-no">321</span><span id="line-321">    public final Function&lt;LinkedHashSet&lt;Bean&lt;?&gt;&gt;, SequencedSet&lt;Bean&lt;?&gt;&gt;&gt; finisher() {</span>
-<span class="source-line-no">322</span><span id="line-322">      return Collections::unmodifiableSequencedSet;</span>
+<span class="source-line-no">297</span><span id="line-297"></span>
+<span class="source-line-no">298</span><span id="line-298">  /*</span>
+<span class="source-line-no">299</span><span id="line-299">   * Static methods.</span>
+<span class="source-line-no">300</span><span id="line-300">   */</span>
+<span class="source-line-no">301</span><span id="line-301"></span>
+<span class="source-line-no">302</span><span id="line-302"></span>
+<span class="source-line-no">303</span><span id="line-303">  private static final int compareRanks(final Ranked b0, final Ranked b1) {</span>
+<span class="source-line-no">304</span><span id="line-304">    return signum(b0.rank() - b1.rank());</span>
+<span class="source-line-no">305</span><span id="line-305">  }</span>
+<span class="source-line-no">306</span><span id="line-306"></span>
+<span class="source-line-no">307</span><span id="line-307">  private static final Bean&lt;?&gt; returnNull(final BeanSelectionCriteria x, final Collection&lt;? extends Bean&lt;?&gt;&gt; xx) {</span>
+<span class="source-line-no">308</span><span id="line-308">    return null;</span>
+<span class="source-line-no">309</span><span id="line-309">  }</span>
+<span class="source-line-no">310</span><span id="line-310"></span>
+<span class="source-line-no">311</span><span id="line-311"></span>
+<span class="source-line-no">312</span><span id="line-312">  /*</span>
+<span class="source-line-no">313</span><span id="line-313">   * Inner and nested classes.</span>
+<span class="source-line-no">314</span><span id="line-314">   */</span>
+<span class="source-line-no">315</span><span id="line-315"></span>
+<span class="source-line-no">316</span><span id="line-316"></span>
+<span class="source-line-no">317</span><span id="line-317">  private static final class StockResolver implements Constable, Resolver {</span>
+<span class="source-line-no">318</span><span id="line-318"></span>
+<span class="source-line-no">319</span><span id="line-319">    private static final Resolver INSTANCE = new StockResolver();</span>
+<span class="source-line-no">320</span><span id="line-320"></span>
+<span class="source-line-no">321</span><span id="line-321">    private StockResolver() {</span>
+<span class="source-line-no">322</span><span id="line-322">      super();</span>
 <span class="source-line-no">323</span><span id="line-323">    }</span>
 <span class="source-line-no">324</span><span id="line-324"></span>
-<span class="source-line-no">325</span><span id="line-325">    @Override // Collector&lt;Bean&lt;?&gt;, LinkedHashSet&lt;Bean&lt;?&gt;&gt;, SequencedSet&lt;Bean&lt;?&gt;&gt;&gt;</span>
-<span class="source-line-no">326</span><span id="line-326">    public final Supplier&lt;LinkedHashSet&lt;Bean&lt;?&gt;&gt;&gt; supplier() {</span>
-<span class="source-line-no">327</span><span id="line-327">      return LinkedHashSet::new;</span>
+<span class="source-line-no">325</span><span id="line-325">    @Override // Constable</span>
+<span class="source-line-no">326</span><span id="line-326">    public final Optional&lt;DynamicConstantDesc&lt;StockResolver&gt;&gt; describeConstable() {</span>
+<span class="source-line-no">327</span><span id="line-327">      return Optional.empty();</span>
 <span class="source-line-no">328</span><span id="line-328">    }</span>
 <span class="source-line-no">329</span><span id="line-329"></span>
-<span class="source-line-no">330</span><span id="line-330">    private static final &lt;T, S extends Collection&lt;T&gt;&gt; S merge(final S s0, final S s1) {</span>
-<span class="source-line-no">331</span><span id="line-331">      s0.addAll(s1);</span>
-<span class="source-line-no">332</span><span id="line-332">      return s0;</span>
-<span class="source-line-no">333</span><span id="line-333">    }</span>
-<span class="source-line-no">334</span><span id="line-334"></span>
-<span class="source-line-no">335</span><span id="line-335"></span>
-<span class="source-line-no">336</span><span id="line-336">  }</span>
+<span class="source-line-no">330</span><span id="line-330">  }</span>
+<span class="source-line-no">331</span><span id="line-331"></span>
+<span class="source-line-no">332</span><span id="line-332">  private static final class BeanCollector implements Collector&lt;Bean&lt;?&gt;, LinkedHashSet&lt;Bean&lt;?&gt;&gt;, SequencedSet&lt;Bean&lt;?&gt;&gt;&gt; {</span>
+<span class="source-line-no">333</span><span id="line-333"></span>
+<span class="source-line-no">334</span><span id="line-334">    private BeanCollector() {</span>
+<span class="source-line-no">335</span><span id="line-335">      super();</span>
+<span class="source-line-no">336</span><span id="line-336">    }</span>
 <span class="source-line-no">337</span><span id="line-337"></span>
-<span class="source-line-no">338</span><span id="line-338">}</span>
+<span class="source-line-no">338</span><span id="line-338">    @Override // Collector&lt;Bean&lt;?&gt;, LinkedHashSet&lt;Bean&lt;?&gt;&gt;, SequencedSet&lt;Bean&lt;?&gt;&gt;&gt;</span>
+<span class="source-line-no">339</span><span id="line-339">    public final BiConsumer&lt;LinkedHashSet&lt;Bean&lt;?&gt;&gt;, Bean&lt;?&gt;&gt; accumulator() {</span>
+<span class="source-line-no">340</span><span id="line-340">      return LinkedHashSet::add;</span>
+<span class="source-line-no">341</span><span id="line-341">    }</span>
+<span class="source-line-no">342</span><span id="line-342"></span>
+<span class="source-line-no">343</span><span id="line-343">    @Override // Collector&lt;Bean&lt;?&gt;, LinkedHashSet&lt;Bean&lt;?&gt;&gt;, SequencedSet&lt;Bean&lt;?&gt;&gt;&gt;</span>
+<span class="source-line-no">344</span><span id="line-344">    public final Set&lt;Characteristics&gt; characteristics() {</span>
+<span class="source-line-no">345</span><span id="line-345">      return Set.of();</span>
+<span class="source-line-no">346</span><span id="line-346">    }</span>
+<span class="source-line-no">347</span><span id="line-347"></span>
+<span class="source-line-no">348</span><span id="line-348">    @Override // Collector&lt;Bean&lt;?&gt;, LinkedHashSet&lt;Bean&lt;?&gt;&gt;, SequencedSet&lt;Bean&lt;?&gt;&gt;&gt;</span>
+<span class="source-line-no">349</span><span id="line-349">    public final BinaryOperator&lt;LinkedHashSet&lt;Bean&lt;?&gt;&gt;&gt; combiner() {</span>
+<span class="source-line-no">350</span><span id="line-350">      return BeanCollector::merge;</span>
+<span class="source-line-no">351</span><span id="line-351">    }</span>
+<span class="source-line-no">352</span><span id="line-352"></span>
+<span class="source-line-no">353</span><span id="line-353">    @Override // Collector&lt;Bean&lt;?&gt;, LinkedHashSet&lt;Bean&lt;?&gt;&gt;, SequencedSet&lt;Bean&lt;?&gt;&gt;&gt;</span>
+<span class="source-line-no">354</span><span id="line-354">    public final Function&lt;LinkedHashSet&lt;Bean&lt;?&gt;&gt;, SequencedSet&lt;Bean&lt;?&gt;&gt;&gt; finisher() {</span>
+<span class="source-line-no">355</span><span id="line-355">      return Collections::unmodifiableSequencedSet;</span>
+<span class="source-line-no">356</span><span id="line-356">    }</span>
+<span class="source-line-no">357</span><span id="line-357"></span>
+<span class="source-line-no">358</span><span id="line-358">    @Override // Collector&lt;Bean&lt;?&gt;, LinkedHashSet&lt;Bean&lt;?&gt;&gt;, SequencedSet&lt;Bean&lt;?&gt;&gt;&gt;</span>
+<span class="source-line-no">359</span><span id="line-359">    public final Supplier&lt;LinkedHashSet&lt;Bean&lt;?&gt;&gt;&gt; supplier() {</span>
+<span class="source-line-no">360</span><span id="line-360">      return LinkedHashSet::new;</span>
+<span class="source-line-no">361</span><span id="line-361">    }</span>
+<span class="source-line-no">362</span><span id="line-362"></span>
+<span class="source-line-no">363</span><span id="line-363">    private static final &lt;T, S extends Collection&lt;T&gt;&gt; S merge(final S s0, final S s1) {</span>
+<span class="source-line-no">364</span><span id="line-364">      s0.addAll(s1);</span>
+<span class="source-line-no">365</span><span id="line-365">      return s0;</span>
+<span class="source-line-no">366</span><span id="line-366">    }</span>
+<span class="source-line-no">367</span><span id="line-367"></span>
+<span class="source-line-no">368</span><span id="line-368"></span>
+<span class="source-line-no">369</span><span id="line-369">  }</span>
+<span class="source-line-no">370</span><span id="line-370"></span>
+<span class="source-line-no">371</span><span id="line-371">}</span>
 
 
 

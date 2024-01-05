@@ -14,7 +14,7 @@
 <div class="source-container">
 <pre><span class="source-line-no">001</span><span id="line-1">/* -*- mode: Java; c-basic-offset: 2; indent-tabs-mode: nil; coding: utf-8-unix -*-</span>
 <span class="source-line-no">002</span><span id="line-2"> *</span>
-<span class="source-line-no">003</span><span id="line-3"> * Copyright © 2023 microBean™.</span>
+<span class="source-line-no">003</span><span id="line-3"> * Copyright © 2023–2024 microBean™.</span>
 <span class="source-line-no">004</span><span id="line-4"> *</span>
 <span class="source-line-no">005</span><span id="line-5"> * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with</span>
 <span class="source-line-no">006</span><span id="line-6"> * the License.  You may obtain a copy of the License at</span>
@@ -31,50 +31,65 @@
 <span class="source-line-no">017</span><span id="line-17"></span>
 <span class="source-line-no">018</span><span id="line-18">import java.util.function.Supplier;</span>
 <span class="source-line-no">019</span><span id="line-19"></span>
-<span class="source-line-no">020</span><span id="line-20">public interface References&lt;R&gt; extends AutoCloseable, Iterable&lt;R&gt;, Supplier&lt;R&gt; {</span>
-<span class="source-line-no">021</span><span id="line-21"></span>
-<span class="source-line-no">022</span><span id="line-22">  // Destroys r if and only if it is (a) dependent and (b) supplied by get()</span>
-<span class="source-line-no">023</span><span id="line-23">  public boolean destroy(final R r);</span>
-<span class="source-line-no">024</span><span id="line-24"></span>
-<span class="source-line-no">025</span><span id="line-25">  public default Cardinality cardinality() {</span>
-<span class="source-line-no">026</span><span id="line-26">    final Iterator&lt;?&gt; i = this.iterator();</span>
-<span class="source-line-no">027</span><span id="line-27">    if (i.hasNext()) {</span>
-<span class="source-line-no">028</span><span id="line-28">      i.next();</span>
-<span class="source-line-no">029</span><span id="line-29">      return i.hasNext() ? Cardinality.MANY : Cardinality.ONE;</span>
-<span class="source-line-no">030</span><span id="line-30">    }</span>
-<span class="source-line-no">031</span><span id="line-31">    return Cardinality.ZERO;</span>
-<span class="source-line-no">032</span><span id="line-32">  }</span>
-<span class="source-line-no">033</span><span id="line-33"></span>
-<span class="source-line-no">034</span><span id="line-34">  @Override // Supplier&lt;R&gt;</span>
-<span class="source-line-no">035</span><span id="line-35">  public default R get() {</span>
-<span class="source-line-no">036</span><span id="line-36">    final Iterator&lt;R&gt; iterator = this.iterator();</span>
-<span class="source-line-no">037</span><span id="line-37">    if (!iterator.hasNext()) {</span>
-<span class="source-line-no">038</span><span id="line-38">      throw new UnsatisfiedResolutionException();</span>
-<span class="source-line-no">039</span><span id="line-39">    }</span>
-<span class="source-line-no">040</span><span id="line-40">    final R returnValue = iterator.next();</span>
-<span class="source-line-no">041</span><span id="line-41">    if (iterator.hasNext()) {</span>
-<span class="source-line-no">042</span><span id="line-42">      throw new AmbiguousResolutionException();</span>
-<span class="source-line-no">043</span><span id="line-43">    }</span>
-<span class="source-line-no">044</span><span id="line-44">    return returnValue;</span>
-<span class="source-line-no">045</span><span id="line-45">  }</span>
-<span class="source-line-no">046</span><span id="line-46"></span>
-<span class="source-line-no">047</span><span id="line-47">  // Overriding encouraged to be more efficient/threadsafe/etc.</span>
-<span class="source-line-no">048</span><span id="line-48">  @Override // AutoCloseable</span>
-<span class="source-line-no">049</span><span id="line-49">  public default void close() {</span>
-<span class="source-line-no">050</span><span id="line-50">    for (final R r : this) {</span>
-<span class="source-line-no">051</span><span id="line-51">      this.destroy(r);</span>
-<span class="source-line-no">052</span><span id="line-52">    }</span>
-<span class="source-line-no">053</span><span id="line-53">  }</span>
-<span class="source-line-no">054</span><span id="line-54"></span>
-<span class="source-line-no">055</span><span id="line-55">  public static enum Cardinality {</span>
-<span class="source-line-no">056</span><span id="line-56"></span>
-<span class="source-line-no">057</span><span id="line-57">    ZERO,</span>
-<span class="source-line-no">058</span><span id="line-58">    ONE,</span>
-<span class="source-line-no">059</span><span id="line-59">    MANY</span>
-<span class="source-line-no">060</span><span id="line-60"></span>
-<span class="source-line-no">061</span><span id="line-61">  }</span>
-<span class="source-line-no">062</span><span id="line-62"></span>
-<span class="source-line-no">063</span><span id="line-63">}</span>
+<span class="source-line-no">020</span><span id="line-20">/**</span>
+<span class="source-line-no">021</span><span id="line-21"> * An {@link Iterable} and a {@link Supplier} of contextual references.</span>
+<span class="source-line-no">022</span><span id="line-22"> *</span>
+<span class="source-line-no">023</span><span id="line-23"> * @param &lt;R&gt; the common supertype of references supplied by this class</span>
+<span class="source-line-no">024</span><span id="line-24"> *</span>
+<span class="source-line-no">025</span><span id="line-25"> * @author &lt;a href="https://about.me/lairdnelson/" target="_top"&gt;Laird Nelson&lt;/a&gt;</span>
+<span class="source-line-no">026</span><span id="line-26"> */</span>
+<span class="source-line-no">027</span><span id="line-27">public interface References&lt;R&gt; extends AutoCloseable, Iterable&lt;R&gt;, Supplier&lt;R&gt; {</span>
+<span class="source-line-no">028</span><span id="line-28"></span>
+<span class="source-line-no">029</span><span id="line-29">  /**</span>
+<span class="source-line-no">030</span><span id="line-30">   * Effectively destroyes the supplied contextual reference, rendering it unfit for use, if and only if it has no scope</span>
+<span class="source-line-no">031</span><span id="line-31">   * (is dependent) and was originally supplied by the {@link #get() get()} method.</span>
+<span class="source-line-no">032</span><span id="line-32">   *</span>
+<span class="source-line-no">033</span><span id="line-33">   * @param r the contextual reference to destroy; may be {@code null} in which case no action will be taken</span>
+<span class="source-line-no">034</span><span id="line-34">   *</span>
+<span class="source-line-no">035</span><span id="line-35">   * @exception DestructionException if {@code r} is unsuitable for any reason or could not be destroyed</span>
+<span class="source-line-no">036</span><span id="line-36">   */</span>
+<span class="source-line-no">037</span><span id="line-37">  // Destroys r if and only if it is (a) dependent and (b) supplied by get()</span>
+<span class="source-line-no">038</span><span id="line-38">  public boolean destroy(final R r);</span>
+<span class="source-line-no">039</span><span id="line-39"></span>
+<span class="source-line-no">040</span><span id="line-40">  public default Cardinality cardinality() {</span>
+<span class="source-line-no">041</span><span id="line-41">    final Iterator&lt;?&gt; i = this.iterator();</span>
+<span class="source-line-no">042</span><span id="line-42">    if (i.hasNext()) {</span>
+<span class="source-line-no">043</span><span id="line-43">      i.next();</span>
+<span class="source-line-no">044</span><span id="line-44">      return i.hasNext() ? Cardinality.MANY : Cardinality.ONE;</span>
+<span class="source-line-no">045</span><span id="line-45">    }</span>
+<span class="source-line-no">046</span><span id="line-46">    return Cardinality.ZERO;</span>
+<span class="source-line-no">047</span><span id="line-47">  }</span>
+<span class="source-line-no">048</span><span id="line-48"></span>
+<span class="source-line-no">049</span><span id="line-49">  @Override // Supplier&lt;R&gt;</span>
+<span class="source-line-no">050</span><span id="line-50">  public default R get() {</span>
+<span class="source-line-no">051</span><span id="line-51">    final Iterator&lt;R&gt; iterator = this.iterator();</span>
+<span class="source-line-no">052</span><span id="line-52">    if (!iterator.hasNext()) {</span>
+<span class="source-line-no">053</span><span id="line-53">      throw new UnsatisfiedResolutionException();</span>
+<span class="source-line-no">054</span><span id="line-54">    }</span>
+<span class="source-line-no">055</span><span id="line-55">    final R returnValue = iterator.next();</span>
+<span class="source-line-no">056</span><span id="line-56">    if (iterator.hasNext()) {</span>
+<span class="source-line-no">057</span><span id="line-57">      throw new AmbiguousResolutionException();</span>
+<span class="source-line-no">058</span><span id="line-58">    }</span>
+<span class="source-line-no">059</span><span id="line-59">    return returnValue;</span>
+<span class="source-line-no">060</span><span id="line-60">  }</span>
+<span class="source-line-no">061</span><span id="line-61"></span>
+<span class="source-line-no">062</span><span id="line-62">  // Overriding encouraged to be more efficient/threadsafe/etc.</span>
+<span class="source-line-no">063</span><span id="line-63">  @Override // AutoCloseable</span>
+<span class="source-line-no">064</span><span id="line-64">  public default void close() {</span>
+<span class="source-line-no">065</span><span id="line-65">    for (final R r : this) {</span>
+<span class="source-line-no">066</span><span id="line-66">      this.destroy(r);</span>
+<span class="source-line-no">067</span><span id="line-67">    }</span>
+<span class="source-line-no">068</span><span id="line-68">  }</span>
+<span class="source-line-no">069</span><span id="line-69"></span>
+<span class="source-line-no">070</span><span id="line-70">  public static enum Cardinality {</span>
+<span class="source-line-no">071</span><span id="line-71"></span>
+<span class="source-line-no">072</span><span id="line-72">    ZERO,</span>
+<span class="source-line-no">073</span><span id="line-73">    ONE,</span>
+<span class="source-line-no">074</span><span id="line-74">    MANY</span>
+<span class="source-line-no">075</span><span id="line-75"></span>
+<span class="source-line-no">076</span><span id="line-76">  }</span>
+<span class="source-line-no">077</span><span id="line-77"></span>
+<span class="source-line-no">078</span><span id="line-78">}</span>
 
 
 
