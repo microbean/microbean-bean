@@ -1,6 +1,6 @@
 /* -*- mode: Java; c-basic-offset: 2; indent-tabs-mode: nil; coding: utf-8-unix -*-
  *
- * Copyright © 2023 microBean™.
+ * Copyright © 2023–2024 microBean™.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
@@ -74,7 +74,7 @@ public final class BeanTypeList extends ReferenceTypeList {
     super(types, typeFilter(typeFilter), typeAndElementSource, equality);
   }
 
-  // Deliberately unvalidated private constructor for use by describeConstable() only.
+  // Deliberately unvalidated constructor for use by describeConstable() only.
   BeanTypeList(final List<DelegatingTypeMirror> types,
                final int classesIndex,
                final int arraysIndex,
@@ -111,16 +111,43 @@ public final class BeanTypeList extends ReferenceTypeList {
     return closure(t, BeanTypeList::validateType, new Visitors(typeAndElementSource()));
   }
 
+  public static final BeanTypeList closure(final TypeMirror t, final TypeAndElementSource tes) {
+    return closure(t, BeanTypeList::validateType, new Visitors(tes));
+  }
+
   public static final BeanTypeList closure(final TypeMirror t, final Visitors visitors) {
     return closure(t, BeanTypeList::validateType, visitors);
   }
 
   public static final BeanTypeList closure(final TypeMirror t,
                                            final Predicate<? super TypeMirror> typeFilter,
-                                           final TypeAndElementSource typeAndElementSource) {
-    return closure(t, typeFilter, new Visitors(typeAndElementSource));
+                                           final TypeAndElementSource tes) {
+    return closure(t, typeFilter, new Visitors(tes));
   }
 
+  /**
+   * Returns a non-{@code null} {@link BeanTypeList} containing the set of types {@code t} bears.
+   *
+   * @param t the {@link TypeMirror} whose type closure will be returned as a {@link BeanTypeList}; must not be {@code
+   * null}; must be either a {@linkplain TypeKind#DECLARED declared type}, an {@linkplain TypeKind#INTERSECTION
+   * intersection type} or a {@linkplain TypeKind#TYPEVAR type variable}
+   *
+   * @param typeFilter a {@link Predicate} used to {@linkplain Predicate#test(Object) test} a given {@link TypeMirror};
+   * if its {@link Predicate#test(Object) test(Object)} method returns {@code true} for a given {@link TypeMirror}, the
+   * {@link TypeMirror} will be included in the returned {@link BeanTypeList}; may be {@code null}
+   *
+   * @param visitors a {@link Visitors} providing access to a {@linkplain Visitors#typeClosureVisitor() type closure
+   * visitor}; must not be {@code null}
+   *
+   * @return a non-{@code null} {@link BeanTypeList}
+   *
+   * @exception NullPointerException if {@code t} or {@code visitors} is {@code null}
+   *
+   * @exception IllegalArgumentException if {@code t} is neither a {@linkplain TypeKind#DECLARED declared type}, an
+   * {@linkplain TypeKind#INTERSECTION intersection type} nor a {@linkplain TypeKind#TYPEVAR type variable}
+   *
+   * @see Visitors#typeClosureVisitor()
+   */
   public static final BeanTypeList closure(final TypeMirror t,
                                            final Predicate<? super TypeMirror> typeFilter,
                                            final Visitors visitors) {
@@ -131,11 +158,8 @@ public final class BeanTypeList extends ReferenceTypeList {
   }
 
   private static final Predicate<? super TypeMirror> typeFilter(final Predicate<? super TypeMirror> typeFilter) {
-    if (typeFilter == null) {
-      return BeanTypeList::legalBeanType;
-    }
-    return ((Predicate<TypeMirror>)BeanTypeList::legalBeanType)
-      .and(typeFilter);
+    return
+      typeFilter == null ? BeanTypeList::legalBeanType : ((Predicate<TypeMirror>)BeanTypeList::legalBeanType).and(typeFilter);
   }
 
   public static final boolean legalBeanType(final TypeMirror t) {

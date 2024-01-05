@@ -1,6 +1,6 @@
 /* -*- mode: Java; c-basic-offset: 2; indent-tabs-mode: nil; coding: utf-8-unix -*-
  *
- * Copyright © 2023 microBean™.
+ * Copyright © 2023–2024 microBean™.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
@@ -18,6 +18,8 @@ package org.microbean.bean;
  *
  * <p>Most {@link Creation} implementations will, and should, also be {@link AutoCloseableRegistry} implementations.
  * See {@link DefaultCreation} as one arbitrary example.</p>
+ *
+ * @param <I> the type of instance being created
  *
  * @author <a href="https://about.me/lairdnelson" target="_parent">Laird Nelson</a>
  */
@@ -93,6 +95,8 @@ public interface Creation<I> extends AutoCloseable, Cloneable {
    * <p>Overrides of this default method must return this {@link Creation} cast to the apppropriate type. Any other
    * return value will result in undefined behavior.</p>
    *
+   * @param <J> the type of the instance being created
+   *
    * @return this {@link Creation}, cast to an appropriate type; never {@code null}
    *
    * @exception ClassCastException if the cast could not be performed for any reason
@@ -133,6 +137,8 @@ public interface Creation<I> extends AutoCloseable, Cloneable {
 
   /**
    * Casts the supplied {@link Creation} to the inferred return type and returns it.
+   *
+   * @param <I> the type of instance being created
    *
    * @param c the {@link Creation} to cast and return; may be {@code null}
    *

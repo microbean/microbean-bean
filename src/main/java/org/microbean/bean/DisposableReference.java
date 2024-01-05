@@ -1,6 +1,6 @@
 /* -*- mode: Java; c-basic-offset: 2; indent-tabs-mode: nil; coding: utf-8-unix -*-
  *
- * Copyright © 2023 microBean™.
+ * Copyright © 2023–2024 microBean™.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
@@ -29,6 +29,8 @@ import static java.lang.System.Logger.Level.DEBUG;
 /**
  * An {@link AutoCloseable} {@link WeakReference} that formally disposes of referents after they have been {@linkplain
  * #clear() cleared} by the Java Virtual Machine during garbage collection.
+ *
+ * @param <R> the type of the reference
  *
  * @author <a href="https://about.me/lairdnelson" target="_top">Laird Nelson</a>
  *

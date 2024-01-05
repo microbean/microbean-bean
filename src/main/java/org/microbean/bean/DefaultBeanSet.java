@@ -1,6 +1,6 @@
 /* -*- mode: Java; c-basic-offset: 2; indent-tabs-mode: nil; coding: utf-8-unix -*-
  *
- * Copyright © 2023 microBean™.
+ * Copyright © 2023–2024 microBean™.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
@@ -17,9 +17,6 @@ import java.lang.constant.Constable;
 import java.lang.constant.DynamicConstantDesc;
 import java.lang.constant.MethodHandleDesc;
 
-import java.lang.invoke.MethodHandles;
-import java.lang.invoke.VarHandle;
-
 import java.util.Collections;
 
 import java.util.function.BiConsumer;
@@ -34,7 +31,6 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.SequencedSet;
 import java.util.Set;
@@ -70,25 +66,14 @@ import static org.microbean.bean.Ranked.DEFAULT_RANK;
 
 import static org.microbean.scope.Scope.SINGLETON_ID;
 
+/**
+ * A straightforward {@link BeanSet} implementation.
+ *
+ * @author <a href="https://about.me/lairdnelson/" target="_top">Laird Nelson</a>
+ */
 // Experimenting with making this non-final so the no-arg constructor can supply its own beans via some other
 // mechanism. Think ldc.
 public class DefaultBeanSet implements BeanSet, Constable {
-
-
-  /*
-   * Static fields.
-   */
-
-
-  private static final VarHandle RESOLVER;
-
-  static {
-    try {
-      RESOLVER = MethodHandles.lookup().findVarHandle(DefaultBeanSet.class, "resolver", Resolver.class);
-    } catch (final IllegalAccessException | NoSuchFieldException e) {
-      throw (Error)new ExceptionInInitializerError(e.getMessage()).initCause(e);
-    }
-  }
 
 
   /*
@@ -96,11 +81,11 @@ public class DefaultBeanSet implements BeanSet, Constable {
    */
 
 
-  private volatile Resolver resolver;
+  private final Resolver resolver;
 
   private final Assignability assignability;
 
-  private final SequencedSet<Bean<?>> beans;
+  private final SequencedSet<Bean<?>> beansView;
 
   // A cache of Beans that were selected by a BeanSelectionCriteria
   private final ConcurrentMap<BeanSelectionCriteria, SequencedSet<Bean<?>>> selectionCache;
@@ -114,18 +99,68 @@ public class DefaultBeanSet implements BeanSet, Constable {
    */
 
 
+  /**
+   * Creates a new, essentially useless, {@link DefaultBeanSet}.
+   *
+   * <p>Using this constructor will result in a {@link DefaultBeanSet} that contains only self-referential {@link
+   * Bean}s. It is probably useful only for proxying purposes.</p>
+   *
+   * @see #DefaultBeanSet(Assignability, Collection, Map, Resolver)
+   *
+   * @deprecated This constructor is for very specialized use cases only. Please use one of the other constructors
+   * instead.
+   */
+  @Deprecated
+  public DefaultBeanSet() {
+    this(new Assignability(), List.of(), Map.of(), StockResolver.INSTANCE);
+  }
+
+  /**
+   * Creates a new {@link DefaultBeanSet}.
+   *
+   * @param beans a {@link Collection} of {@link Bean}s; may be {@code null}; no reference to this object is
+   * retained
+   *
+   * @see #DefaultBeanSet(Assignability, Collection, Map, Resolver)
+   */
   public DefaultBeanSet(final Collection<? extends Bean<?>> beans) {
     this(new Assignability(), beans, Map.of(), StockResolver.INSTANCE);
   }
 
+  /**
+   * Creates a new {@link DefaultBeanSet}.
+   *
+   * @param assignability an {@link Assignability}; may be {@code null} in which case a default one will be used
+   *
+   * @param beans a {@link Collection} of {@link Bean}s; may be {@code null}; no reference to this object is
+   * retained
+   *
+   * @see #DefaultBeanSet(Assignability, Collection, Map, Resolver)
+   */
   public DefaultBeanSet(final Assignability assignability, final Collection<? extends Bean<?>> beans) {
     this(assignability, beans, Map.of(), StockResolver.INSTANCE);
   }
 
+  /**
+   * Creates a new {@link DefaultBeanSet}.
+   *
+   * @param assignability an {@link Assignability}; may be {@code null} in which case a default one will be used
+   *
+   * @param beans a {@link Collection} of {@link Bean}s; may be {@code null}; no reference to this object is
+   * retained
+   *
+   * @param preCalculatedResolutions a {@link Map} of {@link BeanSelectionCriteria} to {@link Bean}s representing
+   * already-resolved {@link Bean}s; may be {@code null}; no reference to this object is retained
+   *
+   * @param resolver a {@link Resolver}; may be {@code null} in which case a default one will be used
+   *
+   * @exception IllegalArgumentException if {@code preCalculatedResolutions} contains any {@link BeanSelectionCriteria}
+   * that does not {@linkplain BeanSelectionCriteria#selects(Bean) select its corresponding <code>Bean</code>}
+   */
   @SuppressWarnings("this-escape")
   public DefaultBeanSet(final Assignability assignability,
-                        final Collection<? extends Bean<?>> beans,
-                        final Map<? extends BeanSelectionCriteria, ? extends Bean<?>> preCalculatedResolutions,
+                        Collection<? extends Bean<?>> beans,
+                        Map<? extends BeanSelectionCriteria, ? extends Bean<?>> preCalculatedResolutions,
                         final Resolver resolver) {
     super();
     this.assignability = assignability == null ? new Assignability() : assignability;
@@ -133,6 +168,8 @@ public class DefaultBeanSet implements BeanSet, Constable {
     this.resolutionCache = new ConcurrentHashMap<>();
     this.selectionCache = new ConcurrentHashMap<>();
 
+    beans = beans == null ? List.of() : beans;
+    preCalculatedResolutions = preCalculatedResolutions == null ? Map.of() : preCalculatedResolutions;
     final List<Bean<?>> newBeans = new ArrayList<>(beans.size() + 2 + preCalculatedResolutions.size());
     newBeans.addAll(beans);
     for (final Entry<? extends BeanSelectionCriteria, ? extends Bean<?>> e : preCalculatedResolutions.entrySet()) {
@@ -151,7 +188,7 @@ public class DefaultBeanSet implements BeanSet, Constable {
     for (final BeanSelectionCriteria bsc : preCalculatedResolutions.keySet()) {
       this.beans(bsc, newBeans);
     }
-    this.beans = unmodifiableSequencedSet(new LinkedHashSet<>(newBeans));
+    this.beansView = unmodifiableSequencedSet(new LinkedHashSet<>(newBeans));
 
     // Prime the selection and resolution caches with our beans.
     final TypeAndElementSource tes = assignability.typeAndElementSource();
@@ -173,23 +210,30 @@ public class DefaultBeanSet implements BeanSet, Constable {
   @Override // BeanSet
   public final Bean<?> bean(final BeanSelectionCriteria beanSelectionCriteria,
                             final BiFunction<? super BeanSelectionCriteria, ? super Collection<? extends Bean<?>>, ? extends Bean<?>> op) {
-    return this.resolutionCache.computeIfAbsent(beanSelectionCriteria, s -> this.resolver.resolve(s, this.beans(s), op)); // volatile read
+    return this.resolutionCache.computeIfAbsent(beanSelectionCriteria, s -> this.resolver.resolve(s, this.beans(s), op));
   }
 
   @Override // BeanSet
   public final SequencedSet<Bean<?>> beans() {
-    return this.beans;
+    return this.beansView;
   }
 
   @Override // BeanSet
   public final SequencedSet<Bean<?>> beans(final BeanSelectionCriteria beanSelectionCriteria) {
-    return this.beans(beanSelectionCriteria, this.beans);
+    return this.beans(beanSelectionCriteria, this.beansView);
+  }
+
+  private final SequencedSet<Bean<?>> beans(final BeanSelectionCriteria beanSelectionCriteria,
+                                            final Collection<? extends Bean<?>> beans) {
+    return
+      this.selectionCache.computeIfAbsent(beanSelectionCriteria,
+                                          bsc -> beans.stream().filter(bsc::selects).collect(new BeanCollector()));
   }
 
   @Override // Constable
   public Optional<DynamicConstantDesc<DefaultBeanSet>> describeConstable() {
     return this.assignability.describeConstable()
-      .flatMap(aDesc -> Constables.describeConstable(this.beans)
+      .flatMap(aDesc -> Constables.describeConstable(this.beansView)
                .flatMap(beansDesc -> Constables.describeConstable(this.resolutionCache)
                         .flatMap(pcrDesc -> Constables.describeConstable(this.resolver)
                                  .map(resolverDesc -> DynamicConstantDesc.of(BSM_INVOKE,
@@ -202,10 +246,6 @@ public class DefaultBeanSet implements BeanSet, Constable {
                                                                              beansDesc,
                                                                              pcrDesc,
                                                                              resolverDesc)))));
-  }
-
-  public final Resolver resolver(final Resolver r) {
-    return (Resolver)RESOLVER.getAndSet(this, Objects.requireNonNullElse(r, StockResolver.INSTANCE));
   }
 
   /*
@@ -230,7 +270,7 @@ public class DefaultBeanSet implements BeanSet, Constable {
   }
 
   /*
-   * Private methods.
+   * Methods returning Beans for foundational constructs in this class.
    */
 
   private final Bean<DefaultBeanSet> bean() {
@@ -244,13 +284,6 @@ public class DefaultBeanSet implements BeanSet, Constable {
                  new Singleton<>(this));
   }
 
-  private final SequencedSet<Bean<?>> beans(final BeanSelectionCriteria beanSelectionCriteria,
-                                            final Collection<? extends Bean<?>> beans) {
-    return
-      this.selectionCache.computeIfAbsent(beanSelectionCriteria,
-                                          bsc -> beans.stream().filter(bsc::selects).collect(new BeanCollector()));
-  }
-
   private final Bean<Resolver> resolverBean() {
     final TypeAndElementSource tes = this.assignability.typeAndElementSource();
     return
@@ -258,7 +291,7 @@ public class DefaultBeanSet implements BeanSet, Constable {
                         anyAndDefaultQualifiers(),
                         SINGLETON_ID,
                         DEFAULT_RANK),
-                 new Singleton<>(this.resolver)); // volatile read
+                 new Singleton<>(this.resolver));
   }
 
 

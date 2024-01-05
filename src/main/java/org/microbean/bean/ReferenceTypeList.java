@@ -91,12 +91,8 @@ class ReferenceTypeList implements Constable {
       this.arraysIndex = -1;
       this.interfacesIndex = -1;
     } else {
-      if (typeFilter == null) {
-        typeFilter = ReferenceTypeList::validateType;
-      } else {
-        typeFilter = ((Predicate<TypeMirror>)ReferenceTypeList::validateType)
-          .and(typeFilter);
-      }
+      typeFilter =
+        typeFilter == null ? ReferenceTypeList::validateType : ((Predicate<TypeMirror>)ReferenceTypeList::validateType).and(typeFilter);
       final List<DelegatingTypeMirror> newTypes = new ArrayList<>(types.size());
       for (final TypeMirror t : types) {
         final DelegatingTypeMirror dt = DelegatingTypeMirror.of(t, typeAndElementSource, this.equality);
@@ -157,7 +153,7 @@ class ReferenceTypeList implements Constable {
     }
   }
 
-  // Deliberately unvalidated private constructor for use by describeConstable() only.
+  // Deliberately unvalidated constructor for use by describeConstable() only.
   ReferenceTypeList(final List<DelegatingTypeMirror> types,
                     final int classesIndex,
                     final int arraysIndex,
