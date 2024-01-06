@@ -1,6 +1,6 @@
 /* -*- mode: Java; c-basic-offset: 2; indent-tabs-mode: nil; coding: utf-8-unix -*-
  *
- * Copyright © 2023 microBean™.
+ * Copyright © 2023–2024 microBean™.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
@@ -48,6 +48,13 @@ import static org.microbean.bean.ConstantDescs.CD_Assignability;
 
 import static org.microbean.lang.ConstantDescs.CD_TypeAndElementSource;
 
+/**
+ * A class encapsulating CDI-compatible assignability ("matching") rules as applied to {@link TypeMirror}s.
+ *
+ * @author <a href="https://about.me/lairdnelson/" target="_top">Laird Nelson</a>
+ *
+ * @see #matches(TypeMirror, TypeMirror)
+ */
 // Applies CDI assignability semantics to types.
 public final class Assignability implements Constable {
 
@@ -65,11 +72,26 @@ public final class Assignability implements Constable {
    */
 
 
+  /**
+   * Creates a new {@link Assignability}.
+   *
+   * @see #Assignability(TypeAndElementSource)
+   */
   public Assignability() {
     super();
     this.tes = Lang.typeAndElementSource();
   }
 
+  /**
+   * Creates a new {@link Assignability}.
+   *
+   * @param tes a {@link TypeAndElementSource}; may be {@code null} in which case the return value of an invocation of
+   * {@link Lang#typeAndElementSource()} will be used instead
+   *
+   * @see TypeAndElementSource
+   *
+   * @see Lang#typeAndElementSource()
+   */
   public Assignability(final TypeAndElementSource tes) {
     super();
     this.tes = tes == null ? Lang.typeAndElementSource() : tes;
@@ -93,6 +115,23 @@ public final class Assignability implements Constable {
     return Optional.empty();
   }
 
+  /**
+   * Returns {@code true} if and only if at least one {@link TypeMirror} present in the supplied {@code payloads}
+   * argument {@linkplain #matches(TypeMirror, TypeMirror) matches} the supplied {@code receiver} argument.
+   *
+   * @param receiver the left hand side of a type assignment; must not be {@code null}
+   *
+   * @param payloads an {@link Iterable} of {@link TypeMirror}s each representing a potential right hand side of a type
+   * assignment; must not be {@code null}
+   *
+   * @return {@code true} if and only if at least one {@link TypeMirror} present in the supplied {@code payloads}
+   * argument {@linkplain #matches(TypeMirror, TypeMirror) matches} the supplied {@code receiver} argument; {@code
+   * false} otherwise
+   *
+   * @exception NullPointerException if either argument is {@code null}
+   *
+   * @see #matches(TypeMirror, TypeMirror)
+   */
   // Is at least one payload assignable to the receiver? That is, does at least one payload "match the receiver" in CDI
   // parlance?
   public final boolean oneMatches(final TypeMirror receiver, final Iterable<? extends TypeMirror> payloads) {
@@ -104,6 +143,25 @@ public final class Assignability implements Constable {
     return false;
   }
 
+  /**
+   * Returns {@code true} if and only if the supplied {@code payload} argument <a
+   * href="https://jakarta.ee/specifications/cdi/4.0/jakarta-cdi-spec-4.0#performing_typesafe_resolution">matches</a>
+   * the supplied {@code receiver} argument, according to the rules defined by <a
+   * href="https://jakarta.ee/specifications/cdi/4.0/jakarta-cdi-spec-4.0#performing_typesafe_resolution">section
+   * 2.4.2.1 of the CDI specification</a>.
+   *
+   * @param receiver the left hand side of a type assignment; must not be {@code null}
+   *
+   * @param payload the right hand side of a type assignment; must not be {@code null}
+   *
+   * @return {@code true} if and only if the supplied {@code payload} argument <a
+   * href="https://jakarta.ee/specifications/cdi/4.0/jakarta-cdi-spec-4.0#performing_typesafe_resolution">matches</a>
+   * the supplied {@code receiver} argument, according to the rules defined by <a
+   * href="https://jakarta.ee/specifications/cdi/4.0/jakarta-cdi-spec-4.0#performing_typesafe_resolution">section
+   * 2.4.2.1 of the CDI specification</a>; {@code false} otherwise
+   *
+   * @exception NullPointerException if either argument is {@code null}
+   */
   // Is the payload assignable to the receiver? That is, does the payload "match the receiver", in CDI parlance?
   public final boolean matches(final TypeMirror receiver, final TypeMirror payload) {
     // "A bean [an object, not a type] is assignable to a given injection point if:
@@ -144,6 +202,15 @@ public final class Assignability implements Constable {
     };
   }
 
+  /**
+   * Returns the {@link TypeAndElementSource} used by this {@link Assignability}.
+   *
+   * @return the {@link TypeAndElementSource} used by this {@link Assignability}; never {@code null}
+   *
+   * @see #Assignability(TypeAndElementSource)
+   *
+   * @see TypeAndElementSource
+   */
   public final TypeAndElementSource typeAndElementSource() {
     return this.tes;
   }

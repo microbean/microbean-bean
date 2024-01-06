@@ -1,6 +1,6 @@
 /* -*- mode: Java; c-basic-offset: 2; indent-tabs-mode: nil; coding: utf-8-unix -*-
  *
- * Copyright © 2023 microBean™.
+ * Copyright © 2023–2024 microBean™.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
@@ -21,6 +21,7 @@ import java.lang.constant.MethodHandleDesc;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -79,7 +80,7 @@ class ReferenceTypeList implements Constable {
   }
 
   public ReferenceTypeList(final Collection<? extends TypeMirror> types,
-                           Predicate<? super TypeMirror> typeFilter, // the type supplied will be a DeclaredType and will be ARRAY, DECLARED or TYPEVAR
+                           Predicate<? super TypeMirror> typeFilter, // the type supplied will be a DeclaredType (a DelegatingTypeMirror) and will be ARRAY, DECLARED or TYPEVAR
                            TypeAndElementSource typeAndElementSource,
                            final Equality equality) {
     super();
@@ -107,17 +108,14 @@ class ReferenceTypeList implements Constable {
         this.interfacesIndex = -1;
       } else {
         Collections.sort(newTypes,
-                         // Type variables first...
-                         new TestingTypeMirrorComparator(t -> t.getKind() == TypeKind.TYPEVAR)
-                         // ...then non-interface classes...
-                         .thenComparing(new TestingTypeMirrorComparator(t -> t.getKind() == TypeKind.DECLARED && !((DeclaredType)t).asElement().getKind().isInterface()))
-                         // ...then array types...
-                         .thenComparing(new TestingTypeMirrorComparator(t -> t.getKind() == TypeKind.ARRAY))
-                         // ...then interfaces...
-                         .thenComparing(new TestingTypeMirrorComparator(t -> t.getKind() == TypeKind.DECLARED && ((DeclaredType)t).asElement().getKind().isInterface()))
-                         // ...order by specialization depth within those categories to the extent possible...
+                         // Sort first by precedence:
+                         //  type variables precede non-interfaces
+                         //  non-interfaces precede arrays
+                         //  arrays precede interfaces
+                         TypeKindComparator.INSTANCE
+                         // Sort next by specialization depth
                          .thenComparing(new SpecializationDepthTypeMirrorComparator(typeAndElementSource, this.equality))
-                         // ...and break any ties with somewhat artificial but deterministic naming semantics.
+                         // Sort last by name
                          .thenComparing(NameTypeMirrorComparator.INSTANCE));
         int classesIndex = -1;
         int arraysIndex = -1;
@@ -296,5 +294,58 @@ class ReferenceTypeList implements Constable {
     default -> throw new IllegalArgumentException("t is not a reference type: " + t);
     };
   }
+
+
+  /*
+   * Inner and nested classes.
+   */
+
+
+  private static final class TypeKindComparator implements Comparator<TypeMirror> {
+
+    private static final TypeKindComparator INSTANCE = new TypeKindComparator();
+
+    private TypeKindComparator() {
+      super();
+    }
+
+    @Override // Comparator<TypeMirror>
+    public final int compare(final TypeMirror t, final TypeMirror s) {
+      return t != null && t == s ? 0 : switch (t.getKind()) {
+        case ARRAY -> switch (s.getKind()) {
+          case ARRAY -> 0;
+          // arrays precede interfaces; non-interfaces precede arrays:
+          case DECLARED -> ((DeclaredType)s).asElement().getKind().isInterface() ? -1 : 1;
+          // type variables precede arrays
+          case TYPEVAR -> 1;
+          default -> throw new IllegalArgumentException("s: " + s);
+        };
+
+        case DECLARED -> switch (s.getKind()) {
+          // non-interfaces precede arrays; arrays precede interfaces:
+          case ARRAY -> ((DeclaredType)t).asElement().getKind().isInterface() ? 1 : -1;
+          // non-interfaces precede interfaces:
+          case DECLARED -> ((DeclaredType)t).asElement().getKind().isInterface() ?
+            ((DeclaredType)s).asElement().getKind().isInterface() ? 0 : 1 :
+            ((DeclaredType)s).asElement().getKind().isInterface() ? -1 : 0;
+          // type variables precede non-interfaces and interfaces:
+          case TYPEVAR -> 1;
+          default -> throw new IllegalArgumentException("s: " + s);
+        };
+
+        case TYPEVAR -> switch (s.getKind()) {
+          // type variables precede non-interfaces, arrays and interfaces:
+          case ARRAY, DECLARED -> -1;
+          case TYPEVAR -> 0;
+          default -> throw new IllegalArgumentException("s: " + s);
+        };
+
+        default -> throw new IllegalArgumentException("t: " + t);
+      };
+    }
+
+  }
+
+
 
 }
