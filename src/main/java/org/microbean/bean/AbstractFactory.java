@@ -1,6 +1,6 @@
 /* -*- mode: Java; c-basic-offset: 2; indent-tabs-mode: nil; coding: utf-8-unix -*-
  *
- * Copyright © 2023 microBean™.
+ * Copyright © 2023–2024 microBean™.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
@@ -15,80 +15,78 @@ package org.microbean.bean;
 
 import java.util.Objects;
 
+// TODO: this is mildly fouled up. The spirit is right but the implementation is not so hot.
+@Deprecated
 public abstract class AbstractFactory<I> implements Factory<I> {
 
-  private final InterceptionsApplicator<I> interceptionsApplicator;
+  private static final Initializer<?> PASSTHROUGH_INITIALIZER = new AbstractInitializer<Object>();
 
-  private final Initializer<I> initializer;
+  private static final PostInitializer<?> PASSTHROUGH_POSTINITIALIZER = new AbstractPostInitializer<Object>();
+
+  private static final InterceptionsApplicator<?> PASSTHROUGH_INTERCEPTIONSAPPLICATOR = new AbstractInterceptionsApplicator<Object>();
+
+  private static final PreDestructor<?> PASSTHROUGH_PREDESTRUCTOR = new AbstractPreDestructor<Object>();
 
   private final Producer<I> producer;
 
-  private final boolean destroys;
+  private final Initializer<I> initializer;
 
-  private final Destructor<I> destructor;
+  private final PostInitializer<I> postInitializer;
 
-  protected AbstractFactory(final Producer<I> producer) {
-    this(null, null, producer, null);
-  }
+  private final InterceptionsApplicator<I> interceptionsApplicator;
 
-  protected AbstractFactory(final Producer<I> producer, final Destructor<I> destructor) {
-    this(null, null, producer, destructor);
-  }
+  private final PreDestructor<I> preDestructor;
+
+  private volatile boolean destroyed;
 
   @SuppressWarnings("unchecked")
-  protected AbstractFactory(final InterceptionsApplicator<I> interceptionsApplicator, // applies business method interceptions
-                            final Initializer<I> initializer, // calls initializer methods and post-initialize methods
-                            final Producer<I> producer, // handles production, including possibly intercepted production
-                            final Destructor<I> destructor) { // calls pre-destroy methods and handles destruction
+  protected AbstractFactory(final Producer<I> producer, // production and destruction (including intercepted production)
+                            final Initializer<I> initializer, // initialization (fields and initializer methods)
+                            final PostInitializer<I> postInitializer, // post-initialization methods
+                            final InterceptionsApplicator<I> interceptionsApplicator, // applies business method interceptions
+                            final PreDestructor<I> preDestructor) { // pre-destroy methods
     super();
-    this.interceptionsApplicator = interceptionsApplicator == null ? AbstractFactory::noopIntercept : interceptionsApplicator;
-    this.initializer = initializer == null ? (NoOpInitializer<I>)NoOpInitializer.INSTANCE : initializer;
-    this.producer = Objects.requireNonNull(producer);
-    if (destructor == null) {
-      this.destroys = false;
-      this.destructor = new Destructor<I>(); // this destructor is basically a no-op
-    } else {
-      this.destroys = true;
-      this.destructor = destructor;
-    }
+    this.producer = Objects.requireNonNull(producer, "producer");
+    this.initializer = initializer == null ? (Initializer<I>)PASSTHROUGH_INITIALIZER : initializer;
+    this.postInitializer = postInitializer == null ? (PostInitializer<I>)PASSTHROUGH_POSTINITIALIZER : postInitializer;
+    this.interceptionsApplicator = interceptionsApplicator == null ? (InterceptionsApplicator<I>)PASSTHROUGH_INTERCEPTIONSAPPLICATOR : interceptionsApplicator;
+    this.preDestructor = preDestructor == null ? (PreDestructor<I>)PASSTHROUGH_PREDESTRUCTOR : preDestructor;
   }
 
   @Override // Factory<I>
   public I create(final Creation<I> c, final ReferenceSelector r) {
     // Produce the product, initialize the product, apply business method interceptions to the product, return the
     // product
-    return this.interceptionsApplicator.apply(this.initializer.initialize(this.producer.produce(c, r), c, r), c, r);
+    return this.interceptionsApplicator.apply(this.postInitializer.postInitialize(this.initializer.initialize(this.producer.produce(c, r), c, r), c, r), c, r);
   }
 
   @Override // Factory<I>
   public boolean destroys() {
-    return this.destroys;
+    return !this.destroyed;
   }
 
   // MUST be idempotent
   @Override // Factory<I>
   @SuppressWarnings("try")
-  public void destroy(final I i, final AutoCloseable destructionRegistry, final ReferenceSelector references) {
-    this.destructor.destroy(i, destructionRegistry, references);
-  }
-
-  private static final <I> I noopIntercept(final I i, final Creation<I> c, final ReferenceSelector r) {
-    return i;
-  }
-
-  private static final class NoOpInitializer<I> extends Initializer<I> {
-
-    private static final NoOpInitializer<?> INSTANCE = new NoOpInitializer<>();
-
-    private NoOpInitializer() {
-      super();
+  public void destroy(final I i, final AutoCloseable destructionRegistry, final Creation<I> c, final ReferenceSelector rs) {
+    if (this.destroyed) {
+      return;
     }
-
-    @Override
-    protected final I performInitialization(final I i, final Creation<I> c, final ReferenceSelector r) {
-      return i;
+    if (destructionRegistry == null) {
+      this.producer.dispose(this.preDestructor.preDestroy(i, c, rs), c, rs);
+    } else {
+      try (destructionRegistry) {
+        this.producer.dispose(this.preDestructor.preDestroy(i, c, rs), c, rs);
+      } catch (final RuntimeException | Error e) {
+        throw e;
+      } catch (final InterruptedException e) {
+        Thread.currentThread().interrupt();
+        throw new DestructionException(e.getMessage(), e);
+      } catch (final Exception e) {
+        throw new DestructionException(e.getMessage(), e);
+      }
     }
-
+    this.destroyed = true;
   }
 
 }

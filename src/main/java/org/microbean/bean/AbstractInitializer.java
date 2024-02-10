@@ -13,9 +13,50 @@
  */
 package org.microbean.bean;
 
-public interface Initializer<I> extends Aggregate {
+import java.util.Collection;
+import java.util.Set;
+
+public class AbstractInitializer<I> implements Initializer<I> {
+
+
+  /*
+   * Instance fields.
+   */
+
+
+  private final Set<Dependency> dependencies;
+
+
+  /*
+   * Constructors.
+   */
+
+
+  public AbstractInitializer() {
+    super();
+    this.dependencies = Set.of();
+  }
+
+  public AbstractInitializer(final Collection<? extends Dependency> dependencies) {
+    super();
+    this.dependencies = Set.copyOf(dependencies);
+  }
+
+
+  /*
+   * Instance methods.
+   */
+
 
   // TODO: c and r go together, always, so anytime you need an r you need a c.
-  public I initialize(final I i, final Creation<I> c, final ReferenceSelector r);
+  @Override // Initializer<I>
+  public I initialize(final I i, final Creation<I> c, final ReferenceSelector r) {
+    return i;
+  }
+
+  @Override // Initializer<I> (Aggregate)
+  public final Set<Dependency> dependencies() {
+    return this.dependencies;
+  }
 
 }

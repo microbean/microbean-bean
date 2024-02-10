@@ -75,6 +75,7 @@ public final class BeanTypeList extends ReferenceTypeList {
   }
 
   // Deliberately unvalidated constructor for use by describeConstable() only.
+  @Deprecated
   BeanTypeList(final List<DelegatingTypeMirror> types,
                final int classesIndex,
                final int arraysIndex,
@@ -108,15 +109,15 @@ public final class BeanTypeList extends ReferenceTypeList {
 
 
   public static final BeanTypeList closure(final TypeMirror t) {
-    return closure(t, BeanTypeList::validateType, new Visitors(typeAndElementSource()));
+    return closure(t, BeanTypeList::legalBeanType, new Visitors(typeAndElementSource()));
   }
 
   public static final BeanTypeList closure(final TypeMirror t, final TypeAndElementSource tes) {
-    return closure(t, BeanTypeList::validateType, new Visitors(tes));
+    return closure(t, BeanTypeList::legalBeanType, new Visitors(tes));
   }
 
   public static final BeanTypeList closure(final TypeMirror t, final Visitors visitors) {
-    return closure(t, BeanTypeList::validateType, visitors);
+    return closure(t, BeanTypeList::legalBeanType, visitors);
   }
 
   public static final BeanTypeList closure(final TypeMirror t,
@@ -162,6 +163,18 @@ public final class BeanTypeList extends ReferenceTypeList {
       typeFilter == null ? BeanTypeList::legalBeanType : ((Predicate<TypeMirror>)BeanTypeList::legalBeanType).and(typeFilter);
   }
 
+  /**
+   * Returns {@code true} if and only if {@code t} is non-{@code null} and a <a
+   * href="https://jakarta.ee/specifications/cdi/4.0/jakarta-cdi-spec-4.0.html#legal_bean_types">legal bean type</a>.
+   *
+   * @param t the {@link TypeMirror} in question; must not be {@code null}
+   *
+   * @return {@code true} if and only if {@code t} is non-{@code null} and a <a
+   * href="https://jakarta.ee/specifications/cdi/4.0/jakarta-cdi-spec-4.0.html#legal_bean_types">legal bean type</a>;
+   * {@code false} otherwise
+   *
+   * @exception NullPointerException if {@code t} is {@code null}
+   */
   public static final boolean legalBeanType(final TypeMirror t) {
     // https://jakarta.ee/specifications/cdi/4.0/jakarta-cdi-spec-4.0.html#legal_bean_types
     // https://jakarta.ee/specifications/cdi/4.0/jakarta-cdi-spec-4.0.html#assignable_parameters
@@ -172,7 +185,7 @@ public final class BeanTypeList extends ReferenceTypeList {
     // "However, some Java types are not legal bean types: [...] An array type whose component type is not a legal bean
     // type"
     case ARRAY:
-      if (!legalBeanType(((ArrayType)t).getComponentType())) {
+      if (!legalBeanType(((ArrayType)t).getComponentType())) { // note recursion
         if (LOGGER.isLoggable(WARNING)) {
           LOGGER.log(WARNING, t + " has a component type that is an illegal bean type (" + ((ArrayType)t).getComponentType() + ")");
         }
@@ -195,15 +208,19 @@ public final class BeanTypeList extends ReferenceTypeList {
       return true;
 
     // "However, some Java types are not legal bean types: [...] A parameterized type that contains [see below] a
-    // wildcard type parameter [sic; should be argument] is not a legal bean type."
+    // wildcard type parameter [type argument] is not a legal bean type."
     //
-    // (They mean "argument", not "parameter".)  Some ink has been spilled on what it means to "contain a wildcard type
-    // parameter" (https://issues.redhat.com/browse/CDI-502).  Because it turns out that "actual type" means, among
-    // other things, a non-wildcard type, it follows that *no* type argument appearing anywhere in a bean type is
-    // permitted.  This still seems way overstrict to me but there you have it.
+    // Some ink has been spilled on what it means to "contain" a "wildcard type parameter [type argument]"
+    // (https://issues.redhat.com/browse/CDI-502). Because it turns out that "actual type" apparently means, among other
+    // things, a non-wildcard type, it follows that *no* type argument appearing anywhere in a bean type is
+    // permitted. Note that the definition of "actual type" does not appear in the CDI specification, but only in a
+    // closed JIRA issue
+    // (https://issues.redhat.com/browse/CDI-502?focusedId=13036118&page=com.atlassian.jira.plugin.system.issuetabpanels%3Acomment-tabpanel#comment-13036118).
+    //
+    // This still seems way overstrict to me but there you have it.
     case DECLARED:
       for (final TypeMirror typeArgument : ((DeclaredType)t).getTypeArguments()) {
-        if (typeArgument.getKind() != TypeKind.TYPEVAR && !legalBeanType(typeArgument)) {
+        if (typeArgument.getKind() != TypeKind.TYPEVAR && !legalBeanType(typeArgument)) { // note recursion
           if (LOGGER.isLoggable(WARNING)) {
             LOGGER.log(WARNING, t + " is parameterized with an illegal bean type (" + typeArgument + ")");
           }

@@ -168,9 +168,13 @@ public class DefaultBeanSet implements BeanSet, Constable {
     this.resolutionCache = new ConcurrentHashMap<>();
     this.selectionCache = new ConcurrentHashMap<>();
 
-    beans = beans == null ? List.of() : beans;
-    preCalculatedResolutions = preCalculatedResolutions == null ? Map.of() : preCalculatedResolutions;
-    final List<Bean<?>> newBeans = new ArrayList<>(beans.size() + 2 + preCalculatedResolutions.size());
+    if (beans == null) {
+      beans = List.of();
+    }
+    if (preCalculatedResolutions == null) {
+      preCalculatedResolutions = Map.of();
+    }
+    final List<Bean<?>> newBeans = new ArrayList<>(beans.size() + 4 + preCalculatedResolutions.size());
     newBeans.addAll(beans);
     for (final Entry<? extends BeanSelectionCriteria, ? extends Bean<?>> e : preCalculatedResolutions.entrySet()) {
       final BeanSelectionCriteria bsc = e.getKey();
@@ -183,6 +187,8 @@ public class DefaultBeanSet implements BeanSet, Constable {
     }
     newBeans.add(this.resolverBean());
     newBeans.add(this.bean());
+    newBeans.add(this.assignabilityBean());
+    newBeans.add(this.typeAndElementSourceBean());
     Collections.sort(newBeans, DefaultBeanSet::compareRanks);
     // Second pass to efficiently prime the selection cache now that validation has happened.
     for (final BeanSelectionCriteria bsc : preCalculatedResolutions.keySet()) {
@@ -192,8 +198,10 @@ public class DefaultBeanSet implements BeanSet, Constable {
 
     // Prime the selection and resolution caches with our beans.
     final TypeAndElementSource tes = assignability.typeAndElementSource();
-    this.bean(new BeanSelectionCriteria(assignability, tes.declaredType(BeanSet.class), defaultQualifiers(), true), DefaultBeanSet::returnNull);
     this.bean(new BeanSelectionCriteria(assignability, tes.declaredType(Resolver.class), defaultQualifiers(), true), DefaultBeanSet::returnNull);
+    this.bean(new BeanSelectionCriteria(assignability, tes.declaredType(BeanSet.class), defaultQualifiers(), true), DefaultBeanSet::returnNull);
+    this.bean(new BeanSelectionCriteria(assignability, tes.declaredType(Assignability.class), defaultQualifiers(), true), DefaultBeanSet::returnNull);
+    this.bean(new BeanSelectionCriteria(assignability, tes.declaredType(TypeAndElementSource.class), defaultQualifiers(), true), DefaultBeanSet::returnNull);
   }
 
 
@@ -292,6 +300,27 @@ public class DefaultBeanSet implements BeanSet, Constable {
                         SINGLETON_ID,
                         DEFAULT_RANK),
                  new Singleton<>(this.resolver));
+  }
+
+  private final Bean<Assignability> assignabilityBean() {
+    final TypeAndElementSource tes = this.assignability.typeAndElementSource();
+    return
+      new Bean<>(new Id(new BeanTypeList(List.of(tes.declaredType(null, tes.typeElement(Assignability.class)))),
+                        anyAndDefaultQualifiers(),
+                        SINGLETON_ID,
+                        DEFAULT_RANK),
+                 new Singleton<>(this.assignability));
+  }
+
+  private final Bean<TypeAndElementSource> typeAndElementSourceBean() {
+    final TypeAndElementSource tes = this.assignability.typeAndElementSource();
+    return
+      new Bean<>(new Id(new BeanTypeList(List.of(tes.declaredType(null, tes.typeElement(tes.getClass())),
+                                                 tes.declaredType(null, tes.typeElement(TypeAndElementSource.class)))),
+                        anyAndDefaultQualifiers(),
+                        SINGLETON_ID,
+                        DEFAULT_RANK),
+                 new Singleton<>(tes));
   }
 
 

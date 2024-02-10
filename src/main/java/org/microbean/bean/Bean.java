@@ -1,6 +1,6 @@
 /* -*- mode: Java; c-basic-offset: 2; indent-tabs-mode: nil; coding: utf-8-unix -*-
  *
- * Copyright © 2023 microBean™.
+ * Copyright © 2023–2024 microBean™.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
@@ -20,6 +20,7 @@ import java.lang.constant.MethodHandleDesc;
 
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 
 import static java.lang.constant.ConstantDescs.BSM_INVOKE;
 
@@ -27,7 +28,7 @@ import static org.microbean.bean.ConstantDescs.CD_Bean;
 import static org.microbean.bean.ConstantDescs.CD_Factory;
 import static org.microbean.bean.ConstantDescs.CD_Id;
 
-public final record Bean<I>(Id id, Factory<I> factory) implements Alternate, Constable {
+public final record Bean<I>(Id id, Factory<I> factory) implements Aggregate, Alternate, Constable {
 
   public Bean {
     id = Objects.requireNonNull(id, "id");
@@ -39,14 +40,14 @@ public final record Bean<I>(Id id, Factory<I> factory) implements Alternate, Con
     return this.id().alternate();
   }
 
-  @Override // Ranked
-  public final int rank() {
-    return this.id().rank();
-  }
-
   @SuppressWarnings("unchecked")
   public final <X> Bean<X> cast() {
     return (Bean<X>)this;
+  }
+
+  @Override // Aggregate
+  public final Set<Dependency> dependencies() {
+    return this.factory().dependencies();
   }
 
   @Override // Constable
@@ -59,6 +60,28 @@ public final record Bean<I>(Id id, Factory<I> factory) implements Alternate, Con
                                                                                     CD_Factory),
                                                      idDesc,
                                                      factoryDesc)));
+  }
+
+  @Override // Object
+  public final boolean equals(final Object other) {
+    if (other == this) {
+      return true;
+    } else if (other != null && other.getClass() == this.getClass()) {
+      return
+        Objects.equals(this.id(), ((Bean<?>)other).id());
+    } else {
+      return false;
+    }
+  }
+
+  @Override // Object
+  public int hashCode() {
+    return this.id().hashCode();
+  }
+
+  @Override // Alternate (Ranked)
+  public final int rank() {
+    return this.id().rank();
   }
 
 }

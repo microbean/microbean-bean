@@ -1,6 +1,6 @@
 /* -*- mode: Java; c-basic-offset: 2; indent-tabs-mode: nil; coding: utf-8-unix -*-
  *
- * Copyright © 2023 microBean™.
+ * Copyright © 2023–2024 microBean™.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
@@ -53,17 +53,17 @@ public class DefaultCreation<I> implements AutoCloseableRegistry, Creation<I> {
     return new DefaultCreation<>(this.registry.clone(), beanSelectionCriteria);
   }
 
-  @Override
+  @Override // AutoCloseableRegistry
   public final void close() {
     this.registry.close();
   }
 
-  @Override
+  @Override // AutoCloseableRegistry
   public final boolean closed() {
     return this.registry.closed();
   }
 
-  @Override
+  @Override // AutoCloseableRegistry
   public final boolean register(final AutoCloseable ac) {
     return this.registry.register(ac);
   }
