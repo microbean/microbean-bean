@@ -30,6 +30,8 @@ import static java.lang.System.Logger.Level.DEBUG;
  * An {@link AutoCloseable} {@link WeakReference} that formally disposes of referents after they have been {@linkplain
  * #clear() cleared} by the Java Virtual Machine during garbage collection.
  *
+ * <p>Note that garbage collection may never happen.</p>
+ *
  * @param <R> the type of the reference
  *
  * @author <a href="https://about.me/lairdnelson" target="_top">Laird Nelson</a>

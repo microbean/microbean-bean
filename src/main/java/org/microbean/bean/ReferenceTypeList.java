@@ -63,6 +63,8 @@ class ReferenceTypeList implements Constable {
 
   private final List<DelegatingTypeMirror> types;
 
+  private final int hashCode;
+
   public ReferenceTypeList(final TypeMirror type) {
     this(List.of(type), null, Lang.typeAndElementSource(), Lang.sameTypeEquality());
   }
@@ -84,7 +86,9 @@ class ReferenceTypeList implements Constable {
                            TypeAndElementSource typeAndElementSource,
                            final Equality equality) {
     super();
-    typeAndElementSource = typeAndElementSource == null ? Lang.typeAndElementSource() : typeAndElementSource;
+    if (typeAndElementSource == null) {
+      typeAndElementSource = Lang.typeAndElementSource();
+    }
     this.equality = equality == null ? Lang.sameTypeEquality() : equality;
     if (types.isEmpty()) {
       this.types = List.of();
@@ -149,9 +153,11 @@ class ReferenceTypeList implements Constable {
         this.interfacesIndex = interfacesIndex;
       }
     }
+    this.hashCode = this.types.hashCode();
   }
 
   // Deliberately unvalidated constructor for use by describeConstable() only.
+  @Deprecated
   ReferenceTypeList(final List<DelegatingTypeMirror> types,
                     final int classesIndex,
                     final int arraysIndex,
@@ -163,6 +169,7 @@ class ReferenceTypeList implements Constable {
     this.arraysIndex = arraysIndex;
     this.interfacesIndex = interfacesIndex;
     this.equality = equality;
+    this.hashCode = types.hashCode();
   }
 
   @Override // Constable
@@ -193,9 +200,8 @@ class ReferenceTypeList implements Constable {
     } else if (this.arraysIndex < 0) {
       if (this.classesIndex == 0) {
         return this.interfacesIndex < 0 ? this.types : this.types.subList(0, this.interfacesIndex);
-      } else {
-        return this.types.subList(this.classesIndex, this.interfacesIndex < 0 ? this.types.size() : this.interfacesIndex);
       }
+      return this.types.subList(this.classesIndex, this.interfacesIndex < 0 ? this.types.size() : this.interfacesIndex);
     }
     return this.types.subList(this.classesIndex, this.arraysIndex);
   }
@@ -224,7 +230,7 @@ class ReferenceTypeList implements Constable {
 
   @Override // Object
   public int hashCode() {
-    return 31 * 17 + this.types().hashCode(); // each TypeMirror will be a DelegatingTypeMirror using value-based hashCode semantics
+    return this.hashCode; // each TypeMirror will be a DelegatingTypeMirror using value-based hashCode semantics
   }
 
   @Override // Object
@@ -232,8 +238,7 @@ class ReferenceTypeList implements Constable {
     if (other == this) {
       return true;
     } else if (other != null && other.getClass() == this.getClass()) {
-      final ReferenceTypeList her = (ReferenceTypeList)other;
-      return Objects.equals(this.types(), her.types()); // each TypeMirror will be a DelegatingTypeMirror using proper equality semantics
+      return Objects.equals(this.types(), ((ReferenceTypeList)other).types()); // each TypeMirror will be a DelegatingTypeMirror using proper equality semantics
     } else {
       return false;
     }
@@ -291,7 +296,7 @@ class ReferenceTypeList implements Constable {
   static final boolean validateType(final TypeMirror t) {
     return switch (t.getKind()) {
     case ARRAY, DECLARED, TYPEVAR -> true;
-    default -> throw new IllegalArgumentException("t is not a reference type: " + t);
+    default -> throw new IllegalArgumentException("t is not a suitable reference type: " + t);
     };
   }
 

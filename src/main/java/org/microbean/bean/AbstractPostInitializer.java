@@ -13,10 +13,15 @@
  */
 package org.microbean.bean;
 
-@FunctionalInterface
-public interface PreDestructor<I> {
+public class AbstractPostInitializer<I> implements PostInitializer<I> {
 
-  // TODO: c and rs go together, always, so anytime you need an rs you need a c.
-  public I preDestroy(final I i, final Creation<I> c, final ReferenceSelector rs);
+  public AbstractPostInitializer() {
+    super();
+  }
+  
+  @Override
+  public I postInitialize(final I i, final Creation<I> c, final ReferenceSelector r) {
+    return i;
+  }
 
 }

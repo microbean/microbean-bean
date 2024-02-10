@@ -19,21 +19,27 @@ import java.lang.constant.DynamicConstantDesc;
 import java.lang.constant.MethodHandleDesc;
 
 import java.util.Optional;
+import java.util.Set;
 
 import static java.lang.constant.ConstantDescs.BSM_INVOKE;
 
 /**
- * A creator of an instance of something.
+ * A creator and destroyer of an instance of something.
  *
- * @param <I> the type of the instances this {@link Factory} creates
+ * @param <I> the type of the instances this {@link Factory} creates and destroys
  *
  * @author <a href="https://about.me/lairdnelson/" target="_top">Laird Nelson</a>
  */
 @FunctionalInterface
-public interface Factory<I> extends Constable {
+public interface Factory<I> extends Aggregate, Constable {
 
   public I create(final Creation<I> c, final ReferenceSelector referenceSelector);
 
+  @Override // Aggregate
+  public default Set<Dependency> dependencies() {
+    return Set.of();
+  }
+  
   public default I singleton() {
     return null;
   }
@@ -45,12 +51,9 @@ public interface Factory<I> extends Constable {
   // MUST be idempotent
   // If i is an AutoCloseable, MUST be idempotent
   // autoCloseableRegistry's close() MUST be idempotent
-  public default void destroy(final I i, final AutoCloseable autoCloseableRegistry, final ReferenceSelector referenceSelector) {
-    if (i == null) {
-      return;
-    }
-    final Runnable r = () -> {
-      if (i instanceof AutoCloseable ac) {
+  public default void destroy(final I i, final AutoCloseable autoCloseableRegistry, final Creation<I> c, final ReferenceSelector rs) {
+    if (i instanceof AutoCloseable ac) {
+      final Runnable r = () -> {
         try {
           ac.close();
         } catch (final RuntimeException | Error re) {
@@ -61,20 +64,20 @@ public interface Factory<I> extends Constable {
           }
           throw new DestructionException(e.getMessage(), e);
         }
-      }
-    };
-    if (autoCloseableRegistry == null) {
-      r.run();
-    } else {
-      try (autoCloseableRegistry) {
+      };
+      if (autoCloseableRegistry == null) {
         r.run();
-      } catch (final RuntimeException | Error re) {
-        throw re;
-      } catch (final Exception e) {
-        if (e instanceof InterruptedException) {
-          Thread.currentThread().interrupt();
+      } else {
+        try (autoCloseableRegistry) {
+          r.run();
+        } catch (final RuntimeException | Error re) {
+          throw re;
+        } catch (final Exception e) {
+          if (e instanceof InterruptedException) {
+            Thread.currentThread().interrupt();
+          }
+          throw new DestructionException(e.getMessage(), e);
         }
-        throw new DestructionException(e.getMessage(), e);
       }
     }
   }

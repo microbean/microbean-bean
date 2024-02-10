@@ -1,6 +1,6 @@
 /* -*- mode: Java; c-basic-offset: 2; indent-tabs-mode: nil; coding: utf-8-unix -*-
  *
- * Copyright © 2023 microBean™.
+ * Copyright © 2023–2024 microBean™.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
@@ -27,6 +27,8 @@ public final class ConstantDescs {
 
   public static final ClassDesc CD_DefaultBeanSet = ClassDesc.of("org.microbean.bean.DefaultBeanSet");
 
+  public static final ClassDesc CD_Dependency = ClassDesc.of("org.microbean.bean.Dependency");
+  
   public static final ClassDesc CD_Factory = ClassDesc.of("org.microbean.bean.Factory");
 
   public static final ClassDesc CD_Id = ClassDesc.of("org.microbean.bean.Id");

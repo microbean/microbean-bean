@@ -1,6 +1,6 @@
 /* -*- mode: Java; c-basic-offset: 2; indent-tabs-mode: nil; coding: utf-8-unix -*-
  *
- * Copyright © 2023 microBean™.
+ * Copyright © 2023–2024 microBean™.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
@@ -13,11 +13,9 @@
  */
 package org.microbean.bean;
 
-// After construction and initialization have happened, applies any last-minute operations. This handles the badly-named
-// "@PostConstruct"-type events. Used while assembling a Factory.
-@FunctionalInterface
 public interface PostInitializer<I> {
 
+  // TODO: c and r go together, always, so anytime you need an r you need a c.
   public I postInitialize(final I i, final Creation<I> c, final ReferenceSelector r);
 
 }

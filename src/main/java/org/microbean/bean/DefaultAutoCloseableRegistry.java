@@ -1,6 +1,6 @@
 /* -*- mode: Java; c-basic-offset: 2; indent-tabs-mode: nil; coding: utf-8-unix -*-
  *
- * Copyright © 2023 microBean™.
+ * Copyright © 2023–2024 microBean™.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
@@ -35,7 +35,9 @@ public class DefaultAutoCloseableRegistry implements AutoCloseableRegistry {
       throw new AssertionError(e.getMessage(), e);
     }
     dacr.closeables = null;
-    this.register(dacr); // critical
+    if (!this.register(dacr)) { // CRITICAL
+      throw new AssertionError();
+    }
     return dacr;
   }
 
@@ -44,13 +46,15 @@ public class DefaultAutoCloseableRegistry implements AutoCloseableRegistry {
     final Set<? extends AutoCloseable> closeables;
     synchronized (this) {
       closeables = this.closeables;
-      if (closeables == null) {
-        this.closeables = Set.of(); // prevent registrations
-        return;
-      } else if (this.closed()) {
+      if (closeables == Set.<AutoCloseable>of()) {
+        // already closed
         return;
       }
-      this.closeables = Set.of(); // prevent recursion; causes closed() to return true
+      this.closeables = Set.of();
+    }
+    if (closeables == null) {
+      // nothing to close
+      return;
     }
     RuntimeException re = null;
     for (final AutoCloseable c : closeables) {
@@ -89,10 +93,12 @@ public class DefaultAutoCloseableRegistry implements AutoCloseableRegistry {
       throw new IllegalArgumentException("closeable == this");
     }
     synchronized (this) {
-      if (this.closeables == null) {
+      if (this.closed()) {
+        return false;
+      } else if (this.closeables == null) {
         this.closeables = new LinkedHashSet<>();
       }
-      return !this.closed() && this.closeables.add(closeable);
+      return this.closeables.add(closeable);
     }
   }
 

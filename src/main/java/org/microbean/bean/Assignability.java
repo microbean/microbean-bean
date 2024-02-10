@@ -19,8 +19,8 @@ import java.lang.constant.DynamicConstantDesc;
 import java.lang.constant.MethodHandleDesc;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 
 import java.util.function.Predicate;
@@ -28,6 +28,7 @@ import java.util.function.Predicate;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.Parameterizable;
+import javax.lang.model.element.QualifiedNameable;
 import javax.lang.model.element.TypeElement;
 
 import javax.lang.model.type.ArrayType;
@@ -145,7 +146,7 @@ public final class Assignability implements Constable {
 
   /**
    * Returns {@code true} if and only if the supplied {@code payload} argument <a
-   * href="https://jakarta.ee/specifications/cdi/4.0/jakarta-cdi-spec-4.0#performing_typesafe_resolution">matches</a>
+   * href="https://jakarta.ee/specifications/cdi/4.0/jakarta-cdi-spec-4.0#performing_typesafe_resolution"><em>matches</em></a>
    * the supplied {@code receiver} argument, according to the rules defined by <a
    * href="https://jakarta.ee/specifications/cdi/4.0/jakarta-cdi-spec-4.0#performing_typesafe_resolution">section
    * 2.4.2.1 of the CDI specification</a>.
@@ -164,10 +165,10 @@ public final class Assignability implements Constable {
    */
   // Is the payload assignable to the receiver? That is, does the payload "match the receiver", in CDI parlance?
   public final boolean matches(final TypeMirror receiver, final TypeMirror payload) {
-    // "A bean [an object, not a type] is assignable to a given injection point if:
+    // "A bean is assignable to a given injection point if:
     //
     // "The bean has a bean type [payload] that matches the required type [receiver]. For this purpose..."
-    return switch (receiver.getKind()) {
+    return receiver == Objects.requireNonNull(payload, "payload") || switch (receiver.getKind()) {
       // "...primitive types are considered to match their corresponding wrapper types in java.lang..."
       case BOOLEAN -> payload.getKind() == TypeKind.BOOLEAN || declaredTypeNamed(payload, "java.lang.Boolean");
       case BYTE    -> payload.getKind() == TypeKind.BYTE    || declaredTypeNamed(payload, "java.lang.Byte");
@@ -177,7 +178,8 @@ public final class Assignability implements Constable {
       case INT     -> payload.getKind() == TypeKind.INT     || declaredTypeNamed(payload, "java.lang.Integer");
       case LONG    -> payload.getKind() == TypeKind.LONG    || declaredTypeNamed(payload, "java.lang.Long");
       case SHORT   -> payload.getKind() == TypeKind.SHORT   || declaredTypeNamed(payload, "java.lang.Short");
-      // "...and array types are considered to match only if their element types are identical"
+      // "...and array types are considered to match only if their element types [note: not component types] are
+      // identical [undefined]..."
       case ARRAY -> payload.getKind() == TypeKind.ARRAY && identical(elementType(receiver), elementType(payload));
       case DECLARED -> switch (payload.getKind()) {
         // "...primitive types are considered to match their corresponding wrapper types in java.lang..."
@@ -221,18 +223,18 @@ public final class Assignability implements Constable {
 
   private final boolean assignable(final TypeMirror receiver, final TypeMirror payload) {
     return switch (payload) {
-      // "A parameterized bean type is considered assignable..."
+      // "A parameterized bean type [payload] is considered assignable..."
       case DeclaredType parameterizedPayload when parameterized(payload) -> switch (receiver) {
-        // "...to a [non-generic class or] raw required type..."
+        // "...to a [non-generic class or] raw required type [receiver]..."
         case TypeMirror rawReceiver when !generic(receiver) || raw(receiver) -> {
-          // "...if the [non-generic class or] raw types are identical and all type parameters [arguments] of the bean
-          // type are either unbounded type variables or java.lang.Object."
+          // "...if the [non-generic class or] raw types are identical [undefined] and all type parameters [arguments]
+          // of the bean type [payload] are either unbounded type variables [undefined] or java.lang.Object."
           yield
             identical(nonGenericClassOrRawType(rawReceiver), nonGenericClassOrRawType(parameterizedPayload)) &&
             allTypeArgumentsAre(parameterizedPayload.getTypeArguments(),
                                 ((Predicate<TypeMirror>)Assignability::unboundedTypeVariable).or(Assignability::isJavaLangObject));
         }
-        // "...to a parameterized required type..."
+        // "...to a parameterized required type [receiver]..."
         case DeclaredType parameterizedReceiver when parameterized(receiver) -> {
           // "...if they have identical raw type [really if their declarations/elements are identical]..."
           if (identical(rawType(receiver), rawType(parameterizedPayload))) {
@@ -243,8 +245,8 @@ public final class Assignability implements Constable {
             for (int i = 0; i < rtas.size(); i++) {
               final TypeMirror rta = rtas.get(i);
               final TypeMirror pta = ptas.get(i);
-              // "...the required type parameter [argument] and the bean type parameter [argument] are actual [non-type
-              // variable, non-wildcard reference] types..."
+              // "...the required [receiver] type parameter [argument] and the bean [payload] type parameter [argument]
+              // are actual [non-type variable, non-wildcard reference] types..."
               if (actual(rta)) {
                 if (actual(pta)) {
                   // "...with identical [non-generic classes or] raw type[s]..."
@@ -305,11 +307,11 @@ public final class Assignability implements Constable {
                   }
                   yield false;
                 } else if (pta.getKind() == TypeKind.TYPEVAR) {
-                  // "...the required type parameter [argument] is an actual [non-type variable, non-wildcard reference]
-                  // type, the bean type parameter [argument] is a type variable and the actual [non-type variable,
-                  // non-wildcard reference] type [required type argument, receiver] is assignable to the upper bound,
-                  // if any, of the type variable [bean type argument, payload] [type variables have multiple
-                  // bounds]..."
+                  // "...the required [receiver] type parameter [argument] is an actual [non-type variable, non-wildcard
+                  // reference] type, the bean [payload] type parameter [argument] is a type variable and the actual
+                  // [non-type variable, non-wildcard reference] type [required type argument, receiver] is assignable
+                  // to the upper bound, if any, of the type variable [bean type argument, payload] [type variables have
+                  // multiple bounds]..."
                   if (assignableToCondensedTypeVariableBounds((TypeVariable)pta, (ReferenceType)receiver)) {
                     continue;
                   }
@@ -329,10 +331,10 @@ public final class Assignability implements Constable {
                   }
                   yield false;
                 } else if (pta.getKind() == TypeKind.TYPEVAR) {
-                  // "...the required type parameter [argument] is a wildcard, the bean type parameter [argument] is a
-                  // type variable and the upper bound of the type variable [a type variable has many bounds?] is
-                  // assignable to or assignable from the upper bound, if any, of the wildcard and assignable from the
-                  // lower bound, if any, of the wildcard"
+                  // "...the required [receiver] type parameter [argument] is a wildcard, the bean [payload] type
+                  // parameter [argument] is a type variable and the upper bound of the type variable [a type variable
+                  // has many bounds?] is assignable to or assignable from the upper bound, if any, of the wildcard and
+                  // assignable from the lower bound, if any, of the wildcard"
                   if ((condensedTypeVariableBoundsAssignableToExtendsBound((WildcardType)rta, (TypeVariable)pta) ||
                        condensedTypeVariableBoundsAssignableFromExtendsBound((TypeVariable)pta, (WildcardType)rta)) &&
                       condensedTypeVariableBoundsAssignableFromSuperBound((TypeVariable)pta, (WildcardType)rta)) {
@@ -379,26 +381,31 @@ public final class Assignability implements Constable {
         // [Otherwise the payload is not assignable to the receiver; identity checking should have already happened in
         // matches(), not here.]
         case DeclaredType nonGenericOrRawReceiver when receiver.getKind() == TypeKind.DECLARED -> {
-          yield false;
+          yield false; // or yield identical(nonGenericOrRawReceiver, nonGenericOrRawPayload);
         }
         default -> throw new AssertionError("Unexpected payload kind: " + payload.getKind() + "; receiver: " + receiver + "; payload: " + payload);
       };
     };
   }
 
+  // Is payload "identical to" receiver, following the intent of CDI?
   private final boolean identical(final TypeMirror receiver, final TypeMirror payload) {
-    // CDI has an undefined notion of "identical to".  This method attempts to interpret that.  Recall that
-    // javax.lang.model.* compares types with "sameType" semantics.
+    // CDI has an undefined notion of "identical to". This method attempts to divine and implement the intent. Recall
+    // that javax.lang.model.* compares types with "sameType" semantics.
     return receiver == payload || this.tes.sameType(receiver, payload);
   }
 
-  // This test asks: is the *required type* assignable to the *bean type*'s bounds?
+  // Is the "actual" type argument represented by payload assignable to the receiver's condensed bounds?
   //
-  // @Inject Foo<String> foo; <-- Bean<T extends CharSequence> // is String (payload) assignable to CharSequence (receiver)?
+  // @Inject Foo<String> foo; <-- Bean<T extends CharSequence> // is the "actual" String type (payload) assignable to T's CharSequence bound (receiver)?
+  //
+  // Recall that after condensing "T extends CharSequence" you get CharSequence.
+  //
+  // Recall that if, instead, you had T extends S and S extends CharSequence, condensing T still yields CharSequence.
   private final boolean assignableToCondensedTypeVariableBounds(final TypeVariable receiver, final ReferenceType payload) {
     assert receiver.getKind() == TypeKind.TYPEVAR;
     assert actual(payload);
-    return covariantlyAssignable(condense(receiver), List.of(payload));
+    return covariantlyAssignable(List.of(receiver), List.of(payload)); // deliberately List.of(payload) and not condense(payload)
   }
 
   private final boolean assignableToExtendsBound(final WildcardType w, final ReferenceType candidate) {
@@ -430,24 +437,27 @@ public final class Assignability implements Constable {
   // undefined). See
   // https://www.oreilly.com/library/view/learning-java-4th/9781449372477/ch08s07.html#learnjava3-CHP-8-SECT-7.1.
   //
-  // Digging deeper, I think getUppermostTypeVariableBounds(tv) is just erase(tv) applied recursively, maybe?
+  // Digging deeper, I think getUppermostTypeVariableBounds(tv) is just erase(tv) applied recursively, maybe? (No, it
+  // turns out; read on.)
   //
   // https://github.com/openjdk/jdk/blob/181845ae46157a9bb3bf8e2a328fa59eddc0273a/src/jdk.compiler/share/classes/com/sun/tools/javac/code/Types.java#L2450
   //
   // Compare vs.:
   // https://github.com/weld/core/blob/e894d1699ff1c91332605f5ecae5f53410effb81/impl/src/main/java/org/jboss/weld/resolution/AbstractAssignabilityRules.java#L57-L62
   //
-  // So maybe not quite. getUppermostTypeVariableBounds just gets to "actual" types. So T extends S, S extends String
-  // yields T extends String.
+  // So maybe not quite. getUppermostTypeVariableBounds() just gets to "actual" types. So given T extends S and S extends
+  // String, T's "uppermost type variable bounds" are String.
 
-  // For every bound in receiverBounds, after condensing, is there a bound in payloadBounds, after condensing, that is
-  // assignable to it using Java, not CDI, assignability semantics?
+  // For every bound in (condensed) receiverBounds, is there a bound in (condensed) payloadBounds that is covariantly
+  // assignable to it?
+  //
+  // (Is there one bound in (condensed) payloadBounds that matches all bounds in (condensed) receiver bounds?
   //
   // Throws ClassCastException if, after condensing, any encountered bound is not either an ArrayType or a DeclaredType.
-  private final boolean covariantlyAssignable(final List<? extends TypeMirror> receiverBounds, List<? extends TypeMirror> payloadBounds) {
+  private final boolean covariantlyAssignable(List<? extends TypeMirror> receiverBounds, List<? extends TypeMirror> payloadBounds) {
     payloadBounds = condense(payloadBounds);
-    for (final TypeMirror receiver : condense(receiverBounds)) { // eliminate type variables via condense() call
-      if (!covariantlyAssignable((ReferenceType)receiver, payloadBounds)) {
+    for (final TypeMirror condensedReceiverBound : condense(receiverBounds)) { // eliminate type variables via condense() call
+      if (!covariantlyAssignable((ReferenceType)condensedReceiverBound, payloadBounds)) {
         return false;
       }
     }
@@ -457,76 +467,82 @@ public final class Assignability implements Constable {
   // Is there a DeclaredType-or-ArrayType bound in condensedPayloadBounds that is assignable to classOrArrayTypeReceiver
   // using Java, not CDI, assignability semantics?
   //
+  // It is assumed condensedPayloadBounds is the result of a condense() call.
+  //
   // Throws ClassCastException or IllegalArgumentException if any encountered type is not either an ArrayType or a
   // DeclaredType.
   private final boolean covariantlyAssignable(final ReferenceType classOrArrayTypeReceiver, final List<? extends TypeMirror> condensedPayloadBounds) {
     return switch (classOrArrayTypeReceiver.getKind()) {
     case ARRAY, DECLARED -> {
-      for (final TypeMirror payload : condensedPayloadBounds) {
-        if (covariantlyAssignable(classOrArrayTypeReceiver, (ReferenceType)payload)) {
+      for (final TypeMirror condensedPayloadBound : condensedPayloadBounds) {
+        if (covariantlyAssignable(classOrArrayTypeReceiver, (ReferenceType)condensedPayloadBound)) {
           yield true;
         }
       }
       yield false;
     }
-    default -> throw new IllegalArgumentException("t: " + classOrArrayTypeReceiver + "; kind: " + classOrArrayTypeReceiver.getKind());
+    default -> throw new IllegalArgumentException("classOrArrayTypeReceiver: " + classOrArrayTypeReceiver + "; kind: " + classOrArrayTypeReceiver.getKind());
     };
   }
 
+  // Is classOrArrayTypePayload assignable to classOrArrayTypeReceiver following the rules of Java assignability
+  // (i.e. covariance)?
+  //
+  // The types are ReferenceTypes because this is only ever invoked in the context of type arguments.
   private final boolean covariantlyAssignable(final ReferenceType classOrArrayTypeReceiver, final ReferenceType classOrArrayTypePayload) {
     assert actual(classOrArrayTypeReceiver);
     assert actual(classOrArrayTypePayload);
     return
       classOrArrayTypeReceiver == classOrArrayTypePayload || // Optimization
-      this.tes.assignable(classOrArrayTypePayload, classOrArrayTypeReceiver); // yes, backwards
+      // Note that TypeAndElementSource#assignable(TypeMirror, TypeMirror) follows the lead of
+      // javax.lang.model.util.Types#isAssignable(TypeMirror, TypeMirror) where the "payload" is the *first* parameter
+      // and the "receiver" is the *second* argument.
+      this.tes.assignable(classOrArrayTypePayload, classOrArrayTypeReceiver); // yes, "backwards"
   }
 
+  // Are payload's condensed bounds assignable to receiver's condensed extends bound (upper bound)?
   private final boolean condensedTypeVariableBoundsAssignableToExtendsBound(final WildcardType receiver, final TypeVariable payload) {
     assert receiver.getKind() == TypeKind.WILDCARD;
     assert payload.getKind() == TypeKind.TYPEVAR;
     // "...the upper bound of the type variable [a type variable has many bounds?] is assignable TO [...] the upper
     // bound, if any, of the wildcard..."
     final TypeMirror extendsBound = receiver.getExtendsBound();
-    if (extendsBound == null) {
-      // WildcardType#getExtendsBound() javadoc: "If no upper bound is explicitly declared, null is returned."  This
-      // means the receiver is effectively java.lang.Object, and any reference type is assignable to it.
-      return true;
-    }
     // Condense arguments to eliminate useless type variables and intersection types so that Java covariant semantics
     // will work properly in this case.
-    return covariantlyAssignable(condense((ReferenceType)extendsBound), condense(payload));
+    return extendsBound == null || covariantlyAssignable(List.of((ReferenceType)extendsBound), List.of(payload)); // No need to condense; #covariantlyAssignable(List, List) does this already
   }
 
+  // Is payload's condensed extends bound (upper bound) covariantly assignable to receiver's condensed bounds?
   private final boolean condensedTypeVariableBoundsAssignableFromExtendsBound(final TypeVariable receiver, final WildcardType payload) {
     assert receiver.getKind() == TypeKind.TYPEVAR;
     assert payload.getKind() == TypeKind.WILDCARD;
-    // "...the upper bound of the type variable [a type variable has many bounds?] is assignable [...] FROM the upper bound, if any, of the wildcard..."
+    // "...the upper bound of the type variable [a type variable has many bounds?] is assignable [...] FROM the upper
+    // bound, if any, of the wildcard..."
     final TypeMirror extendsBound = payload.getExtendsBound();
-    if (extendsBound == null) {
-      // "if any" is problematic. CDI implementations return true in this case.
-      return true;
-    }
-    return covariantlyAssignable(condense(receiver), condense((ReferenceType)extendsBound));
+    return extendsBound == null || covariantlyAssignable(List.of(receiver), List.of((ReferenceType)extendsBound));
   }
 
+  // Is payload's super bound (lower bound) covariantly assignable to receiver's condensed bounds?
   private final boolean condensedTypeVariableBoundsAssignableFromSuperBound(final TypeVariable receiver, final WildcardType payload) {
     assert receiver.getKind() == TypeKind.TYPEVAR;
     assert payload.getKind() == TypeKind.WILDCARD;
     final TypeMirror superBound = payload.getSuperBound();
-    return superBound == null || covariantlyAssignable(condense(receiver), List.of(superBound));
+    return superBound == null || covariantlyAssignable(List.of(receiver), List.of(superBound));
   }
 
+  // Are payload's condensed bounds covariantly assignable to receiver's condensed bounds?
   private final boolean condensedTypeVariableBoundsAssignableToCondensedTypeVariableBounds(final TypeVariable receiver, final TypeVariable payload) {
     assert receiver.getKind() == TypeKind.TYPEVAR;
     assert payload.getKind() == TypeKind.TYPEVAR;
-    return covariantlyAssignable(condense(receiver), condense(payload)); // I think
+    return covariantlyAssignable(List.of(receiver), List.of(payload));
   }
 
-  private final boolean assignableFromSuperBound(final ReferenceType candidate, final WildcardType payload) {
+  // Is payload's super bound (lower bound) covariantly assignable to receiver?
+  private final boolean assignableFromSuperBound(final ReferenceType receiver, final WildcardType payload) {
     assert payload.getKind() == TypeKind.WILDCARD;
-    assert actual(candidate);
+    assert actual(receiver);
     final ReferenceType superBound = (ReferenceType)payload.getSuperBound();
-    return superBound == null || covariantlyAssignable(candidate, superBound);
+    return superBound == null || covariantlyAssignable(receiver, superBound);
   }
 
   // Get the raw type yielded by t, assuming t is the sort of type that can yield a raw type.
@@ -576,43 +592,57 @@ public final class Assignability implements Constable {
    */
 
 
-  // If t is a TypeVariable whose bounds are, for example, S extends String, replaces S with String and returns a List
-  // whose sole element is String.
+  // If t is null, returns an empty List.
   //
-  // If t is an IntersectionType whose first and therefore only permitted bound is, for example, S extends String,
-  // replaces S in the list of bounds with String instead.
+  // If t is a type variable, returns the result of condensing its upper bound.
+  //
+  // If t is an intersection type, returns the result of condensing its bounds.
   //
   // In all other cases returns List.of(t).
+  //
+  // See #condense(List) below.
   private static final List<? extends TypeMirror> condense(final TypeMirror t) {
-    if (t == null) {
-      return List.of();
-    }
-    return switch (t.getKind()) {
-    case INTERSECTION -> condense(((IntersectionType)t).getBounds()); // drop t; replace with its bounds
-    case TYPEVAR -> condense(((TypeVariable)t).getUpperBound()); // drop t; replace with its bounds
-    default -> List.of(t); // it doesn't have bounds, or it's a wildcard and we didn't say which bounds
+    return t == null ? List.of() : switch (t.getKind()) {
+    case INTERSECTION -> condense(((IntersectionType)t).getBounds());
+    case TYPEVAR -> condense(((TypeVariable)t).getUpperBound());
+    default -> List.of(t); // t's bounds are defined solely by itself, or it's a wildcard and we didn't say which bounds
     };
   }
 
+  // If ts is null or empty, returns an empty List.
+  //
+  // If ts consists of a single element, returns the result of condensing t (see #condense(TypeMirror) above).
+  //
+  // If ts's first element (of several) is an intersection type i, returns the result of condensing the list formed by
+  // effectively replacing ts's first element with i's bounds.
+  //
+  // If ts's first element (of several) is a type variable tv, returns the result of condensing the list formed by
+  // effectively replacing ts's first element with tv's upper bound.
+  //
+  // In all other cases, returns ts.
   private static final List<? extends TypeMirror> condense(final List<? extends TypeMirror> ts) {
-    if (ts == null || ts.isEmpty()) {
+    final int size = ts == null ? 0 : ts.size();
+    if (size <= 0) {
       return List.of();
     }
-    final TypeMirror t = ts.get(0);
-    return switch (t.getKind()) {
+    final TypeMirror ts0 = ts.get(0);
+    if (size == 1) {
+      return condense(ts0);
+    }
+    return switch (ts0.getKind()) {
     case INTERSECTION -> {
       final ArrayList<TypeMirror> newBounds = new ArrayList<>();
-      newBounds.addAll(((IntersectionType)t).getBounds()); // replace the first element (t) with its bounds
-      newBounds.addAll(ts.subList(1, ts.size()));
+      newBounds.addAll(((IntersectionType)ts0).getBounds()); // first elements are now ts0's bounds, not ts0
+      newBounds.addAll(ts.subList(1, size)); // drop ts0; add whatever was left
       newBounds.trimToSize();
-      yield condense(Collections.unmodifiableList(newBounds));
+      yield condense(newBounds);
     }
     case TYPEVAR -> {
       final ArrayList<TypeMirror> newBounds = new ArrayList<>();
-      newBounds.add(((TypeVariable)t).getUpperBound()); // replace the first element (t) with its bounds
-      newBounds.addAll(ts.subList(1, ts.size()));
+      newBounds.add(((TypeVariable)ts0).getUpperBound()); // first element is now ts0's upper bound, not ts0
+      newBounds.addAll(ts.subList(1, size)); // drop ts0; add whatever was left
       newBounds.trimToSize();
-      yield condense(Collections.unmodifiableList(newBounds));
+      yield condense(newBounds);
     }
     default -> ts;
     };
@@ -626,16 +656,9 @@ public final class Assignability implements Constable {
   // instances are never generic.
   private static final boolean generic(final Element e) {
     return switch (e.getKind()) {
-    case CLASS, CONSTRUCTOR, ENUM, INTERFACE, METHOD, RECORD -> e instanceof Parameterizable p && generic(p);
+    case CLASS, CONSTRUCTOR, ENUM, INTERFACE, METHOD, RECORD -> !((Parameterizable)e).getTypeParameters().isEmpty();
     default -> false;
     };
-  }
-
-  // Is p generic?
-  //
-  // A Parameterizable is generic if it has one or more TypeParameterElements.
-  private static final boolean generic(final Parameterizable p) {
-    return !p.getTypeParameters().isEmpty();
   }
 
   // Is t the usage of a generic class, i.e. a usage (whether raw or parameterized) of a generic class declaration?
@@ -647,7 +670,7 @@ public final class Assignability implements Constable {
     return t.getKind() == TypeKind.DECLARED && generic(((DeclaredType)t).asElement());
   }
 
-  // Is t a parameterized type (and not a raw type)?
+  // Is t a parameterized type (and not a raw type) according to the rules of the Java Language Specification?
   //
   // A type is parameterized if it is a declared type with a non-empty list of type arguments. No other type is
   // parameterized.
@@ -657,9 +680,13 @@ public final class Assignability implements Constable {
     return t.getKind() == TypeKind.DECLARED && !((DeclaredType)t).getTypeArguments().isEmpty();
   }
 
-  // There are some cases, but not all, where CDI considers an array type to be something that can be parameterized, or
-  // else "bean type parameter" resolution would never work. See
+  // Is t a type that CDI considers to be "parameterized"?
+  //
+  // There are some cases, but not all, where CDI (incorrectly) considers an array type to be something that can be
+  // parameterized, or else "bean type parameter" resolution would never work. See
   // https://stackoverflow.com/questions/76493672/when-cdi-speaks-of-a-parameterized-type-does-it-also-incorrectly-mean-array-typ.
+  //
+  // The semantics CDI wants to express are really: can t yield a raw type? See #yieldsRawType(TypeMirror) below.
   private static final boolean cdiParameterized(final TypeMirror t) {
     return yieldsRawType(t);
   }
@@ -674,13 +701,16 @@ public final class Assignability implements Constable {
     return parameterized(t) || t.getKind() == TypeKind.ARRAY && parameterized(elementType(t));
   }
 
-  // Is t a raw type?
+  // Is t a raw type, following the rules of the Java Language Specification, not CDI?
   //
   // A raw type is either "the erasure of a parameterized type" (so List<String>'s raw type is List, clearly not
   // List<?>, and not List<E>) or "an array type whose element type is a raw type" (so List<String>[]'s raw type is
   // List[]). (String is not a raw type; its element defines no type parameters.)
   //
   // No other type is a raw type.
+  //
+  // CDI gets confused and uses "raw" in different senses. The sense used here is that of the Java Language
+  // Specification.
   private static final boolean raw(final TypeMirror t) {
     return switch (t.getKind()) {
     case ARRAY -> raw(elementType((ArrayType)t));
@@ -690,15 +720,20 @@ public final class Assignability implements Constable {
     };
   }
 
+  // Is t a declared type that bears the supplied fully qualified name?
   private static final boolean declaredTypeNamed(final TypeMirror t, final CharSequence n) {
     return t.getKind() == TypeKind.DECLARED && named(((DeclaredType)t), n);
   }
 
+  // Regardless of its reported TypeKind, does t's declaring TypeElement bear the supplied fully qualified name?
+  //
+  // Throws ClassCastException if the return value of t.asElement() is not a TypeElement.
   private static final boolean named(final DeclaredType t, final CharSequence n) {
     // (No getKind() check on purpose.)
     return ((TypeElement)t.asElement()).getQualifiedName().contentEquals(n);
   }
 
+  // Do all supplied TypeMirrors pass the test represented by the supplied Predicate?
   private static final boolean allTypeArgumentsAre(final Iterable<? extends TypeMirror> typeArguments, final Predicate<? super TypeMirror> p) {
     for (final TypeMirror t : typeArguments) {
       if (!p.test(t)) {
@@ -708,17 +743,24 @@ public final class Assignability implements Constable {
     return true;
   }
 
+  // Is e a TypeElement representing java.lang.Object?
   private static final boolean isJavaLangObject(final Element e) {
-    return e.getKind() == ElementKind.CLASS && ((TypeElement)e).getQualifiedName().contentEquals("java.lang.Object");
+    return
+      e.getKind() == ElementKind.CLASS &&
+      ((QualifiedNameable)e).getQualifiedName().contentEquals("java.lang.Object");
   }
 
+  // Is t a DeclaredType whose asElement() method returns an Element representing java.lang.Object?
   private static final boolean isJavaLangObject(final TypeMirror t) {
-    return t.getKind() == TypeKind.DECLARED && isJavaLangObject(((DeclaredType)t).asElement());
+    return
+      t.getKind() == TypeKind.DECLARED &&
+      isJavaLangObject(((DeclaredType)t).asElement());
   }
 
   // Is t an "actual type"?
   //
-  // CDI mentions actual types but does not define what they are.
+  // CDI mentions actual types but does not define what they are. This method attempts to divine and implement the
+  // intent.
   //
   // A comment in a closed bug report (CDI-502)
   // (https://issues.redhat.com/browse/CDI-502?focusedId=13036118&page=com.atlassian.jira.plugin.system.issuetabpanels%3Acomment-tabpanel#comment-13036118)
@@ -726,7 +768,11 @@ public final class Assignability implements Constable {
   //
   // "An actual type is a type that is not a wildcard nor [sic] an unresolved [sic] type variable."
   //
-  // More strictly, therefore, it seems an actual type is an array, declared or primitive type.
+  // The Java Language Specification does not mention anything about "actual types" or type variable resolution. CDI
+  // does not mention anything about type variable resolution.
+  //
+  // More strictly, therefore, the intent seems to be that an actual type is an array, declared or primitive type, and
+  // none other.
   private static final boolean actual(final TypeMirror t) {
     return switch (t.getKind()) {
     case ARRAY, BOOLEAN, BYTE, CHAR, DECLARED, DOUBLE, FLOAT, INT, LONG, SHORT -> true;
@@ -734,10 +780,22 @@ public final class Assignability implements Constable {
     };
   }
 
+  // Is t an unbounded type variable?
+  //
+  // CDI does not define what an "unbounded type variable" is. This method attempts to divine and implement the intent.
+  //
+  // TODO: do we need to condense? Given T extends S and S extends Object, is T an unbounded TypeVariable or not?
   private static final boolean unboundedTypeVariable(final TypeMirror t) {
-    return t instanceof TypeVariable tv && tv.getKind() == TypeKind.TYPEVAR && isJavaLangObject(tv.getUpperBound());
+    return
+      t.getKind() == TypeKind.TYPEVAR &&
+      isJavaLangObject(((TypeVariable)t).getUpperBound());
   }
 
+  // Returns the element type of t.
+  //
+  // The element type of an array type is the element type of its component type.
+  //
+  // The element type of every other kind of type is the type itself.
   private static final TypeMirror elementType(final TypeMirror t) {
     return t.getKind() == TypeKind.ARRAY ? elementType(((ArrayType)t).getComponentType()) : t;
   }

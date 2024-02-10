@@ -1,6 +1,6 @@
 /* -*- mode: Java; c-basic-offset: 2; indent-tabs-mode: nil; coding: utf-8-unix -*-
  *
- * Copyright © 2023 microBean™.
+ * Copyright © 2023–2024 microBean™.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
@@ -19,6 +19,7 @@ import java.lang.constant.MethodHandleDesc;
 
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 
 import org.microbean.constant.Constables;
 
@@ -46,25 +47,30 @@ public final class Singleton<I> implements Factory<I> {
     this.singleton = preCreate ? product : null;
   }
 
-  @Override
+  @Override // Factory<I> (Aggregate)
+  public final Set<Dependency> dependencies() {
+    return Set.of();
+  }
+
+  @Override // Factory<I>
   public final boolean destroys() {
     return false;
   }
 
-  @Override
+  @Override // Factory<I>
   public final I singleton() {
     return this.singleton;
   }
 
-  @Override
-  public final I create(final Creation<I> c, final ReferenceSelector references) {
+  @Override // Factory<I>
+  public final I create(final Creation<I> c, final ReferenceSelector rs) {
     if (this.singleton == null) {
       this.singleton = this.product;
     }
     return this.product;
   }
 
-  @Override // Constable
+  @Override // Factory<I> (Constable)
   public final Optional<DynamicConstantDesc<Singleton<I>>> describeConstable() {
     return Constables.describeConstable(this.product)
       .map(productDesc -> DynamicConstantDesc.of(BSM_INVOKE,

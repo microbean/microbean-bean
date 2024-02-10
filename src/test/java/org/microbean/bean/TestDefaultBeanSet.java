@@ -1,6 +1,6 @@
 /* -*- mode: Java; c-basic-offset: 2; indent-tabs-mode: nil; coding: utf-8-unix -*-
  *
- * Copyright © 2023 microBean™.
+ * Copyright © 2023–2024 microBean™.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
@@ -99,8 +99,8 @@ final class TestDefaultBeanSet {
   final void testBeans() {
     final Set<Bean<?>> set = this.beans.beans();
 
-    // 3 == Bean<String>, Bean<DefaultBeanSet>, Bean<Alternate.Resolver>
-    assertEquals(3, set.size());
+    // 5 == Bean<String>, Bean<DefaultBeanSet>, Bean<Alternate.Resolver>, Bean<Assignability>, Bean<TypeAndElementSource>
+    assertEquals(5, set.size());
     hello = beans.bean(new BeanSelectionCriteria(assignability, tes.declaredType(String.class), List.of(defaultQualifier()), true)).cast();
     assertSame("Hello", hello.factory().create(null, null));
     hello = beans.bean(new BeanSelectionCriteria(assignability, tes.declaredType(Object.class), List.of(defaultQualifier()), true)).cast();
