@@ -14,7 +14,7 @@
 <div class="source-container">
 <pre><span class="source-line-no">001</span><span id="line-1">/* -*- mode: Java; c-basic-offset: 2; indent-tabs-mode: nil; coding: utf-8-unix -*-</span>
 <span class="source-line-no">002</span><span id="line-2"> *</span>
-<span class="source-line-no">003</span><span id="line-3"> * Copyright © 2023 microBean™.</span>
+<span class="source-line-no">003</span><span id="line-3"> * Copyright © 2023–2024 microBean™.</span>
 <span class="source-line-no">004</span><span id="line-4"> *</span>
 <span class="source-line-no">005</span><span id="line-5"> * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with</span>
 <span class="source-line-no">006</span><span id="line-6"> * the License.  You may obtain a copy of the License at</span>
@@ -67,17 +67,17 @@
 <span class="source-line-no">053</span><span id="line-53">    return new DefaultCreation&lt;&gt;(this.registry.clone(), beanSelectionCriteria);</span>
 <span class="source-line-no">054</span><span id="line-54">  }</span>
 <span class="source-line-no">055</span><span id="line-55"></span>
-<span class="source-line-no">056</span><span id="line-56">  @Override</span>
+<span class="source-line-no">056</span><span id="line-56">  @Override // AutoCloseableRegistry</span>
 <span class="source-line-no">057</span><span id="line-57">  public final void close() {</span>
 <span class="source-line-no">058</span><span id="line-58">    this.registry.close();</span>
 <span class="source-line-no">059</span><span id="line-59">  }</span>
 <span class="source-line-no">060</span><span id="line-60"></span>
-<span class="source-line-no">061</span><span id="line-61">  @Override</span>
+<span class="source-line-no">061</span><span id="line-61">  @Override // AutoCloseableRegistry</span>
 <span class="source-line-no">062</span><span id="line-62">  public final boolean closed() {</span>
 <span class="source-line-no">063</span><span id="line-63">    return this.registry.closed();</span>
 <span class="source-line-no">064</span><span id="line-64">  }</span>
 <span class="source-line-no">065</span><span id="line-65"></span>
-<span class="source-line-no">066</span><span id="line-66">  @Override</span>
+<span class="source-line-no">066</span><span id="line-66">  @Override // AutoCloseableRegistry</span>
 <span class="source-line-no">067</span><span id="line-67">  public final boolean register(final AutoCloseable ac) {</span>
 <span class="source-line-no">068</span><span id="line-68">    return this.registry.register(ac);</span>
 <span class="source-line-no">069</span><span id="line-69">  }</span>

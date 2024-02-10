@@ -33,8 +33,8 @@
 <span class="source-line-no">019</span><span id="line-19">import java.lang.constant.MethodHandleDesc;</span>
 <span class="source-line-no">020</span><span id="line-20"></span>
 <span class="source-line-no">021</span><span id="line-21">import java.util.ArrayList;</span>
-<span class="source-line-no">022</span><span id="line-22">import java.util.Collections;</span>
-<span class="source-line-no">023</span><span id="line-23">import java.util.List;</span>
+<span class="source-line-no">022</span><span id="line-22">import java.util.List;</span>
+<span class="source-line-no">023</span><span id="line-23">import java.util.Objects;</span>
 <span class="source-line-no">024</span><span id="line-24">import java.util.Optional;</span>
 <span class="source-line-no">025</span><span id="line-25"></span>
 <span class="source-line-no">026</span><span id="line-26">import java.util.function.Predicate;</span>
@@ -42,721 +42,779 @@
 <span class="source-line-no">028</span><span id="line-28">import javax.lang.model.element.Element;</span>
 <span class="source-line-no">029</span><span id="line-29">import javax.lang.model.element.ElementKind;</span>
 <span class="source-line-no">030</span><span id="line-30">import javax.lang.model.element.Parameterizable;</span>
-<span class="source-line-no">031</span><span id="line-31">import javax.lang.model.element.TypeElement;</span>
-<span class="source-line-no">032</span><span id="line-32"></span>
-<span class="source-line-no">033</span><span id="line-33">import javax.lang.model.type.ArrayType;</span>
-<span class="source-line-no">034</span><span id="line-34">import javax.lang.model.type.DeclaredType;</span>
-<span class="source-line-no">035</span><span id="line-35">import javax.lang.model.type.IntersectionType;</span>
-<span class="source-line-no">036</span><span id="line-36">import javax.lang.model.type.ReferenceType;</span>
-<span class="source-line-no">037</span><span id="line-37">import javax.lang.model.type.TypeKind;</span>
-<span class="source-line-no">038</span><span id="line-38">import javax.lang.model.type.TypeMirror;</span>
-<span class="source-line-no">039</span><span id="line-39">import javax.lang.model.type.TypeVariable;</span>
-<span class="source-line-no">040</span><span id="line-40">import javax.lang.model.type.WildcardType;</span>
-<span class="source-line-no">041</span><span id="line-41"></span>
-<span class="source-line-no">042</span><span id="line-42">import org.microbean.lang.Lang;</span>
-<span class="source-line-no">043</span><span id="line-43">import org.microbean.lang.TypeAndElementSource;</span>
-<span class="source-line-no">044</span><span id="line-44"></span>
-<span class="source-line-no">045</span><span id="line-45">import static java.lang.constant.ConstantDescs.BSM_INVOKE;</span>
-<span class="source-line-no">046</span><span id="line-46"></span>
-<span class="source-line-no">047</span><span id="line-47">import static org.microbean.bean.ConstantDescs.CD_Assignability;</span>
-<span class="source-line-no">048</span><span id="line-48"></span>
-<span class="source-line-no">049</span><span id="line-49">import static org.microbean.lang.ConstantDescs.CD_TypeAndElementSource;</span>
-<span class="source-line-no">050</span><span id="line-50"></span>
-<span class="source-line-no">051</span><span id="line-51">/**</span>
-<span class="source-line-no">052</span><span id="line-52"> * A class encapsulating CDI-compatible assignability ("matching") rules as applied to {@link TypeMirror}s.</span>
-<span class="source-line-no">053</span><span id="line-53"> *</span>
-<span class="source-line-no">054</span><span id="line-54"> * @author &lt;a href="https://about.me/lairdnelson/" target="_top"&gt;Laird Nelson&lt;/a&gt;</span>
-<span class="source-line-no">055</span><span id="line-55"> *</span>
-<span class="source-line-no">056</span><span id="line-56"> * @see #matches(TypeMirror, TypeMirror)</span>
-<span class="source-line-no">057</span><span id="line-57"> */</span>
-<span class="source-line-no">058</span><span id="line-58">// Applies CDI assignability semantics to types.</span>
-<span class="source-line-no">059</span><span id="line-59">public final class Assignability implements Constable {</span>
-<span class="source-line-no">060</span><span id="line-60"></span>
+<span class="source-line-no">031</span><span id="line-31">import javax.lang.model.element.QualifiedNameable;</span>
+<span class="source-line-no">032</span><span id="line-32">import javax.lang.model.element.TypeElement;</span>
+<span class="source-line-no">033</span><span id="line-33"></span>
+<span class="source-line-no">034</span><span id="line-34">import javax.lang.model.type.ArrayType;</span>
+<span class="source-line-no">035</span><span id="line-35">import javax.lang.model.type.DeclaredType;</span>
+<span class="source-line-no">036</span><span id="line-36">import javax.lang.model.type.IntersectionType;</span>
+<span class="source-line-no">037</span><span id="line-37">import javax.lang.model.type.ReferenceType;</span>
+<span class="source-line-no">038</span><span id="line-38">import javax.lang.model.type.TypeKind;</span>
+<span class="source-line-no">039</span><span id="line-39">import javax.lang.model.type.TypeMirror;</span>
+<span class="source-line-no">040</span><span id="line-40">import javax.lang.model.type.TypeVariable;</span>
+<span class="source-line-no">041</span><span id="line-41">import javax.lang.model.type.WildcardType;</span>
+<span class="source-line-no">042</span><span id="line-42"></span>
+<span class="source-line-no">043</span><span id="line-43">import org.microbean.lang.Lang;</span>
+<span class="source-line-no">044</span><span id="line-44">import org.microbean.lang.TypeAndElementSource;</span>
+<span class="source-line-no">045</span><span id="line-45"></span>
+<span class="source-line-no">046</span><span id="line-46">import static java.lang.constant.ConstantDescs.BSM_INVOKE;</span>
+<span class="source-line-no">047</span><span id="line-47"></span>
+<span class="source-line-no">048</span><span id="line-48">import static org.microbean.bean.ConstantDescs.CD_Assignability;</span>
+<span class="source-line-no">049</span><span id="line-49"></span>
+<span class="source-line-no">050</span><span id="line-50">import static org.microbean.lang.ConstantDescs.CD_TypeAndElementSource;</span>
+<span class="source-line-no">051</span><span id="line-51"></span>
+<span class="source-line-no">052</span><span id="line-52">/**</span>
+<span class="source-line-no">053</span><span id="line-53"> * A class encapsulating CDI-compatible assignability ("matching") rules as applied to {@link TypeMirror}s.</span>
+<span class="source-line-no">054</span><span id="line-54"> *</span>
+<span class="source-line-no">055</span><span id="line-55"> * @author &lt;a href="https://about.me/lairdnelson/" target="_top"&gt;Laird Nelson&lt;/a&gt;</span>
+<span class="source-line-no">056</span><span id="line-56"> *</span>
+<span class="source-line-no">057</span><span id="line-57"> * @see #matches(TypeMirror, TypeMirror)</span>
+<span class="source-line-no">058</span><span id="line-58"> */</span>
+<span class="source-line-no">059</span><span id="line-59">// Applies CDI assignability semantics to types.</span>
+<span class="source-line-no">060</span><span id="line-60">public final class Assignability implements Constable {</span>
 <span class="source-line-no">061</span><span id="line-61"></span>
-<span class="source-line-no">062</span><span id="line-62">  /*</span>
-<span class="source-line-no">063</span><span id="line-63">   * Instance fields.</span>
-<span class="source-line-no">064</span><span id="line-64">   */</span>
-<span class="source-line-no">065</span><span id="line-65"></span>
+<span class="source-line-no">062</span><span id="line-62"></span>
+<span class="source-line-no">063</span><span id="line-63">  /*</span>
+<span class="source-line-no">064</span><span id="line-64">   * Instance fields.</span>
+<span class="source-line-no">065</span><span id="line-65">   */</span>
 <span class="source-line-no">066</span><span id="line-66"></span>
-<span class="source-line-no">067</span><span id="line-67">  private final TypeAndElementSource tes;</span>
-<span class="source-line-no">068</span><span id="line-68"></span>
+<span class="source-line-no">067</span><span id="line-67"></span>
+<span class="source-line-no">068</span><span id="line-68">  private final TypeAndElementSource tes;</span>
 <span class="source-line-no">069</span><span id="line-69"></span>
-<span class="source-line-no">070</span><span id="line-70">  /*</span>
-<span class="source-line-no">071</span><span id="line-71">   * Constructors.</span>
-<span class="source-line-no">072</span><span id="line-72">   */</span>
-<span class="source-line-no">073</span><span id="line-73"></span>
+<span class="source-line-no">070</span><span id="line-70"></span>
+<span class="source-line-no">071</span><span id="line-71">  /*</span>
+<span class="source-line-no">072</span><span id="line-72">   * Constructors.</span>
+<span class="source-line-no">073</span><span id="line-73">   */</span>
 <span class="source-line-no">074</span><span id="line-74"></span>
-<span class="source-line-no">075</span><span id="line-75">  /**</span>
-<span class="source-line-no">076</span><span id="line-76">   * Creates a new {@link Assignability}.</span>
-<span class="source-line-no">077</span><span id="line-77">   *</span>
-<span class="source-line-no">078</span><span id="line-78">   * @see #Assignability(TypeAndElementSource)</span>
-<span class="source-line-no">079</span><span id="line-79">   */</span>
-<span class="source-line-no">080</span><span id="line-80">  public Assignability() {</span>
-<span class="source-line-no">081</span><span id="line-81">    super();</span>
-<span class="source-line-no">082</span><span id="line-82">    this.tes = Lang.typeAndElementSource();</span>
-<span class="source-line-no">083</span><span id="line-83">  }</span>
-<span class="source-line-no">084</span><span id="line-84"></span>
-<span class="source-line-no">085</span><span id="line-85">  /**</span>
-<span class="source-line-no">086</span><span id="line-86">   * Creates a new {@link Assignability}.</span>
-<span class="source-line-no">087</span><span id="line-87">   *</span>
-<span class="source-line-no">088</span><span id="line-88">   * @param tes a {@link TypeAndElementSource}; may be {@code null} in which case the return value of an invocation of</span>
-<span class="source-line-no">089</span><span id="line-89">   * {@link Lang#typeAndElementSource()} will be used instead</span>
-<span class="source-line-no">090</span><span id="line-90">   *</span>
-<span class="source-line-no">091</span><span id="line-91">   * @see TypeAndElementSource</span>
-<span class="source-line-no">092</span><span id="line-92">   *</span>
-<span class="source-line-no">093</span><span id="line-93">   * @see Lang#typeAndElementSource()</span>
-<span class="source-line-no">094</span><span id="line-94">   */</span>
-<span class="source-line-no">095</span><span id="line-95">  public Assignability(final TypeAndElementSource tes) {</span>
-<span class="source-line-no">096</span><span id="line-96">    super();</span>
-<span class="source-line-no">097</span><span id="line-97">    this.tes = tes == null ? Lang.typeAndElementSource() : tes;</span>
-<span class="source-line-no">098</span><span id="line-98">  }</span>
-<span class="source-line-no">099</span><span id="line-99"></span>
+<span class="source-line-no">075</span><span id="line-75"></span>
+<span class="source-line-no">076</span><span id="line-76">  /**</span>
+<span class="source-line-no">077</span><span id="line-77">   * Creates a new {@link Assignability}.</span>
+<span class="source-line-no">078</span><span id="line-78">   *</span>
+<span class="source-line-no">079</span><span id="line-79">   * @see #Assignability(TypeAndElementSource)</span>
+<span class="source-line-no">080</span><span id="line-80">   */</span>
+<span class="source-line-no">081</span><span id="line-81">  public Assignability() {</span>
+<span class="source-line-no">082</span><span id="line-82">    super();</span>
+<span class="source-line-no">083</span><span id="line-83">    this.tes = Lang.typeAndElementSource();</span>
+<span class="source-line-no">084</span><span id="line-84">  }</span>
+<span class="source-line-no">085</span><span id="line-85"></span>
+<span class="source-line-no">086</span><span id="line-86">  /**</span>
+<span class="source-line-no">087</span><span id="line-87">   * Creates a new {@link Assignability}.</span>
+<span class="source-line-no">088</span><span id="line-88">   *</span>
+<span class="source-line-no">089</span><span id="line-89">   * @param tes a {@link TypeAndElementSource}; may be {@code null} in which case the return value of an invocation of</span>
+<span class="source-line-no">090</span><span id="line-90">   * {@link Lang#typeAndElementSource()} will be used instead</span>
+<span class="source-line-no">091</span><span id="line-91">   *</span>
+<span class="source-line-no">092</span><span id="line-92">   * @see TypeAndElementSource</span>
+<span class="source-line-no">093</span><span id="line-93">   *</span>
+<span class="source-line-no">094</span><span id="line-94">   * @see Lang#typeAndElementSource()</span>
+<span class="source-line-no">095</span><span id="line-95">   */</span>
+<span class="source-line-no">096</span><span id="line-96">  public Assignability(final TypeAndElementSource tes) {</span>
+<span class="source-line-no">097</span><span id="line-97">    super();</span>
+<span class="source-line-no">098</span><span id="line-98">    this.tes = tes == null ? Lang.typeAndElementSource() : tes;</span>
+<span class="source-line-no">099</span><span id="line-99">  }</span>
 <span class="source-line-no">100</span><span id="line-100"></span>
-<span class="source-line-no">101</span><span id="line-101">  /*</span>
-<span class="source-line-no">102</span><span id="line-102">   * Instance methods.</span>
-<span class="source-line-no">103</span><span id="line-103">   */</span>
-<span class="source-line-no">104</span><span id="line-104"></span>
+<span class="source-line-no">101</span><span id="line-101"></span>
+<span class="source-line-no">102</span><span id="line-102">  /*</span>
+<span class="source-line-no">103</span><span id="line-103">   * Instance methods.</span>
+<span class="source-line-no">104</span><span id="line-104">   */</span>
 <span class="source-line-no">105</span><span id="line-105"></span>
-<span class="source-line-no">106</span><span id="line-106">  @Override // Constable</span>
-<span class="source-line-no">107</span><span id="line-107">  public final Optional&lt;? extends ConstantDesc&gt; describeConstable() {</span>
-<span class="source-line-no">108</span><span id="line-108">    if (this.tes instanceof Constable c) {</span>
-<span class="source-line-no">109</span><span id="line-109">      return c.describeConstable()</span>
-<span class="source-line-no">110</span><span id="line-110">        .map(tesDesc -&gt; DynamicConstantDesc.of(BSM_INVOKE,</span>
-<span class="source-line-no">111</span><span id="line-111">                                               MethodHandleDesc.ofConstructor(CD_Assignability,</span>
-<span class="source-line-no">112</span><span id="line-112">                                                                              CD_TypeAndElementSource),</span>
-<span class="source-line-no">113</span><span id="line-113">                                               tesDesc));</span>
-<span class="source-line-no">114</span><span id="line-114">    }</span>
-<span class="source-line-no">115</span><span id="line-115">    return Optional.empty();</span>
-<span class="source-line-no">116</span><span id="line-116">  }</span>
-<span class="source-line-no">117</span><span id="line-117"></span>
-<span class="source-line-no">118</span><span id="line-118">  /**</span>
-<span class="source-line-no">119</span><span id="line-119">   * Returns {@code true} if and only if at least one {@link TypeMirror} present in the supplied {@code payloads}</span>
-<span class="source-line-no">120</span><span id="line-120">   * argument {@linkplain #matches(TypeMirror, TypeMirror) matches} the supplied {@code receiver} argument.</span>
-<span class="source-line-no">121</span><span id="line-121">   *</span>
-<span class="source-line-no">122</span><span id="line-122">   * @param receiver the left hand side of a type assignment; must not be {@code null}</span>
-<span class="source-line-no">123</span><span id="line-123">   *</span>
-<span class="source-line-no">124</span><span id="line-124">   * @param payloads an {@link Iterable} of {@link TypeMirror}s each representing a potential right hand side of a type</span>
-<span class="source-line-no">125</span><span id="line-125">   * assignment; must not be {@code null}</span>
-<span class="source-line-no">126</span><span id="line-126">   *</span>
-<span class="source-line-no">127</span><span id="line-127">   * @return {@code true} if and only if at least one {@link TypeMirror} present in the supplied {@code payloads}</span>
-<span class="source-line-no">128</span><span id="line-128">   * argument {@linkplain #matches(TypeMirror, TypeMirror) matches} the supplied {@code receiver} argument; {@code</span>
-<span class="source-line-no">129</span><span id="line-129">   * false} otherwise</span>
-<span class="source-line-no">130</span><span id="line-130">   *</span>
-<span class="source-line-no">131</span><span id="line-131">   * @exception NullPointerException if either argument is {@code null}</span>
-<span class="source-line-no">132</span><span id="line-132">   *</span>
-<span class="source-line-no">133</span><span id="line-133">   * @see #matches(TypeMirror, TypeMirror)</span>
-<span class="source-line-no">134</span><span id="line-134">   */</span>
-<span class="source-line-no">135</span><span id="line-135">  // Is at least one payload assignable to the receiver? That is, does at least one payload "match the receiver" in CDI</span>
-<span class="source-line-no">136</span><span id="line-136">  // parlance?</span>
-<span class="source-line-no">137</span><span id="line-137">  public final boolean oneMatches(final TypeMirror receiver, final Iterable&lt;? extends TypeMirror&gt; payloads) {</span>
-<span class="source-line-no">138</span><span id="line-138">    for (final TypeMirror payload : payloads) {</span>
-<span class="source-line-no">139</span><span id="line-139">      if (matches(receiver, payload)) {</span>
-<span class="source-line-no">140</span><span id="line-140">        return true;</span>
-<span class="source-line-no">141</span><span id="line-141">      }</span>
-<span class="source-line-no">142</span><span id="line-142">    }</span>
-<span class="source-line-no">143</span><span id="line-143">    return false;</span>
-<span class="source-line-no">144</span><span id="line-144">  }</span>
-<span class="source-line-no">145</span><span id="line-145"></span>
-<span class="source-line-no">146</span><span id="line-146">  /**</span>
-<span class="source-line-no">147</span><span id="line-147">   * Returns {@code true} if and only if the supplied {@code payload} argument &lt;a</span>
-<span class="source-line-no">148</span><span id="line-148">   * href="https://jakarta.ee/specifications/cdi/4.0/jakarta-cdi-spec-4.0#performing_typesafe_resolution"&gt;matches&lt;/a&gt;</span>
-<span class="source-line-no">149</span><span id="line-149">   * the supplied {@code receiver} argument, according to the rules defined by &lt;a</span>
-<span class="source-line-no">150</span><span id="line-150">   * href="https://jakarta.ee/specifications/cdi/4.0/jakarta-cdi-spec-4.0#performing_typesafe_resolution"&gt;section</span>
-<span class="source-line-no">151</span><span id="line-151">   * 2.4.2.1 of the CDI specification&lt;/a&gt;.</span>
-<span class="source-line-no">152</span><span id="line-152">   *</span>
-<span class="source-line-no">153</span><span id="line-153">   * @param receiver the left hand side of a type assignment; must not be {@code null}</span>
-<span class="source-line-no">154</span><span id="line-154">   *</span>
-<span class="source-line-no">155</span><span id="line-155">   * @param payload the right hand side of a type assignment; must not be {@code null}</span>
-<span class="source-line-no">156</span><span id="line-156">   *</span>
-<span class="source-line-no">157</span><span id="line-157">   * @return {@code true} if and only if the supplied {@code payload} argument &lt;a</span>
-<span class="source-line-no">158</span><span id="line-158">   * href="https://jakarta.ee/specifications/cdi/4.0/jakarta-cdi-spec-4.0#performing_typesafe_resolution"&gt;matches&lt;/a&gt;</span>
-<span class="source-line-no">159</span><span id="line-159">   * the supplied {@code receiver} argument, according to the rules defined by &lt;a</span>
-<span class="source-line-no">160</span><span id="line-160">   * href="https://jakarta.ee/specifications/cdi/4.0/jakarta-cdi-spec-4.0#performing_typesafe_resolution"&gt;section</span>
-<span class="source-line-no">161</span><span id="line-161">   * 2.4.2.1 of the CDI specification&lt;/a&gt;; {@code false} otherwise</span>
-<span class="source-line-no">162</span><span id="line-162">   *</span>
-<span class="source-line-no">163</span><span id="line-163">   * @exception NullPointerException if either argument is {@code null}</span>
-<span class="source-line-no">164</span><span id="line-164">   */</span>
-<span class="source-line-no">165</span><span id="line-165">  // Is the payload assignable to the receiver? That is, does the payload "match the receiver", in CDI parlance?</span>
-<span class="source-line-no">166</span><span id="line-166">  public final boolean matches(final TypeMirror receiver, final TypeMirror payload) {</span>
-<span class="source-line-no">167</span><span id="line-167">    // "A bean [an object, not a type] is assignable to a given injection point if:</span>
-<span class="source-line-no">168</span><span id="line-168">    //</span>
-<span class="source-line-no">169</span><span id="line-169">    // "The bean has a bean type [payload] that matches the required type [receiver]. For this purpose..."</span>
-<span class="source-line-no">170</span><span id="line-170">    return switch (receiver.getKind()) {</span>
-<span class="source-line-no">171</span><span id="line-171">      // "...primitive types are considered to match their corresponding wrapper types in java.lang..."</span>
-<span class="source-line-no">172</span><span id="line-172">      case BOOLEAN -&gt; payload.getKind() == TypeKind.BOOLEAN || declaredTypeNamed(payload, "java.lang.Boolean");</span>
-<span class="source-line-no">173</span><span id="line-173">      case BYTE    -&gt; payload.getKind() == TypeKind.BYTE    || declaredTypeNamed(payload, "java.lang.Byte");</span>
-<span class="source-line-no">174</span><span id="line-174">      case CHAR    -&gt; payload.getKind() == TypeKind.CHAR    || declaredTypeNamed(payload, "java.lang.Character");</span>
-<span class="source-line-no">175</span><span id="line-175">      case DOUBLE  -&gt; payload.getKind() == TypeKind.DOUBLE  || declaredTypeNamed(payload, "java.lang.Double");</span>
-<span class="source-line-no">176</span><span id="line-176">      case FLOAT   -&gt; payload.getKind() == TypeKind.FLOAT   || declaredTypeNamed(payload, "java.lang.Float");</span>
-<span class="source-line-no">177</span><span id="line-177">      case INT     -&gt; payload.getKind() == TypeKind.INT     || declaredTypeNamed(payload, "java.lang.Integer");</span>
-<span class="source-line-no">178</span><span id="line-178">      case LONG    -&gt; payload.getKind() == TypeKind.LONG    || declaredTypeNamed(payload, "java.lang.Long");</span>
-<span class="source-line-no">179</span><span id="line-179">      case SHORT   -&gt; payload.getKind() == TypeKind.SHORT   || declaredTypeNamed(payload, "java.lang.Short");</span>
-<span class="source-line-no">180</span><span id="line-180">      // "...and array types are considered to match only if their element types are identical"</span>
-<span class="source-line-no">181</span><span id="line-181">      case ARRAY -&gt; payload.getKind() == TypeKind.ARRAY &amp;&amp; identical(elementType(receiver), elementType(payload));</span>
-<span class="source-line-no">182</span><span id="line-182">      case DECLARED -&gt; switch (payload.getKind()) {</span>
-<span class="source-line-no">183</span><span id="line-183">        // "...primitive types are considered to match their corresponding wrapper types in java.lang..."</span>
-<span class="source-line-no">184</span><span id="line-184">        case BOOLEAN -&gt; named((DeclaredType)receiver, "java.lang.Boolean");</span>
-<span class="source-line-no">185</span><span id="line-185">        case BYTE    -&gt; named((DeclaredType)receiver, "java.lang.Byte");</span>
-<span class="source-line-no">186</span><span id="line-186">        case CHAR    -&gt; named((DeclaredType)receiver, "java.lang.Character");</span>
-<span class="source-line-no">187</span><span id="line-187">        case DOUBLE  -&gt; named((DeclaredType)receiver, "java.lang.Double");</span>
-<span class="source-line-no">188</span><span id="line-188">        case FLOAT   -&gt; named((DeclaredType)receiver, "java.lang.Float");</span>
-<span class="source-line-no">189</span><span id="line-189">        case INT     -&gt; named((DeclaredType)receiver, "java.lang.Integer");</span>
-<span class="source-line-no">190</span><span id="line-190">        case LONG    -&gt; named((DeclaredType)receiver, "java.lang.Long");</span>
-<span class="source-line-no">191</span><span id="line-191">        case SHORT   -&gt; named((DeclaredType)receiver, "java.lang.Short");</span>
-<span class="source-line-no">192</span><span id="line-192">        // "Parameterized and raw types [and non-generic classes, and non-array types]..."</span>
-<span class="source-line-no">193</span><span id="line-193">        case DECLARED -&gt;</span>
-<span class="source-line-no">194</span><span id="line-194">          // "...are considered to match if they are identical [undefined]..."</span>
-<span class="source-line-no">195</span><span id="line-195">          identical(receiver, payload) ||</span>
-<span class="source-line-no">196</span><span id="line-196">          // "...or if the bean type [payload] is assignable [see #assignable(TypeMirror, TypeMirror)] to the required</span>
-<span class="source-line-no">197</span><span id="line-197">          // type [receiver]...."</span>
-<span class="source-line-no">198</span><span id="line-198">          assignable((DeclaredType)receiver, (DeclaredType)payload);</span>
-<span class="source-line-no">199</span><span id="line-199">        default -&gt; throw new IllegalArgumentException("Illegal payload kind: " + payload.getKind() + "; payload: " + payload);</span>
-<span class="source-line-no">200</span><span id="line-200">      };</span>
-<span class="source-line-no">201</span><span id="line-201">      default -&gt; throw new IllegalArgumentException("Illegal receiver kind: " + receiver.getKind() + "; receiver: " + receiver);</span>
-<span class="source-line-no">202</span><span id="line-202">    };</span>
-<span class="source-line-no">203</span><span id="line-203">  }</span>
-<span class="source-line-no">204</span><span id="line-204"></span>
-<span class="source-line-no">205</span><span id="line-205">  /**</span>
-<span class="source-line-no">206</span><span id="line-206">   * Returns the {@link TypeAndElementSource} used by this {@link Assignability}.</span>
-<span class="source-line-no">207</span><span id="line-207">   *</span>
-<span class="source-line-no">208</span><span id="line-208">   * @return the {@link TypeAndElementSource} used by this {@link Assignability}; never {@code null}</span>
+<span class="source-line-no">106</span><span id="line-106"></span>
+<span class="source-line-no">107</span><span id="line-107">  @Override // Constable</span>
+<span class="source-line-no">108</span><span id="line-108">  public final Optional&lt;? extends ConstantDesc&gt; describeConstable() {</span>
+<span class="source-line-no">109</span><span id="line-109">    if (this.tes instanceof Constable c) {</span>
+<span class="source-line-no">110</span><span id="line-110">      return c.describeConstable()</span>
+<span class="source-line-no">111</span><span id="line-111">        .map(tesDesc -&gt; DynamicConstantDesc.of(BSM_INVOKE,</span>
+<span class="source-line-no">112</span><span id="line-112">                                               MethodHandleDesc.ofConstructor(CD_Assignability,</span>
+<span class="source-line-no">113</span><span id="line-113">                                                                              CD_TypeAndElementSource),</span>
+<span class="source-line-no">114</span><span id="line-114">                                               tesDesc));</span>
+<span class="source-line-no">115</span><span id="line-115">    }</span>
+<span class="source-line-no">116</span><span id="line-116">    return Optional.empty();</span>
+<span class="source-line-no">117</span><span id="line-117">  }</span>
+<span class="source-line-no">118</span><span id="line-118"></span>
+<span class="source-line-no">119</span><span id="line-119">  /**</span>
+<span class="source-line-no">120</span><span id="line-120">   * Returns {@code true} if and only if at least one {@link TypeMirror} present in the supplied {@code payloads}</span>
+<span class="source-line-no">121</span><span id="line-121">   * argument {@linkplain #matches(TypeMirror, TypeMirror) matches} the supplied {@code receiver} argument.</span>
+<span class="source-line-no">122</span><span id="line-122">   *</span>
+<span class="source-line-no">123</span><span id="line-123">   * @param receiver the left hand side of a type assignment; must not be {@code null}</span>
+<span class="source-line-no">124</span><span id="line-124">   *</span>
+<span class="source-line-no">125</span><span id="line-125">   * @param payloads an {@link Iterable} of {@link TypeMirror}s each representing a potential right hand side of a type</span>
+<span class="source-line-no">126</span><span id="line-126">   * assignment; must not be {@code null}</span>
+<span class="source-line-no">127</span><span id="line-127">   *</span>
+<span class="source-line-no">128</span><span id="line-128">   * @return {@code true} if and only if at least one {@link TypeMirror} present in the supplied {@code payloads}</span>
+<span class="source-line-no">129</span><span id="line-129">   * argument {@linkplain #matches(TypeMirror, TypeMirror) matches} the supplied {@code receiver} argument; {@code</span>
+<span class="source-line-no">130</span><span id="line-130">   * false} otherwise</span>
+<span class="source-line-no">131</span><span id="line-131">   *</span>
+<span class="source-line-no">132</span><span id="line-132">   * @exception NullPointerException if either argument is {@code null}</span>
+<span class="source-line-no">133</span><span id="line-133">   *</span>
+<span class="source-line-no">134</span><span id="line-134">   * @see #matches(TypeMirror, TypeMirror)</span>
+<span class="source-line-no">135</span><span id="line-135">   */</span>
+<span class="source-line-no">136</span><span id="line-136">  // Is at least one payload assignable to the receiver? That is, does at least one payload "match the receiver" in CDI</span>
+<span class="source-line-no">137</span><span id="line-137">  // parlance?</span>
+<span class="source-line-no">138</span><span id="line-138">  public final boolean oneMatches(final TypeMirror receiver, final Iterable&lt;? extends TypeMirror&gt; payloads) {</span>
+<span class="source-line-no">139</span><span id="line-139">    for (final TypeMirror payload : payloads) {</span>
+<span class="source-line-no">140</span><span id="line-140">      if (matches(receiver, payload)) {</span>
+<span class="source-line-no">141</span><span id="line-141">        return true;</span>
+<span class="source-line-no">142</span><span id="line-142">      }</span>
+<span class="source-line-no">143</span><span id="line-143">    }</span>
+<span class="source-line-no">144</span><span id="line-144">    return false;</span>
+<span class="source-line-no">145</span><span id="line-145">  }</span>
+<span class="source-line-no">146</span><span id="line-146"></span>
+<span class="source-line-no">147</span><span id="line-147">  /**</span>
+<span class="source-line-no">148</span><span id="line-148">   * Returns {@code true} if and only if the supplied {@code payload} argument &lt;a</span>
+<span class="source-line-no">149</span><span id="line-149">   * href="https://jakarta.ee/specifications/cdi/4.0/jakarta-cdi-spec-4.0#performing_typesafe_resolution"&gt;&lt;em&gt;matches&lt;/em&gt;&lt;/a&gt;</span>
+<span class="source-line-no">150</span><span id="line-150">   * the supplied {@code receiver} argument, according to the rules defined by &lt;a</span>
+<span class="source-line-no">151</span><span id="line-151">   * href="https://jakarta.ee/specifications/cdi/4.0/jakarta-cdi-spec-4.0#performing_typesafe_resolution"&gt;section</span>
+<span class="source-line-no">152</span><span id="line-152">   * 2.4.2.1 of the CDI specification&lt;/a&gt;.</span>
+<span class="source-line-no">153</span><span id="line-153">   *</span>
+<span class="source-line-no">154</span><span id="line-154">   * @param receiver the left hand side of a type assignment; must not be {@code null}</span>
+<span class="source-line-no">155</span><span id="line-155">   *</span>
+<span class="source-line-no">156</span><span id="line-156">   * @param payload the right hand side of a type assignment; must not be {@code null}</span>
+<span class="source-line-no">157</span><span id="line-157">   *</span>
+<span class="source-line-no">158</span><span id="line-158">   * @return {@code true} if and only if the supplied {@code payload} argument &lt;a</span>
+<span class="source-line-no">159</span><span id="line-159">   * href="https://jakarta.ee/specifications/cdi/4.0/jakarta-cdi-spec-4.0#performing_typesafe_resolution"&gt;matches&lt;/a&gt;</span>
+<span class="source-line-no">160</span><span id="line-160">   * the supplied {@code receiver} argument, according to the rules defined by &lt;a</span>
+<span class="source-line-no">161</span><span id="line-161">   * href="https://jakarta.ee/specifications/cdi/4.0/jakarta-cdi-spec-4.0#performing_typesafe_resolution"&gt;section</span>
+<span class="source-line-no">162</span><span id="line-162">   * 2.4.2.1 of the CDI specification&lt;/a&gt;; {@code false} otherwise</span>
+<span class="source-line-no">163</span><span id="line-163">   *</span>
+<span class="source-line-no">164</span><span id="line-164">   * @exception NullPointerException if either argument is {@code null}</span>
+<span class="source-line-no">165</span><span id="line-165">   */</span>
+<span class="source-line-no">166</span><span id="line-166">  // Is the payload assignable to the receiver? That is, does the payload "match the receiver", in CDI parlance?</span>
+<span class="source-line-no">167</span><span id="line-167">  public final boolean matches(final TypeMirror receiver, final TypeMirror payload) {</span>
+<span class="source-line-no">168</span><span id="line-168">    // "A bean is assignable to a given injection point if:</span>
+<span class="source-line-no">169</span><span id="line-169">    //</span>
+<span class="source-line-no">170</span><span id="line-170">    // "The bean has a bean type [payload] that matches the required type [receiver]. For this purpose..."</span>
+<span class="source-line-no">171</span><span id="line-171">    return receiver == Objects.requireNonNull(payload, "payload") || switch (receiver.getKind()) {</span>
+<span class="source-line-no">172</span><span id="line-172">      // "...primitive types are considered to match their corresponding wrapper types in java.lang..."</span>
+<span class="source-line-no">173</span><span id="line-173">      case BOOLEAN -&gt; payload.getKind() == TypeKind.BOOLEAN || declaredTypeNamed(payload, "java.lang.Boolean");</span>
+<span class="source-line-no">174</span><span id="line-174">      case BYTE    -&gt; payload.getKind() == TypeKind.BYTE    || declaredTypeNamed(payload, "java.lang.Byte");</span>
+<span class="source-line-no">175</span><span id="line-175">      case CHAR    -&gt; payload.getKind() == TypeKind.CHAR    || declaredTypeNamed(payload, "java.lang.Character");</span>
+<span class="source-line-no">176</span><span id="line-176">      case DOUBLE  -&gt; payload.getKind() == TypeKind.DOUBLE  || declaredTypeNamed(payload, "java.lang.Double");</span>
+<span class="source-line-no">177</span><span id="line-177">      case FLOAT   -&gt; payload.getKind() == TypeKind.FLOAT   || declaredTypeNamed(payload, "java.lang.Float");</span>
+<span class="source-line-no">178</span><span id="line-178">      case INT     -&gt; payload.getKind() == TypeKind.INT     || declaredTypeNamed(payload, "java.lang.Integer");</span>
+<span class="source-line-no">179</span><span id="line-179">      case LONG    -&gt; payload.getKind() == TypeKind.LONG    || declaredTypeNamed(payload, "java.lang.Long");</span>
+<span class="source-line-no">180</span><span id="line-180">      case SHORT   -&gt; payload.getKind() == TypeKind.SHORT   || declaredTypeNamed(payload, "java.lang.Short");</span>
+<span class="source-line-no">181</span><span id="line-181">      // "...and array types are considered to match only if their element types [note: not component types] are</span>
+<span class="source-line-no">182</span><span id="line-182">      // identical [undefined]..."</span>
+<span class="source-line-no">183</span><span id="line-183">      case ARRAY -&gt; payload.getKind() == TypeKind.ARRAY &amp;&amp; identical(elementType(receiver), elementType(payload));</span>
+<span class="source-line-no">184</span><span id="line-184">      case DECLARED -&gt; switch (payload.getKind()) {</span>
+<span class="source-line-no">185</span><span id="line-185">        // "...primitive types are considered to match their corresponding wrapper types in java.lang..."</span>
+<span class="source-line-no">186</span><span id="line-186">        case BOOLEAN -&gt; named((DeclaredType)receiver, "java.lang.Boolean");</span>
+<span class="source-line-no">187</span><span id="line-187">        case BYTE    -&gt; named((DeclaredType)receiver, "java.lang.Byte");</span>
+<span class="source-line-no">188</span><span id="line-188">        case CHAR    -&gt; named((DeclaredType)receiver, "java.lang.Character");</span>
+<span class="source-line-no">189</span><span id="line-189">        case DOUBLE  -&gt; named((DeclaredType)receiver, "java.lang.Double");</span>
+<span class="source-line-no">190</span><span id="line-190">        case FLOAT   -&gt; named((DeclaredType)receiver, "java.lang.Float");</span>
+<span class="source-line-no">191</span><span id="line-191">        case INT     -&gt; named((DeclaredType)receiver, "java.lang.Integer");</span>
+<span class="source-line-no">192</span><span id="line-192">        case LONG    -&gt; named((DeclaredType)receiver, "java.lang.Long");</span>
+<span class="source-line-no">193</span><span id="line-193">        case SHORT   -&gt; named((DeclaredType)receiver, "java.lang.Short");</span>
+<span class="source-line-no">194</span><span id="line-194">        // "Parameterized and raw types [and non-generic classes, and non-array types]..."</span>
+<span class="source-line-no">195</span><span id="line-195">        case DECLARED -&gt;</span>
+<span class="source-line-no">196</span><span id="line-196">          // "...are considered to match if they are identical [undefined]..."</span>
+<span class="source-line-no">197</span><span id="line-197">          identical(receiver, payload) ||</span>
+<span class="source-line-no">198</span><span id="line-198">          // "...or if the bean type [payload] is assignable [see #assignable(TypeMirror, TypeMirror)] to the required</span>
+<span class="source-line-no">199</span><span id="line-199">          // type [receiver]...."</span>
+<span class="source-line-no">200</span><span id="line-200">          assignable((DeclaredType)receiver, (DeclaredType)payload);</span>
+<span class="source-line-no">201</span><span id="line-201">        default -&gt; throw new IllegalArgumentException("Illegal payload kind: " + payload.getKind() + "; payload: " + payload);</span>
+<span class="source-line-no">202</span><span id="line-202">      };</span>
+<span class="source-line-no">203</span><span id="line-203">      default -&gt; throw new IllegalArgumentException("Illegal receiver kind: " + receiver.getKind() + "; receiver: " + receiver);</span>
+<span class="source-line-no">204</span><span id="line-204">    };</span>
+<span class="source-line-no">205</span><span id="line-205">  }</span>
+<span class="source-line-no">206</span><span id="line-206"></span>
+<span class="source-line-no">207</span><span id="line-207">  /**</span>
+<span class="source-line-no">208</span><span id="line-208">   * Returns the {@link TypeAndElementSource} used by this {@link Assignability}.</span>
 <span class="source-line-no">209</span><span id="line-209">   *</span>
-<span class="source-line-no">210</span><span id="line-210">   * @see #Assignability(TypeAndElementSource)</span>
+<span class="source-line-no">210</span><span id="line-210">   * @return the {@link TypeAndElementSource} used by this {@link Assignability}; never {@code null}</span>
 <span class="source-line-no">211</span><span id="line-211">   *</span>
-<span class="source-line-no">212</span><span id="line-212">   * @see TypeAndElementSource</span>
-<span class="source-line-no">213</span><span id="line-213">   */</span>
-<span class="source-line-no">214</span><span id="line-214">  public final TypeAndElementSource typeAndElementSource() {</span>
-<span class="source-line-no">215</span><span id="line-215">    return this.tes;</span>
-<span class="source-line-no">216</span><span id="line-216">  }</span>
-<span class="source-line-no">217</span><span id="line-217"></span>
-<span class="source-line-no">218</span><span id="line-218">  /*</span>
-<span class="source-line-no">219</span><span id="line-219">   * Private methods.</span>
-<span class="source-line-no">220</span><span id="line-220">   */</span>
-<span class="source-line-no">221</span><span id="line-221"></span>
-<span class="source-line-no">222</span><span id="line-222">  private final boolean assignable(final TypeMirror receiver, final TypeMirror payload) {</span>
-<span class="source-line-no">223</span><span id="line-223">    return switch (payload) {</span>
-<span class="source-line-no">224</span><span id="line-224">      // "A parameterized bean type is considered assignable..."</span>
-<span class="source-line-no">225</span><span id="line-225">      case DeclaredType parameterizedPayload when parameterized(payload) -&gt; switch (receiver) {</span>
-<span class="source-line-no">226</span><span id="line-226">        // "...to a [non-generic class or] raw required type..."</span>
-<span class="source-line-no">227</span><span id="line-227">        case TypeMirror rawReceiver when !generic(receiver) || raw(receiver) -&gt; {</span>
-<span class="source-line-no">228</span><span id="line-228">          // "...if the [non-generic class or] raw types are identical and all type parameters [arguments] of the bean</span>
-<span class="source-line-no">229</span><span id="line-229">          // type are either unbounded type variables or java.lang.Object."</span>
-<span class="source-line-no">230</span><span id="line-230">          yield</span>
-<span class="source-line-no">231</span><span id="line-231">            identical(nonGenericClassOrRawType(rawReceiver), nonGenericClassOrRawType(parameterizedPayload)) &amp;&amp;</span>
-<span class="source-line-no">232</span><span id="line-232">            allTypeArgumentsAre(parameterizedPayload.getTypeArguments(),</span>
-<span class="source-line-no">233</span><span id="line-233">                                ((Predicate&lt;TypeMirror&gt;)Assignability::unboundedTypeVariable).or(Assignability::isJavaLangObject));</span>
-<span class="source-line-no">234</span><span id="line-234">        }</span>
-<span class="source-line-no">235</span><span id="line-235">        // "...to a parameterized required type..."</span>
-<span class="source-line-no">236</span><span id="line-236">        case DeclaredType parameterizedReceiver when parameterized(receiver) -&gt; {</span>
-<span class="source-line-no">237</span><span id="line-237">          // "...if they have identical raw type [really if their declarations/elements are identical]..."</span>
-<span class="source-line-no">238</span><span id="line-238">          if (identical(rawType(receiver), rawType(parameterizedPayload))) {</span>
-<span class="source-line-no">239</span><span id="line-239">            // "...and for each parameter [type argument] [pair]..."</span>
-<span class="source-line-no">240</span><span id="line-240">            final List&lt;? extends TypeMirror&gt; rtas = parameterizedReceiver.getTypeArguments();</span>
-<span class="source-line-no">241</span><span id="line-241">            final List&lt;? extends TypeMirror&gt; ptas = parameterizedPayload.getTypeArguments();</span>
-<span class="source-line-no">242</span><span id="line-242">            assert rtas.size() == ptas.size();</span>
-<span class="source-line-no">243</span><span id="line-243">            for (int i = 0; i &lt; rtas.size(); i++) {</span>
-<span class="source-line-no">244</span><span id="line-244">              final TypeMirror rta = rtas.get(i);</span>
-<span class="source-line-no">245</span><span id="line-245">              final TypeMirror pta = ptas.get(i);</span>
-<span class="source-line-no">246</span><span id="line-246">              // "...the required type parameter [argument] and the bean type parameter [argument] are actual [non-type</span>
-<span class="source-line-no">247</span><span id="line-247">              // variable, non-wildcard reference] types..."</span>
-<span class="source-line-no">248</span><span id="line-248">              if (actual(rta)) {</span>
-<span class="source-line-no">249</span><span id="line-249">                if (actual(pta)) {</span>
-<span class="source-line-no">250</span><span id="line-250">                  // "...with identical [non-generic classes or] raw type[s]..."</span>
-<span class="source-line-no">251</span><span id="line-251">                  if (identical(nonGenericClassOrRawType(rta), nonGenericClassOrRawType(pta))) {</span>
-<span class="source-line-no">252</span><span id="line-252">                    // "...and, if the type [?] is parameterized [?]..."</span>
-<span class="source-line-no">253</span><span id="line-253">                    //</span>
-<span class="source-line-no">254</span><span id="line-254">                    // Let rta and pta be array types with parameterized element types, such as List&lt;Number&gt;[] and</span>
-<span class="source-line-no">255</span><span id="line-255">                    // List&lt;String&gt;[]. Then their raw types are List[] and List[]. Their parameterized element types are</span>
-<span class="source-line-no">256</span><span id="line-256">                    // List&lt;Number&gt; and List&lt;String&gt;. According to the JLS, neither List&lt;Number&gt;[] nor List&lt;String&gt;[] is</span>
-<span class="source-line-no">257</span><span id="line-257">                    // parameterized.</span>
-<span class="source-line-no">258</span><span id="line-258">                    //</span>
-<span class="source-line-no">259</span><span id="line-259">                    // In this example, if we get here, we have only proven that List[] is "identical" to List[].</span>
+<span class="source-line-no">212</span><span id="line-212">   * @see #Assignability(TypeAndElementSource)</span>
+<span class="source-line-no">213</span><span id="line-213">   *</span>
+<span class="source-line-no">214</span><span id="line-214">   * @see TypeAndElementSource</span>
+<span class="source-line-no">215</span><span id="line-215">   */</span>
+<span class="source-line-no">216</span><span id="line-216">  public final TypeAndElementSource typeAndElementSource() {</span>
+<span class="source-line-no">217</span><span id="line-217">    return this.tes;</span>
+<span class="source-line-no">218</span><span id="line-218">  }</span>
+<span class="source-line-no">219</span><span id="line-219"></span>
+<span class="source-line-no">220</span><span id="line-220">  /*</span>
+<span class="source-line-no">221</span><span id="line-221">   * Private methods.</span>
+<span class="source-line-no">222</span><span id="line-222">   */</span>
+<span class="source-line-no">223</span><span id="line-223"></span>
+<span class="source-line-no">224</span><span id="line-224">  private final boolean assignable(final TypeMirror receiver, final TypeMirror payload) {</span>
+<span class="source-line-no">225</span><span id="line-225">    return switch (payload) {</span>
+<span class="source-line-no">226</span><span id="line-226">      // "A parameterized bean type [payload] is considered assignable..."</span>
+<span class="source-line-no">227</span><span id="line-227">      case DeclaredType parameterizedPayload when parameterized(payload) -&gt; switch (receiver) {</span>
+<span class="source-line-no">228</span><span id="line-228">        // "...to a [non-generic class or] raw required type [receiver]..."</span>
+<span class="source-line-no">229</span><span id="line-229">        case TypeMirror rawReceiver when !generic(receiver) || raw(receiver) -&gt; {</span>
+<span class="source-line-no">230</span><span id="line-230">          // "...if the [non-generic class or] raw types are identical [undefined] and all type parameters [arguments]</span>
+<span class="source-line-no">231</span><span id="line-231">          // of the bean type [payload] are either unbounded type variables [undefined] or java.lang.Object."</span>
+<span class="source-line-no">232</span><span id="line-232">          yield</span>
+<span class="source-line-no">233</span><span id="line-233">            identical(nonGenericClassOrRawType(rawReceiver), nonGenericClassOrRawType(parameterizedPayload)) &amp;&amp;</span>
+<span class="source-line-no">234</span><span id="line-234">            allTypeArgumentsAre(parameterizedPayload.getTypeArguments(),</span>
+<span class="source-line-no">235</span><span id="line-235">                                ((Predicate&lt;TypeMirror&gt;)Assignability::unboundedTypeVariable).or(Assignability::isJavaLangObject));</span>
+<span class="source-line-no">236</span><span id="line-236">        }</span>
+<span class="source-line-no">237</span><span id="line-237">        // "...to a parameterized required type [receiver]..."</span>
+<span class="source-line-no">238</span><span id="line-238">        case DeclaredType parameterizedReceiver when parameterized(receiver) -&gt; {</span>
+<span class="source-line-no">239</span><span id="line-239">          // "...if they have identical raw type [really if their declarations/elements are identical]..."</span>
+<span class="source-line-no">240</span><span id="line-240">          if (identical(rawType(receiver), rawType(parameterizedPayload))) {</span>
+<span class="source-line-no">241</span><span id="line-241">            // "...and for each parameter [type argument] [pair]..."</span>
+<span class="source-line-no">242</span><span id="line-242">            final List&lt;? extends TypeMirror&gt; rtas = parameterizedReceiver.getTypeArguments();</span>
+<span class="source-line-no">243</span><span id="line-243">            final List&lt;? extends TypeMirror&gt; ptas = parameterizedPayload.getTypeArguments();</span>
+<span class="source-line-no">244</span><span id="line-244">            assert rtas.size() == ptas.size();</span>
+<span class="source-line-no">245</span><span id="line-245">            for (int i = 0; i &lt; rtas.size(); i++) {</span>
+<span class="source-line-no">246</span><span id="line-246">              final TypeMirror rta = rtas.get(i);</span>
+<span class="source-line-no">247</span><span id="line-247">              final TypeMirror pta = ptas.get(i);</span>
+<span class="source-line-no">248</span><span id="line-248">              // "...the required [receiver] type parameter [argument] and the bean [payload] type parameter [argument]</span>
+<span class="source-line-no">249</span><span id="line-249">              // are actual [non-type variable, non-wildcard reference] types..."</span>
+<span class="source-line-no">250</span><span id="line-250">              if (actual(rta)) {</span>
+<span class="source-line-no">251</span><span id="line-251">                if (actual(pta)) {</span>
+<span class="source-line-no">252</span><span id="line-252">                  // "...with identical [non-generic classes or] raw type[s]..."</span>
+<span class="source-line-no">253</span><span id="line-253">                  if (identical(nonGenericClassOrRawType(rta), nonGenericClassOrRawType(pta))) {</span>
+<span class="source-line-no">254</span><span id="line-254">                    // "...and, if the type [?] is parameterized [?]..."</span>
+<span class="source-line-no">255</span><span id="line-255">                    //</span>
+<span class="source-line-no">256</span><span id="line-256">                    // Let rta and pta be array types with parameterized element types, such as List&lt;Number&gt;[] and</span>
+<span class="source-line-no">257</span><span id="line-257">                    // List&lt;String&gt;[]. Then their raw types are List[] and List[]. Their parameterized element types are</span>
+<span class="source-line-no">258</span><span id="line-258">                    // List&lt;Number&gt; and List&lt;String&gt;. According to the JLS, neither List&lt;Number&gt;[] nor List&lt;String&gt;[] is</span>
+<span class="source-line-no">259</span><span id="line-259">                    // parameterized.</span>
 <span class="source-line-no">260</span><span id="line-260">                    //</span>
-<span class="source-line-no">261</span><span id="line-261">                    // The "if the type is parameterized" clause is tough. Which type is under discussion? "the type"</span>
-<span class="source-line-no">262</span><span id="line-262">                    // seems to refer to the "identical raw type". But a raw type by definition is not parameterized, so</span>
-<span class="source-line-no">263</span><span id="line-263">                    // this clause would seem to be superfluous and thus never apply, and so List&lt;Number&gt;[] :=</span>
-<span class="source-line-no">264</span><span id="line-264">                    // List&lt;String&gt;[] is OK. Oops.</span>
-<span class="source-line-no">265</span><span id="line-265">                    //</span>
-<span class="source-line-no">266</span><span id="line-266">                    // Or what if the "if the type is parameterized" clause means the receiver type itself and somehow</span>
-<span class="source-line-no">267</span><span id="line-267">                    // loosely the payload type as well? Well, clearly it cannot correctly do this, since an array type</span>
-<span class="source-line-no">268</span><span id="line-268">                    // is never a parameterized type. Same bad result. Oops.</span>
-<span class="source-line-no">269</span><span id="line-269">                    //</span>
-<span class="source-line-no">270</span><span id="line-270">                    // Or what if "identical raw type" really means "identical raw type (or identical component type if</span>
-<span class="source-line-no">271</span><span id="line-271">                    // they are array types)"? That would be most efficient, since it would rule out List&lt;Number&gt;[] :=</span>
-<span class="source-line-no">272</span><span id="line-272">                    // List&lt;String&gt;[] right off the bat: we wouldn't even get here. But that really doesn't seem to be</span>
-<span class="source-line-no">273</span><span id="line-273">                    // what is meant.</span>
-<span class="source-line-no">274</span><span id="line-274">                    //</span>
-<span class="source-line-no">275</span><span id="line-275">                    // What if the "if the type is parameterized" clause really means "if the type declaration used by</span>
-<span class="source-line-no">276</span><span id="line-276">                    // both the receiver and payload types is generic"? That would work. That's also equivalent to</span>
-<span class="source-line-no">277</span><span id="line-277">                    // something like: "...if at least one of the two arguments is a parameterized type [e.g. List&lt;Number&gt;,</span>
-<span class="source-line-no">278</span><span id="line-278">                    // not List&lt;Number&gt;[], not String, not List], or at least one of the two types is an array type with</span>
-<span class="source-line-no">279</span><span id="line-279">                    // a parameterized element type [e.g. List&lt;Number&gt;[], not List[], not String[]]..."</span>
-<span class="source-line-no">280</span><span id="line-280">                    //</span>
-<span class="source-line-no">281</span><span id="line-281">                    // That is the interpretation we apply here. So:</span>
+<span class="source-line-no">261</span><span id="line-261">                    // In this example, if we get here, we have only proven that List[] is "identical" to List[].</span>
+<span class="source-line-no">262</span><span id="line-262">                    //</span>
+<span class="source-line-no">263</span><span id="line-263">                    // The "if the type is parameterized" clause is tough. Which type is under discussion? "the type"</span>
+<span class="source-line-no">264</span><span id="line-264">                    // seems to refer to the "identical raw type". But a raw type by definition is not parameterized, so</span>
+<span class="source-line-no">265</span><span id="line-265">                    // this clause would seem to be superfluous and thus never apply, and so List&lt;Number&gt;[] :=</span>
+<span class="source-line-no">266</span><span id="line-266">                    // List&lt;String&gt;[] is OK. Oops.</span>
+<span class="source-line-no">267</span><span id="line-267">                    //</span>
+<span class="source-line-no">268</span><span id="line-268">                    // Or what if the "if the type is parameterized" clause means the receiver type itself and somehow</span>
+<span class="source-line-no">269</span><span id="line-269">                    // loosely the payload type as well? Well, clearly it cannot correctly do this, since an array type</span>
+<span class="source-line-no">270</span><span id="line-270">                    // is never a parameterized type. Same bad result. Oops.</span>
+<span class="source-line-no">271</span><span id="line-271">                    //</span>
+<span class="source-line-no">272</span><span id="line-272">                    // Or what if "identical raw type" really means "identical raw type (or identical component type if</span>
+<span class="source-line-no">273</span><span id="line-273">                    // they are array types)"? That would be most efficient, since it would rule out List&lt;Number&gt;[] :=</span>
+<span class="source-line-no">274</span><span id="line-274">                    // List&lt;String&gt;[] right off the bat: we wouldn't even get here. But that really doesn't seem to be</span>
+<span class="source-line-no">275</span><span id="line-275">                    // what is meant.</span>
+<span class="source-line-no">276</span><span id="line-276">                    //</span>
+<span class="source-line-no">277</span><span id="line-277">                    // What if the "if the type is parameterized" clause really means "if the type declaration used by</span>
+<span class="source-line-no">278</span><span id="line-278">                    // both the receiver and payload types is generic"? That would work. That's also equivalent to</span>
+<span class="source-line-no">279</span><span id="line-279">                    // something like: "...if at least one of the two arguments is a parameterized type [e.g. List&lt;Number&gt;,</span>
+<span class="source-line-no">280</span><span id="line-280">                    // not List&lt;Number&gt;[], not String, not List], or at least one of the two types is an array type with</span>
+<span class="source-line-no">281</span><span id="line-281">                    // a parameterized element type [e.g. List&lt;Number&gt;[], not List[], not String[]]..."</span>
 <span class="source-line-no">282</span><span id="line-282">                    //</span>
-<span class="source-line-no">283</span><span id="line-283">                    //   "...and, if the type [?] is parameterized..."</span>
+<span class="source-line-no">283</span><span id="line-283">                    // That is the interpretation we apply here. So:</span>
 <span class="source-line-no">284</span><span id="line-284">                    //</span>
-<span class="source-line-no">285</span><span id="line-285">                    // becomes:</span>
+<span class="source-line-no">285</span><span id="line-285">                    //   "...and, if the type [?] is parameterized..."</span>
 <span class="source-line-no">286</span><span id="line-286">                    //</span>
-<span class="source-line-no">287</span><span id="line-287">                    //   "...and, if at least one of the two type arguments is a parameterized type, or if at least one</span>
-<span class="source-line-no">288</span><span id="line-288">                    //   of the two types is an array type with a parameterized element type..."</span>
-<span class="source-line-no">289</span><span id="line-289">                    //</span>
-<span class="source-line-no">290</span><span id="line-290">                    // That, in turn, designates any type capable of properly yielding a raw type, while ruling out</span>
-<span class="source-line-no">291</span><span id="line-291">                    // those that can't! That means it is exactly equal to our yieldsRawType(TypeMirror) method, and so</span>
-<span class="source-line-no">292</span><span id="line-292">                    // that's what cdiParameterized(TypeMirror) returns.</span>
-<span class="source-line-no">293</span><span id="line-293">                    if (cdiParameterized(rta)) {</span>
-<span class="source-line-no">294</span><span id="line-294">                      assert cdiParameterized(pta); // ...because otherwise their raw types would not have been "identical"</span>
-<span class="source-line-no">295</span><span id="line-295">                      // "...the bean type parameter [argument] is assignable to the required type parameter [argument]</span>
-<span class="source-line-no">296</span><span id="line-296">                      // according to [all of] these rules [including 'matching']..."</span>
-<span class="source-line-no">297</span><span id="line-297">                      if (matches(rta, pta)) {</span>
-<span class="source-line-no">298</span><span id="line-298">                        continue;</span>
-<span class="source-line-no">299</span><span id="line-299">                      }</span>
-<span class="source-line-no">300</span><span id="line-300">                      yield false;</span>
-<span class="source-line-no">301</span><span id="line-301">                    } else {</span>
-<span class="source-line-no">302</span><span id="line-302">                      assert !cdiParameterized(pta);</span>
-<span class="source-line-no">303</span><span id="line-303">                      continue;</span>
-<span class="source-line-no">304</span><span id="line-304">                    }</span>
-<span class="source-line-no">305</span><span id="line-305">                  }</span>
-<span class="source-line-no">306</span><span id="line-306">                  yield false;</span>
-<span class="source-line-no">307</span><span id="line-307">                } else if (pta.getKind() == TypeKind.TYPEVAR) {</span>
-<span class="source-line-no">308</span><span id="line-308">                  // "...the required type parameter [argument] is an actual [non-type variable, non-wildcard reference]</span>
-<span class="source-line-no">309</span><span id="line-309">                  // type, the bean type parameter [argument] is a type variable and the actual [non-type variable,</span>
-<span class="source-line-no">310</span><span id="line-310">                  // non-wildcard reference] type [required type argument, receiver] is assignable to the upper bound,</span>
-<span class="source-line-no">311</span><span id="line-311">                  // if any, of the type variable [bean type argument, payload] [type variables have multiple</span>
-<span class="source-line-no">312</span><span id="line-312">                  // bounds]..."</span>
-<span class="source-line-no">313</span><span id="line-313">                  if (assignableToCondensedTypeVariableBounds((TypeVariable)pta, (ReferenceType)receiver)) {</span>
-<span class="source-line-no">314</span><span id="line-314">                    continue;</span>
-<span class="source-line-no">315</span><span id="line-315">                  }</span>
-<span class="source-line-no">316</span><span id="line-316">                  yield false;</span>
-<span class="source-line-no">317</span><span id="line-317">                } else {</span>
-<span class="source-line-no">318</span><span id="line-318">                  throw new AssertionError("Unexpected payload type argument kind: " + pta.getKind());</span>
-<span class="source-line-no">319</span><span id="line-319">                }</span>
-<span class="source-line-no">320</span><span id="line-320">              } else if (rta.getKind() == TypeKind.WILDCARD) {</span>
-<span class="source-line-no">321</span><span id="line-321">                // "...the required type parameter [argument] is a wildcard, the bean type parameter [argument] is an</span>
-<span class="source-line-no">322</span><span id="line-322">                // actual [non-type variable, non-wildcard reference] type..."</span>
-<span class="source-line-no">323</span><span id="line-323">                if (actual(pta)) {</span>
-<span class="source-line-no">324</span><span id="line-324">                  // "...and the actual [non-type variable, non-wildcard reference] type is assignable to the upper</span>
-<span class="source-line-no">325</span><span id="line-325">                  // bound, if any, of the wildcard and assignable from the lower bound, if any of the wildcard"</span>
-<span class="source-line-no">326</span><span id="line-326">                  if (assignableToExtendsBound((WildcardType)rta, (ReferenceType)pta) &amp;&amp;</span>
-<span class="source-line-no">327</span><span id="line-327">                      assignableFromSuperBound((ReferenceType)pta, (WildcardType)rta)) {</span>
-<span class="source-line-no">328</span><span id="line-328">                    continue;</span>
-<span class="source-line-no">329</span><span id="line-329">                  }</span>
-<span class="source-line-no">330</span><span id="line-330">                  yield false;</span>
-<span class="source-line-no">331</span><span id="line-331">                } else if (pta.getKind() == TypeKind.TYPEVAR) {</span>
-<span class="source-line-no">332</span><span id="line-332">                  // "...the required type parameter [argument] is a wildcard, the bean type parameter [argument] is a</span>
-<span class="source-line-no">333</span><span id="line-333">                  // type variable and the upper bound of the type variable [a type variable has many bounds?] is</span>
-<span class="source-line-no">334</span><span id="line-334">                  // assignable to or assignable from the upper bound, if any, of the wildcard and assignable from the</span>
-<span class="source-line-no">335</span><span id="line-335">                  // lower bound, if any, of the wildcard"</span>
-<span class="source-line-no">336</span><span id="line-336">                  if ((condensedTypeVariableBoundsAssignableToExtendsBound((WildcardType)rta, (TypeVariable)pta) ||</span>
-<span class="source-line-no">337</span><span id="line-337">                       condensedTypeVariableBoundsAssignableFromExtendsBound((TypeVariable)pta, (WildcardType)rta)) &amp;&amp;</span>
-<span class="source-line-no">338</span><span id="line-338">                      condensedTypeVariableBoundsAssignableFromSuperBound((TypeVariable)pta, (WildcardType)rta)) {</span>
-<span class="source-line-no">339</span><span id="line-339">                    continue;</span>
-<span class="source-line-no">340</span><span id="line-340">                  }</span>
-<span class="source-line-no">341</span><span id="line-341">                  yield false;</span>
-<span class="source-line-no">342</span><span id="line-342">                } else {</span>
-<span class="source-line-no">343</span><span id="line-343">                  throw new AssertionError("Unexpected payload type argument kind: " + pta.getKind());</span>
-<span class="source-line-no">344</span><span id="line-344">                }</span>
-<span class="source-line-no">345</span><span id="line-345">              } else if (rta.getKind() == TypeKind.TYPEVAR) {</span>
-<span class="source-line-no">346</span><span id="line-346">                if (pta.getKind() == TypeKind.TYPEVAR) {</span>
-<span class="source-line-no">347</span><span id="line-347">                  // "...the required type parameter [argument] and the bean type parameter [argument] are both type</span>
-<span class="source-line-no">348</span><span id="line-348">                  // variables and the upper bound of the required type parameter [argument] [a type variable has many</span>
-<span class="source-line-no">349</span><span id="line-349">                  // bounds?] is assignable to the upper bound [a type variable has many bounds?], if any, of the bean</span>
-<span class="source-line-no">350</span><span id="line-350">                  // type parameter [argument]"</span>
-<span class="source-line-no">351</span><span id="line-351">                  if (condensedTypeVariableBoundsAssignableToCondensedTypeVariableBounds((TypeVariable)pta, (TypeVariable)rta)) {</span>
-<span class="source-line-no">352</span><span id="line-352">                    continue;</span>
-<span class="source-line-no">353</span><span id="line-353">                  }</span>
-<span class="source-line-no">354</span><span id="line-354">                  yield false;</span>
-<span class="source-line-no">355</span><span id="line-355">                } else {</span>
-<span class="source-line-no">356</span><span id="line-356">                  throw new AssertionError("Unexpected payload type argument kind: " + pta.getKind());</span>
-<span class="source-line-no">357</span><span id="line-357">                }</span>
-<span class="source-line-no">358</span><span id="line-358">              } else {</span>
-<span class="source-line-no">359</span><span id="line-359">                throw new AssertionError("Unexpected receiver type argument kind: " + rta.getKind());</span>
-<span class="source-line-no">360</span><span id="line-360">              }</span>
-<span class="source-line-no">361</span><span id="line-361">            }</span>
-<span class="source-line-no">362</span><span id="line-362">            yield true; // we passed all the tests</span>
-<span class="source-line-no">363</span><span id="line-363">          }</span>
-<span class="source-line-no">364</span><span id="line-364">          yield false; // non-generic classes or raw types were not identical</span>
-<span class="source-line-no">365</span><span id="line-365">        }</span>
-<span class="source-line-no">366</span><span id="line-366">        default -&gt; throw new AssertionError("Unexpected receiver kind: " + receiver.getKind());</span>
-<span class="source-line-no">367</span><span id="line-367">      };</span>
-<span class="source-line-no">368</span><span id="line-368">      // "A [non-generic or] raw bean type [payload] is considered assignable..."</span>
-<span class="source-line-no">369</span><span id="line-369">      case TypeMirror nonGenericOrRawPayload -&gt; switch (receiver) {</span>
-<span class="source-line-no">370</span><span id="line-370">        // "...to a parameterized required type [receiver]..."</span>
-<span class="source-line-no">371</span><span id="line-371">        case DeclaredType parameterizedReceiver when parameterized(receiver) -&gt; {</span>
-<span class="source-line-no">372</span><span id="line-372">          // "...if the[ir] [non-generic classes or] raw types are identical and all type parameters [arguments] of the</span>
-<span class="source-line-no">373</span><span id="line-373">          // required type [receiver] are either unbounded type variables or java.lang.Object."</span>
-<span class="source-line-no">374</span><span id="line-374">          yield</span>
-<span class="source-line-no">375</span><span id="line-375">            identical(nonGenericClassOrRawType(parameterizedReceiver), nonGenericOrRawPayload) &amp;&amp;</span>
-<span class="source-line-no">376</span><span id="line-376">            allTypeArgumentsAre(parameterizedReceiver.getTypeArguments(),</span>
-<span class="source-line-no">377</span><span id="line-377">                                ((Predicate&lt;TypeMirror&gt;)Assignability::unboundedTypeVariable).or(Assignability::isJavaLangObject));</span>
-<span class="source-line-no">378</span><span id="line-378">        }</span>
-<span class="source-line-no">379</span><span id="line-379">        // [Otherwise the payload is not assignable to the receiver; identity checking should have already happened in</span>
-<span class="source-line-no">380</span><span id="line-380">        // matches(), not here.]</span>
-<span class="source-line-no">381</span><span id="line-381">        case DeclaredType nonGenericOrRawReceiver when receiver.getKind() == TypeKind.DECLARED -&gt; {</span>
-<span class="source-line-no">382</span><span id="line-382">          yield false;</span>
-<span class="source-line-no">383</span><span id="line-383">        }</span>
-<span class="source-line-no">384</span><span id="line-384">        default -&gt; throw new AssertionError("Unexpected payload kind: " + payload.getKind() + "; receiver: " + receiver + "; payload: " + payload);</span>
-<span class="source-line-no">385</span><span id="line-385">      };</span>
-<span class="source-line-no">386</span><span id="line-386">    };</span>
-<span class="source-line-no">387</span><span id="line-387">  }</span>
-<span class="source-line-no">388</span><span id="line-388"></span>
-<span class="source-line-no">389</span><span id="line-389">  private final boolean identical(final TypeMirror receiver, final TypeMirror payload) {</span>
-<span class="source-line-no">390</span><span id="line-390">    // CDI has an undefined notion of "identical to".  This method attempts to interpret that.  Recall that</span>
-<span class="source-line-no">391</span><span id="line-391">    // javax.lang.model.* compares types with "sameType" semantics.</span>
-<span class="source-line-no">392</span><span id="line-392">    return receiver == payload || this.tes.sameType(receiver, payload);</span>
-<span class="source-line-no">393</span><span id="line-393">  }</span>
-<span class="source-line-no">394</span><span id="line-394"></span>
-<span class="source-line-no">395</span><span id="line-395">  // This test asks: is the *required type* assignable to the *bean type*'s bounds?</span>
-<span class="source-line-no">396</span><span id="line-396">  //</span>
-<span class="source-line-no">397</span><span id="line-397">  // @Inject Foo&lt;String&gt; foo; &lt;-- Bean&lt;T extends CharSequence&gt; // is String (payload) assignable to CharSequence (receiver)?</span>
-<span class="source-line-no">398</span><span id="line-398">  private final boolean assignableToCondensedTypeVariableBounds(final TypeVariable receiver, final ReferenceType payload) {</span>
-<span class="source-line-no">399</span><span id="line-399">    assert receiver.getKind() == TypeKind.TYPEVAR;</span>
-<span class="source-line-no">400</span><span id="line-400">    assert actual(payload);</span>
-<span class="source-line-no">401</span><span id="line-401">    return covariantlyAssignable(condense(receiver), List.of(payload));</span>
-<span class="source-line-no">402</span><span id="line-402">  }</span>
-<span class="source-line-no">403</span><span id="line-403"></span>
-<span class="source-line-no">404</span><span id="line-404">  private final boolean assignableToExtendsBound(final WildcardType w, final ReferenceType candidate) {</span>
-<span class="source-line-no">405</span><span id="line-405">    assert w.getKind() == TypeKind.WILDCARD;</span>
-<span class="source-line-no">406</span><span id="line-406">    assert actual(candidate);</span>
-<span class="source-line-no">407</span><span id="line-407">    final TypeMirror extendsBound = w.getExtendsBound();</span>
-<span class="source-line-no">408</span><span id="line-408">    return extendsBound == null || covariantlyAssignable((ReferenceType)extendsBound, candidate);</span>
+<span class="source-line-no">287</span><span id="line-287">                    // becomes:</span>
+<span class="source-line-no">288</span><span id="line-288">                    //</span>
+<span class="source-line-no">289</span><span id="line-289">                    //   "...and, if at least one of the two type arguments is a parameterized type, or if at least one</span>
+<span class="source-line-no">290</span><span id="line-290">                    //   of the two types is an array type with a parameterized element type..."</span>
+<span class="source-line-no">291</span><span id="line-291">                    //</span>
+<span class="source-line-no">292</span><span id="line-292">                    // That, in turn, designates any type capable of properly yielding a raw type, while ruling out</span>
+<span class="source-line-no">293</span><span id="line-293">                    // those that can't! That means it is exactly equal to our yieldsRawType(TypeMirror) method, and so</span>
+<span class="source-line-no">294</span><span id="line-294">                    // that's what cdiParameterized(TypeMirror) returns.</span>
+<span class="source-line-no">295</span><span id="line-295">                    if (cdiParameterized(rta)) {</span>
+<span class="source-line-no">296</span><span id="line-296">                      assert cdiParameterized(pta); // ...because otherwise their raw types would not have been "identical"</span>
+<span class="source-line-no">297</span><span id="line-297">                      // "...the bean type parameter [argument] is assignable to the required type parameter [argument]</span>
+<span class="source-line-no">298</span><span id="line-298">                      // according to [all of] these rules [including 'matching']..."</span>
+<span class="source-line-no">299</span><span id="line-299">                      if (matches(rta, pta)) {</span>
+<span class="source-line-no">300</span><span id="line-300">                        continue;</span>
+<span class="source-line-no">301</span><span id="line-301">                      }</span>
+<span class="source-line-no">302</span><span id="line-302">                      yield false;</span>
+<span class="source-line-no">303</span><span id="line-303">                    } else {</span>
+<span class="source-line-no">304</span><span id="line-304">                      assert !cdiParameterized(pta);</span>
+<span class="source-line-no">305</span><span id="line-305">                      continue;</span>
+<span class="source-line-no">306</span><span id="line-306">                    }</span>
+<span class="source-line-no">307</span><span id="line-307">                  }</span>
+<span class="source-line-no">308</span><span id="line-308">                  yield false;</span>
+<span class="source-line-no">309</span><span id="line-309">                } else if (pta.getKind() == TypeKind.TYPEVAR) {</span>
+<span class="source-line-no">310</span><span id="line-310">                  // "...the required [receiver] type parameter [argument] is an actual [non-type variable, non-wildcard</span>
+<span class="source-line-no">311</span><span id="line-311">                  // reference] type, the bean [payload] type parameter [argument] is a type variable and the actual</span>
+<span class="source-line-no">312</span><span id="line-312">                  // [non-type variable, non-wildcard reference] type [required type argument, receiver] is assignable</span>
+<span class="source-line-no">313</span><span id="line-313">                  // to the upper bound, if any, of the type variable [bean type argument, payload] [type variables have</span>
+<span class="source-line-no">314</span><span id="line-314">                  // multiple bounds]..."</span>
+<span class="source-line-no">315</span><span id="line-315">                  if (assignableToCondensedTypeVariableBounds((TypeVariable)pta, (ReferenceType)receiver)) {</span>
+<span class="source-line-no">316</span><span id="line-316">                    continue;</span>
+<span class="source-line-no">317</span><span id="line-317">                  }</span>
+<span class="source-line-no">318</span><span id="line-318">                  yield false;</span>
+<span class="source-line-no">319</span><span id="line-319">                } else {</span>
+<span class="source-line-no">320</span><span id="line-320">                  throw new AssertionError("Unexpected payload type argument kind: " + pta.getKind());</span>
+<span class="source-line-no">321</span><span id="line-321">                }</span>
+<span class="source-line-no">322</span><span id="line-322">              } else if (rta.getKind() == TypeKind.WILDCARD) {</span>
+<span class="source-line-no">323</span><span id="line-323">                // "...the required type parameter [argument] is a wildcard, the bean type parameter [argument] is an</span>
+<span class="source-line-no">324</span><span id="line-324">                // actual [non-type variable, non-wildcard reference] type..."</span>
+<span class="source-line-no">325</span><span id="line-325">                if (actual(pta)) {</span>
+<span class="source-line-no">326</span><span id="line-326">                  // "...and the actual [non-type variable, non-wildcard reference] type is assignable to the upper</span>
+<span class="source-line-no">327</span><span id="line-327">                  // bound, if any, of the wildcard and assignable from the lower bound, if any of the wildcard"</span>
+<span class="source-line-no">328</span><span id="line-328">                  if (assignableToExtendsBound((WildcardType)rta, (ReferenceType)pta) &amp;&amp;</span>
+<span class="source-line-no">329</span><span id="line-329">                      assignableFromSuperBound((ReferenceType)pta, (WildcardType)rta)) {</span>
+<span class="source-line-no">330</span><span id="line-330">                    continue;</span>
+<span class="source-line-no">331</span><span id="line-331">                  }</span>
+<span class="source-line-no">332</span><span id="line-332">                  yield false;</span>
+<span class="source-line-no">333</span><span id="line-333">                } else if (pta.getKind() == TypeKind.TYPEVAR) {</span>
+<span class="source-line-no">334</span><span id="line-334">                  // "...the required [receiver] type parameter [argument] is a wildcard, the bean [payload] type</span>
+<span class="source-line-no">335</span><span id="line-335">                  // parameter [argument] is a type variable and the upper bound of the type variable [a type variable</span>
+<span class="source-line-no">336</span><span id="line-336">                  // has many bounds?] is assignable to or assignable from the upper bound, if any, of the wildcard and</span>
+<span class="source-line-no">337</span><span id="line-337">                  // assignable from the lower bound, if any, of the wildcard"</span>
+<span class="source-line-no">338</span><span id="line-338">                  if ((condensedTypeVariableBoundsAssignableToExtendsBound((WildcardType)rta, (TypeVariable)pta) ||</span>
+<span class="source-line-no">339</span><span id="line-339">                       condensedTypeVariableBoundsAssignableFromExtendsBound((TypeVariable)pta, (WildcardType)rta)) &amp;&amp;</span>
+<span class="source-line-no">340</span><span id="line-340">                      condensedTypeVariableBoundsAssignableFromSuperBound((TypeVariable)pta, (WildcardType)rta)) {</span>
+<span class="source-line-no">341</span><span id="line-341">                    continue;</span>
+<span class="source-line-no">342</span><span id="line-342">                  }</span>
+<span class="source-line-no">343</span><span id="line-343">                  yield false;</span>
+<span class="source-line-no">344</span><span id="line-344">                } else {</span>
+<span class="source-line-no">345</span><span id="line-345">                  throw new AssertionError("Unexpected payload type argument kind: " + pta.getKind());</span>
+<span class="source-line-no">346</span><span id="line-346">                }</span>
+<span class="source-line-no">347</span><span id="line-347">              } else if (rta.getKind() == TypeKind.TYPEVAR) {</span>
+<span class="source-line-no">348</span><span id="line-348">                if (pta.getKind() == TypeKind.TYPEVAR) {</span>
+<span class="source-line-no">349</span><span id="line-349">                  // "...the required type parameter [argument] and the bean type parameter [argument] are both type</span>
+<span class="source-line-no">350</span><span id="line-350">                  // variables and the upper bound of the required type parameter [argument] [a type variable has many</span>
+<span class="source-line-no">351</span><span id="line-351">                  // bounds?] is assignable to the upper bound [a type variable has many bounds?], if any, of the bean</span>
+<span class="source-line-no">352</span><span id="line-352">                  // type parameter [argument]"</span>
+<span class="source-line-no">353</span><span id="line-353">                  if (condensedTypeVariableBoundsAssignableToCondensedTypeVariableBounds((TypeVariable)pta, (TypeVariable)rta)) {</span>
+<span class="source-line-no">354</span><span id="line-354">                    continue;</span>
+<span class="source-line-no">355</span><span id="line-355">                  }</span>
+<span class="source-line-no">356</span><span id="line-356">                  yield false;</span>
+<span class="source-line-no">357</span><span id="line-357">                } else {</span>
+<span class="source-line-no">358</span><span id="line-358">                  throw new AssertionError("Unexpected payload type argument kind: " + pta.getKind());</span>
+<span class="source-line-no">359</span><span id="line-359">                }</span>
+<span class="source-line-no">360</span><span id="line-360">              } else {</span>
+<span class="source-line-no">361</span><span id="line-361">                throw new AssertionError("Unexpected receiver type argument kind: " + rta.getKind());</span>
+<span class="source-line-no">362</span><span id="line-362">              }</span>
+<span class="source-line-no">363</span><span id="line-363">            }</span>
+<span class="source-line-no">364</span><span id="line-364">            yield true; // we passed all the tests</span>
+<span class="source-line-no">365</span><span id="line-365">          }</span>
+<span class="source-line-no">366</span><span id="line-366">          yield false; // non-generic classes or raw types were not identical</span>
+<span class="source-line-no">367</span><span id="line-367">        }</span>
+<span class="source-line-no">368</span><span id="line-368">        default -&gt; throw new AssertionError("Unexpected receiver kind: " + receiver.getKind());</span>
+<span class="source-line-no">369</span><span id="line-369">      };</span>
+<span class="source-line-no">370</span><span id="line-370">      // "A [non-generic or] raw bean type [payload] is considered assignable..."</span>
+<span class="source-line-no">371</span><span id="line-371">      case TypeMirror nonGenericOrRawPayload -&gt; switch (receiver) {</span>
+<span class="source-line-no">372</span><span id="line-372">        // "...to a parameterized required type [receiver]..."</span>
+<span class="source-line-no">373</span><span id="line-373">        case DeclaredType parameterizedReceiver when parameterized(receiver) -&gt; {</span>
+<span class="source-line-no">374</span><span id="line-374">          // "...if the[ir] [non-generic classes or] raw types are identical and all type parameters [arguments] of the</span>
+<span class="source-line-no">375</span><span id="line-375">          // required type [receiver] are either unbounded type variables or java.lang.Object."</span>
+<span class="source-line-no">376</span><span id="line-376">          yield</span>
+<span class="source-line-no">377</span><span id="line-377">            identical(nonGenericClassOrRawType(parameterizedReceiver), nonGenericOrRawPayload) &amp;&amp;</span>
+<span class="source-line-no">378</span><span id="line-378">            allTypeArgumentsAre(parameterizedReceiver.getTypeArguments(),</span>
+<span class="source-line-no">379</span><span id="line-379">                                ((Predicate&lt;TypeMirror&gt;)Assignability::unboundedTypeVariable).or(Assignability::isJavaLangObject));</span>
+<span class="source-line-no">380</span><span id="line-380">        }</span>
+<span class="source-line-no">381</span><span id="line-381">        // [Otherwise the payload is not assignable to the receiver; identity checking should have already happened in</span>
+<span class="source-line-no">382</span><span id="line-382">        // matches(), not here.]</span>
+<span class="source-line-no">383</span><span id="line-383">        case DeclaredType nonGenericOrRawReceiver when receiver.getKind() == TypeKind.DECLARED -&gt; {</span>
+<span class="source-line-no">384</span><span id="line-384">          yield false; // or yield identical(nonGenericOrRawReceiver, nonGenericOrRawPayload);</span>
+<span class="source-line-no">385</span><span id="line-385">        }</span>
+<span class="source-line-no">386</span><span id="line-386">        default -&gt; throw new AssertionError("Unexpected payload kind: " + payload.getKind() + "; receiver: " + receiver + "; payload: " + payload);</span>
+<span class="source-line-no">387</span><span id="line-387">      };</span>
+<span class="source-line-no">388</span><span id="line-388">    };</span>
+<span class="source-line-no">389</span><span id="line-389">  }</span>
+<span class="source-line-no">390</span><span id="line-390"></span>
+<span class="source-line-no">391</span><span id="line-391">  // Is payload "identical to" receiver, following the intent of CDI?</span>
+<span class="source-line-no">392</span><span id="line-392">  private final boolean identical(final TypeMirror receiver, final TypeMirror payload) {</span>
+<span class="source-line-no">393</span><span id="line-393">    // CDI has an undefined notion of "identical to". This method attempts to divine and implement the intent. Recall</span>
+<span class="source-line-no">394</span><span id="line-394">    // that javax.lang.model.* compares types with "sameType" semantics.</span>
+<span class="source-line-no">395</span><span id="line-395">    return receiver == payload || this.tes.sameType(receiver, payload);</span>
+<span class="source-line-no">396</span><span id="line-396">  }</span>
+<span class="source-line-no">397</span><span id="line-397"></span>
+<span class="source-line-no">398</span><span id="line-398">  // Is the "actual" type argument represented by payload assignable to the receiver's condensed bounds?</span>
+<span class="source-line-no">399</span><span id="line-399">  //</span>
+<span class="source-line-no">400</span><span id="line-400">  // @Inject Foo&lt;String&gt; foo; &lt;-- Bean&lt;T extends CharSequence&gt; // is the "actual" String type (payload) assignable to T's CharSequence bound (receiver)?</span>
+<span class="source-line-no">401</span><span id="line-401">  //</span>
+<span class="source-line-no">402</span><span id="line-402">  // Recall that after condensing "T extends CharSequence" you get CharSequence.</span>
+<span class="source-line-no">403</span><span id="line-403">  //</span>
+<span class="source-line-no">404</span><span id="line-404">  // Recall that if, instead, you had T extends S and S extends CharSequence, condensing T still yields CharSequence.</span>
+<span class="source-line-no">405</span><span id="line-405">  private final boolean assignableToCondensedTypeVariableBounds(final TypeVariable receiver, final ReferenceType payload) {</span>
+<span class="source-line-no">406</span><span id="line-406">    assert receiver.getKind() == TypeKind.TYPEVAR;</span>
+<span class="source-line-no">407</span><span id="line-407">    assert actual(payload);</span>
+<span class="source-line-no">408</span><span id="line-408">    return covariantlyAssignable(List.of(receiver), List.of(payload)); // deliberately List.of(payload) and not condense(payload)</span>
 <span class="source-line-no">409</span><span id="line-409">  }</span>
 <span class="source-line-no">410</span><span id="line-410"></span>
-<span class="source-line-no">411</span><span id="line-411">  // It's not immediately clear what CDI means by a type variable's upper bound. In javax.lang.model.type parlance,</span>
-<span class="source-line-no">412</span><span id="line-412">  // the upper bound of a TypeVariable could be an IntersectionType, which java.lang.reflect.TypeVariable represents</span>
-<span class="source-line-no">413</span><span id="line-413">  // as a collection of bounds. CDI blundered into this earlier: https://issues.redhat.com/browse/CDI-440 and</span>
-<span class="source-line-no">414</span><span id="line-414">  // https://github.com/jakartaee/cdi/issues/682</span>
-<span class="source-line-no">415</span><span id="line-415">  //</span>
-<span class="source-line-no">416</span><span id="line-416">  // "the upper bound of the required type parameter [receiver argument] is assignable to the upper bound, if any, of the bean</span>
-<span class="source-line-no">417</span><span id="line-417">  // type parameter [argument]" (when both arguments are type variables) should read:</span>
-<span class="source-line-no">418</span><span id="line-418">  //</span>
-<span class="source-line-no">419</span><span id="line-419">  // "for each bound, PA, of the bean type parameter [payload argument], there is at least one bound, RA, of the</span>
-<span class="source-line-no">420</span><span id="line-420">  // required type parameter [receiver argument], which is assignable to PA."</span>
-<span class="source-line-no">421</span><span id="line-421">  //</span>
-<span class="source-line-no">422</span><span id="line-422">  // The TCK enforces this, even though it's not in the specification (!).</span>
-<span class="source-line-no">423</span><span id="line-423">  //</span>
-<span class="source-line-no">424</span><span id="line-424">  // Weld's implementation confuses type parameters with arguments, just like the specification. They have a series of</span>
-<span class="source-line-no">425</span><span id="line-425">  // methods implemented as part of PR 614 (https://github.com/weld/core/pull/614) named "parametersMatch" [arguments</span>
-<span class="source-line-no">426</span><span id="line-426">  // match].</span>
-<span class="source-line-no">427</span><span id="line-427">  //</span>
-<span class="source-line-no">428</span><span id="line-428">  // Weld also has methods named things like "getUppermostTypeVariableBounds" and "getUppermostBounds". I think this is</span>
-<span class="source-line-no">429</span><span id="line-429">  // Weld's excruciatingly clumsy way of trying to express the JLS notion of "leftmost bound" (which is also</span>
-<span class="source-line-no">430</span><span id="line-430">  // undefined). See</span>
-<span class="source-line-no">431</span><span id="line-431">  // https://www.oreilly.com/library/view/learning-java-4th/9781449372477/ch08s07.html#learnjava3-CHP-8-SECT-7.1.</span>
-<span class="source-line-no">432</span><span id="line-432">  //</span>
-<span class="source-line-no">433</span><span id="line-433">  // Digging deeper, I think getUppermostTypeVariableBounds(tv) is just erase(tv) applied recursively, maybe?</span>
+<span class="source-line-no">411</span><span id="line-411">  private final boolean assignableToExtendsBound(final WildcardType w, final ReferenceType candidate) {</span>
+<span class="source-line-no">412</span><span id="line-412">    assert w.getKind() == TypeKind.WILDCARD;</span>
+<span class="source-line-no">413</span><span id="line-413">    assert actual(candidate);</span>
+<span class="source-line-no">414</span><span id="line-414">    final TypeMirror extendsBound = w.getExtendsBound();</span>
+<span class="source-line-no">415</span><span id="line-415">    return extendsBound == null || covariantlyAssignable((ReferenceType)extendsBound, candidate);</span>
+<span class="source-line-no">416</span><span id="line-416">  }</span>
+<span class="source-line-no">417</span><span id="line-417"></span>
+<span class="source-line-no">418</span><span id="line-418">  // It's not immediately clear what CDI means by a type variable's upper bound. In javax.lang.model.type parlance,</span>
+<span class="source-line-no">419</span><span id="line-419">  // the upper bound of a TypeVariable could be an IntersectionType, which java.lang.reflect.TypeVariable represents</span>
+<span class="source-line-no">420</span><span id="line-420">  // as a collection of bounds. CDI blundered into this earlier: https://issues.redhat.com/browse/CDI-440 and</span>
+<span class="source-line-no">421</span><span id="line-421">  // https://github.com/jakartaee/cdi/issues/682</span>
+<span class="source-line-no">422</span><span id="line-422">  //</span>
+<span class="source-line-no">423</span><span id="line-423">  // "the upper bound of the required type parameter [receiver argument] is assignable to the upper bound, if any, of the bean</span>
+<span class="source-line-no">424</span><span id="line-424">  // type parameter [argument]" (when both arguments are type variables) should read:</span>
+<span class="source-line-no">425</span><span id="line-425">  //</span>
+<span class="source-line-no">426</span><span id="line-426">  // "for each bound, PA, of the bean type parameter [payload argument], there is at least one bound, RA, of the</span>
+<span class="source-line-no">427</span><span id="line-427">  // required type parameter [receiver argument], which is assignable to PA."</span>
+<span class="source-line-no">428</span><span id="line-428">  //</span>
+<span class="source-line-no">429</span><span id="line-429">  // The TCK enforces this, even though it's not in the specification (!).</span>
+<span class="source-line-no">430</span><span id="line-430">  //</span>
+<span class="source-line-no">431</span><span id="line-431">  // Weld's implementation confuses type parameters with arguments, just like the specification. They have a series of</span>
+<span class="source-line-no">432</span><span id="line-432">  // methods implemented as part of PR 614 (https://github.com/weld/core/pull/614) named "parametersMatch" [arguments</span>
+<span class="source-line-no">433</span><span id="line-433">  // match].</span>
 <span class="source-line-no">434</span><span id="line-434">  //</span>
-<span class="source-line-no">435</span><span id="line-435">  // https://github.com/openjdk/jdk/blob/181845ae46157a9bb3bf8e2a328fa59eddc0273a/src/jdk.compiler/share/classes/com/sun/tools/javac/code/Types.java#L2450</span>
-<span class="source-line-no">436</span><span id="line-436">  //</span>
-<span class="source-line-no">437</span><span id="line-437">  // Compare vs.:</span>
-<span class="source-line-no">438</span><span id="line-438">  // https://github.com/weld/core/blob/e894d1699ff1c91332605f5ecae5f53410effb81/impl/src/main/java/org/jboss/weld/resolution/AbstractAssignabilityRules.java#L57-L62</span>
+<span class="source-line-no">435</span><span id="line-435">  // Weld also has methods named things like "getUppermostTypeVariableBounds" and "getUppermostBounds". I think this is</span>
+<span class="source-line-no">436</span><span id="line-436">  // Weld's excruciatingly clumsy way of trying to express the JLS notion of "leftmost bound" (which is also</span>
+<span class="source-line-no">437</span><span id="line-437">  // undefined). See</span>
+<span class="source-line-no">438</span><span id="line-438">  // https://www.oreilly.com/library/view/learning-java-4th/9781449372477/ch08s07.html#learnjava3-CHP-8-SECT-7.1.</span>
 <span class="source-line-no">439</span><span id="line-439">  //</span>
-<span class="source-line-no">440</span><span id="line-440">  // So maybe not quite. getUppermostTypeVariableBounds just gets to "actual" types. So T extends S, S extends String</span>
-<span class="source-line-no">441</span><span id="line-441">  // yields T extends String.</span>
-<span class="source-line-no">442</span><span id="line-442"></span>
-<span class="source-line-no">443</span><span id="line-443">  // For every bound in receiverBounds, after condensing, is there a bound in payloadBounds, after condensing, that is</span>
-<span class="source-line-no">444</span><span id="line-444">  // assignable to it using Java, not CDI, assignability semantics?</span>
-<span class="source-line-no">445</span><span id="line-445">  //</span>
-<span class="source-line-no">446</span><span id="line-446">  // Throws ClassCastException if, after condensing, any encountered bound is not either an ArrayType or a DeclaredType.</span>
-<span class="source-line-no">447</span><span id="line-447">  private final boolean covariantlyAssignable(final List&lt;? extends TypeMirror&gt; receiverBounds, List&lt;? extends TypeMirror&gt; payloadBounds) {</span>
-<span class="source-line-no">448</span><span id="line-448">    payloadBounds = condense(payloadBounds);</span>
-<span class="source-line-no">449</span><span id="line-449">    for (final TypeMirror receiver : condense(receiverBounds)) { // eliminate type variables via condense() call</span>
-<span class="source-line-no">450</span><span id="line-450">      if (!covariantlyAssignable((ReferenceType)receiver, payloadBounds)) {</span>
-<span class="source-line-no">451</span><span id="line-451">        return false;</span>
-<span class="source-line-no">452</span><span id="line-452">      }</span>
-<span class="source-line-no">453</span><span id="line-453">    }</span>
-<span class="source-line-no">454</span><span id="line-454">    return true;</span>
-<span class="source-line-no">455</span><span id="line-455">  }</span>
-<span class="source-line-no">456</span><span id="line-456"></span>
-<span class="source-line-no">457</span><span id="line-457">  // Is there a DeclaredType-or-ArrayType bound in condensedPayloadBounds that is assignable to classOrArrayTypeReceiver</span>
-<span class="source-line-no">458</span><span id="line-458">  // using Java, not CDI, assignability semantics?</span>
-<span class="source-line-no">459</span><span id="line-459">  //</span>
-<span class="source-line-no">460</span><span id="line-460">  // Throws ClassCastException or IllegalArgumentException if any encountered type is not either an ArrayType or a</span>
-<span class="source-line-no">461</span><span id="line-461">  // DeclaredType.</span>
-<span class="source-line-no">462</span><span id="line-462">  private final boolean covariantlyAssignable(final ReferenceType classOrArrayTypeReceiver, final List&lt;? extends TypeMirror&gt; condensedPayloadBounds) {</span>
-<span class="source-line-no">463</span><span id="line-463">    return switch (classOrArrayTypeReceiver.getKind()) {</span>
-<span class="source-line-no">464</span><span id="line-464">    case ARRAY, DECLARED -&gt; {</span>
-<span class="source-line-no">465</span><span id="line-465">      for (final TypeMirror payload : condensedPayloadBounds) {</span>
-<span class="source-line-no">466</span><span id="line-466">        if (covariantlyAssignable(classOrArrayTypeReceiver, (ReferenceType)payload)) {</span>
-<span class="source-line-no">467</span><span id="line-467">          yield true;</span>
-<span class="source-line-no">468</span><span id="line-468">        }</span>
-<span class="source-line-no">469</span><span id="line-469">      }</span>
-<span class="source-line-no">470</span><span id="line-470">      yield false;</span>
-<span class="source-line-no">471</span><span id="line-471">    }</span>
-<span class="source-line-no">472</span><span id="line-472">    default -&gt; throw new IllegalArgumentException("t: " + classOrArrayTypeReceiver + "; kind: " + classOrArrayTypeReceiver.getKind());</span>
-<span class="source-line-no">473</span><span id="line-473">    };</span>
-<span class="source-line-no">474</span><span id="line-474">  }</span>
-<span class="source-line-no">475</span><span id="line-475"></span>
-<span class="source-line-no">476</span><span id="line-476">  private final boolean covariantlyAssignable(final ReferenceType classOrArrayTypeReceiver, final ReferenceType classOrArrayTypePayload) {</span>
-<span class="source-line-no">477</span><span id="line-477">    assert actual(classOrArrayTypeReceiver);</span>
-<span class="source-line-no">478</span><span id="line-478">    assert actual(classOrArrayTypePayload);</span>
-<span class="source-line-no">479</span><span id="line-479">    return</span>
-<span class="source-line-no">480</span><span id="line-480">      classOrArrayTypeReceiver == classOrArrayTypePayload || // Optimization</span>
-<span class="source-line-no">481</span><span id="line-481">      this.tes.assignable(classOrArrayTypePayload, classOrArrayTypeReceiver); // yes, backwards</span>
-<span class="source-line-no">482</span><span id="line-482">  }</span>
-<span class="source-line-no">483</span><span id="line-483"></span>
-<span class="source-line-no">484</span><span id="line-484">  private final boolean condensedTypeVariableBoundsAssignableToExtendsBound(final WildcardType receiver, final TypeVariable payload) {</span>
-<span class="source-line-no">485</span><span id="line-485">    assert receiver.getKind() == TypeKind.WILDCARD;</span>
-<span class="source-line-no">486</span><span id="line-486">    assert payload.getKind() == TypeKind.TYPEVAR;</span>
-<span class="source-line-no">487</span><span id="line-487">    // "...the upper bound of the type variable [a type variable has many bounds?] is assignable TO [...] the upper</span>
-<span class="source-line-no">488</span><span id="line-488">    // bound, if any, of the wildcard..."</span>
-<span class="source-line-no">489</span><span id="line-489">    final TypeMirror extendsBound = receiver.getExtendsBound();</span>
-<span class="source-line-no">490</span><span id="line-490">    if (extendsBound == null) {</span>
-<span class="source-line-no">491</span><span id="line-491">      // WildcardType#getExtendsBound() javadoc: "If no upper bound is explicitly declared, null is returned."  This</span>
-<span class="source-line-no">492</span><span id="line-492">      // means the receiver is effectively java.lang.Object, and any reference type is assignable to it.</span>
-<span class="source-line-no">493</span><span id="line-493">      return true;</span>
-<span class="source-line-no">494</span><span id="line-494">    }</span>
-<span class="source-line-no">495</span><span id="line-495">    // Condense arguments to eliminate useless type variables and intersection types so that Java covariant semantics</span>
-<span class="source-line-no">496</span><span id="line-496">    // will work properly in this case.</span>
-<span class="source-line-no">497</span><span id="line-497">    return covariantlyAssignable(condense((ReferenceType)extendsBound), condense(payload));</span>
-<span class="source-line-no">498</span><span id="line-498">  }</span>
-<span class="source-line-no">499</span><span id="line-499"></span>
-<span class="source-line-no">500</span><span id="line-500">  private final boolean condensedTypeVariableBoundsAssignableFromExtendsBound(final TypeVariable receiver, final WildcardType payload) {</span>
-<span class="source-line-no">501</span><span id="line-501">    assert receiver.getKind() == TypeKind.TYPEVAR;</span>
-<span class="source-line-no">502</span><span id="line-502">    assert payload.getKind() == TypeKind.WILDCARD;</span>
-<span class="source-line-no">503</span><span id="line-503">    // "...the upper bound of the type variable [a type variable has many bounds?] is assignable [...] FROM the upper bound, if any, of the wildcard..."</span>
-<span class="source-line-no">504</span><span id="line-504">    final TypeMirror extendsBound = payload.getExtendsBound();</span>
-<span class="source-line-no">505</span><span id="line-505">    if (extendsBound == null) {</span>
-<span class="source-line-no">506</span><span id="line-506">      // "if any" is problematic. CDI implementations return true in this case.</span>
-<span class="source-line-no">507</span><span id="line-507">      return true;</span>
-<span class="source-line-no">508</span><span id="line-508">    }</span>
-<span class="source-line-no">509</span><span id="line-509">    return covariantlyAssignable(condense(receiver), condense((ReferenceType)extendsBound));</span>
-<span class="source-line-no">510</span><span id="line-510">  }</span>
-<span class="source-line-no">511</span><span id="line-511"></span>
-<span class="source-line-no">512</span><span id="line-512">  private final boolean condensedTypeVariableBoundsAssignableFromSuperBound(final TypeVariable receiver, final WildcardType payload) {</span>
-<span class="source-line-no">513</span><span id="line-513">    assert receiver.getKind() == TypeKind.TYPEVAR;</span>
-<span class="source-line-no">514</span><span id="line-514">    assert payload.getKind() == TypeKind.WILDCARD;</span>
-<span class="source-line-no">515</span><span id="line-515">    final TypeMirror superBound = payload.getSuperBound();</span>
-<span class="source-line-no">516</span><span id="line-516">    return superBound == null || covariantlyAssignable(condense(receiver), List.of(superBound));</span>
-<span class="source-line-no">517</span><span id="line-517">  }</span>
-<span class="source-line-no">518</span><span id="line-518"></span>
-<span class="source-line-no">519</span><span id="line-519">  private final boolean condensedTypeVariableBoundsAssignableToCondensedTypeVariableBounds(final TypeVariable receiver, final TypeVariable payload) {</span>
-<span class="source-line-no">520</span><span id="line-520">    assert receiver.getKind() == TypeKind.TYPEVAR;</span>
-<span class="source-line-no">521</span><span id="line-521">    assert payload.getKind() == TypeKind.TYPEVAR;</span>
-<span class="source-line-no">522</span><span id="line-522">    return covariantlyAssignable(condense(receiver), condense(payload)); // I think</span>
+<span class="source-line-no">440</span><span id="line-440">  // Digging deeper, I think getUppermostTypeVariableBounds(tv) is just erase(tv) applied recursively, maybe? (No, it</span>
+<span class="source-line-no">441</span><span id="line-441">  // turns out; read on.)</span>
+<span class="source-line-no">442</span><span id="line-442">  //</span>
+<span class="source-line-no">443</span><span id="line-443">  // https://github.com/openjdk/jdk/blob/181845ae46157a9bb3bf8e2a328fa59eddc0273a/src/jdk.compiler/share/classes/com/sun/tools/javac/code/Types.java#L2450</span>
+<span class="source-line-no">444</span><span id="line-444">  //</span>
+<span class="source-line-no">445</span><span id="line-445">  // Compare vs.:</span>
+<span class="source-line-no">446</span><span id="line-446">  // https://github.com/weld/core/blob/e894d1699ff1c91332605f5ecae5f53410effb81/impl/src/main/java/org/jboss/weld/resolution/AbstractAssignabilityRules.java#L57-L62</span>
+<span class="source-line-no">447</span><span id="line-447">  //</span>
+<span class="source-line-no">448</span><span id="line-448">  // So maybe not quite. getUppermostTypeVariableBounds() just gets to "actual" types. So given T extends S and S extends</span>
+<span class="source-line-no">449</span><span id="line-449">  // String, T's "uppermost type variable bounds" are String.</span>
+<span class="source-line-no">450</span><span id="line-450"></span>
+<span class="source-line-no">451</span><span id="line-451">  // For every bound in (condensed) receiverBounds, is there a bound in (condensed) payloadBounds that is covariantly</span>
+<span class="source-line-no">452</span><span id="line-452">  // assignable to it?</span>
+<span class="source-line-no">453</span><span id="line-453">  //</span>
+<span class="source-line-no">454</span><span id="line-454">  // (Is there one bound in (condensed) payloadBounds that matches all bounds in (condensed) receiver bounds?</span>
+<span class="source-line-no">455</span><span id="line-455">  //</span>
+<span class="source-line-no">456</span><span id="line-456">  // Throws ClassCastException if, after condensing, any encountered bound is not either an ArrayType or a DeclaredType.</span>
+<span class="source-line-no">457</span><span id="line-457">  private final boolean covariantlyAssignable(List&lt;? extends TypeMirror&gt; receiverBounds, List&lt;? extends TypeMirror&gt; payloadBounds) {</span>
+<span class="source-line-no">458</span><span id="line-458">    payloadBounds = condense(payloadBounds);</span>
+<span class="source-line-no">459</span><span id="line-459">    for (final TypeMirror condensedReceiverBound : condense(receiverBounds)) { // eliminate type variables via condense() call</span>
+<span class="source-line-no">460</span><span id="line-460">      if (!covariantlyAssignable((ReferenceType)condensedReceiverBound, payloadBounds)) {</span>
+<span class="source-line-no">461</span><span id="line-461">        return false;</span>
+<span class="source-line-no">462</span><span id="line-462">      }</span>
+<span class="source-line-no">463</span><span id="line-463">    }</span>
+<span class="source-line-no">464</span><span id="line-464">    return true;</span>
+<span class="source-line-no">465</span><span id="line-465">  }</span>
+<span class="source-line-no">466</span><span id="line-466"></span>
+<span class="source-line-no">467</span><span id="line-467">  // Is there a DeclaredType-or-ArrayType bound in condensedPayloadBounds that is assignable to classOrArrayTypeReceiver</span>
+<span class="source-line-no">468</span><span id="line-468">  // using Java, not CDI, assignability semantics?</span>
+<span class="source-line-no">469</span><span id="line-469">  //</span>
+<span class="source-line-no">470</span><span id="line-470">  // It is assumed condensedPayloadBounds is the result of a condense() call.</span>
+<span class="source-line-no">471</span><span id="line-471">  //</span>
+<span class="source-line-no">472</span><span id="line-472">  // Throws ClassCastException or IllegalArgumentException if any encountered type is not either an ArrayType or a</span>
+<span class="source-line-no">473</span><span id="line-473">  // DeclaredType.</span>
+<span class="source-line-no">474</span><span id="line-474">  private final boolean covariantlyAssignable(final ReferenceType classOrArrayTypeReceiver, final List&lt;? extends TypeMirror&gt; condensedPayloadBounds) {</span>
+<span class="source-line-no">475</span><span id="line-475">    return switch (classOrArrayTypeReceiver.getKind()) {</span>
+<span class="source-line-no">476</span><span id="line-476">    case ARRAY, DECLARED -&gt; {</span>
+<span class="source-line-no">477</span><span id="line-477">      for (final TypeMirror condensedPayloadBound : condensedPayloadBounds) {</span>
+<span class="source-line-no">478</span><span id="line-478">        if (covariantlyAssignable(classOrArrayTypeReceiver, (ReferenceType)condensedPayloadBound)) {</span>
+<span class="source-line-no">479</span><span id="line-479">          yield true;</span>
+<span class="source-line-no">480</span><span id="line-480">        }</span>
+<span class="source-line-no">481</span><span id="line-481">      }</span>
+<span class="source-line-no">482</span><span id="line-482">      yield false;</span>
+<span class="source-line-no">483</span><span id="line-483">    }</span>
+<span class="source-line-no">484</span><span id="line-484">    default -&gt; throw new IllegalArgumentException("classOrArrayTypeReceiver: " + classOrArrayTypeReceiver + "; kind: " + classOrArrayTypeReceiver.getKind());</span>
+<span class="source-line-no">485</span><span id="line-485">    };</span>
+<span class="source-line-no">486</span><span id="line-486">  }</span>
+<span class="source-line-no">487</span><span id="line-487"></span>
+<span class="source-line-no">488</span><span id="line-488">  // Is classOrArrayTypePayload assignable to classOrArrayTypeReceiver following the rules of Java assignability</span>
+<span class="source-line-no">489</span><span id="line-489">  // (i.e. covariance)?</span>
+<span class="source-line-no">490</span><span id="line-490">  //</span>
+<span class="source-line-no">491</span><span id="line-491">  // The types are ReferenceTypes because this is only ever invoked in the context of type arguments.</span>
+<span class="source-line-no">492</span><span id="line-492">  private final boolean covariantlyAssignable(final ReferenceType classOrArrayTypeReceiver, final ReferenceType classOrArrayTypePayload) {</span>
+<span class="source-line-no">493</span><span id="line-493">    assert actual(classOrArrayTypeReceiver);</span>
+<span class="source-line-no">494</span><span id="line-494">    assert actual(classOrArrayTypePayload);</span>
+<span class="source-line-no">495</span><span id="line-495">    return</span>
+<span class="source-line-no">496</span><span id="line-496">      classOrArrayTypeReceiver == classOrArrayTypePayload || // Optimization</span>
+<span class="source-line-no">497</span><span id="line-497">      // Note that TypeAndElementSource#assignable(TypeMirror, TypeMirror) follows the lead of</span>
+<span class="source-line-no">498</span><span id="line-498">      // javax.lang.model.util.Types#isAssignable(TypeMirror, TypeMirror) where the "payload" is the *first* parameter</span>
+<span class="source-line-no">499</span><span id="line-499">      // and the "receiver" is the *second* argument.</span>
+<span class="source-line-no">500</span><span id="line-500">      this.tes.assignable(classOrArrayTypePayload, classOrArrayTypeReceiver); // yes, "backwards"</span>
+<span class="source-line-no">501</span><span id="line-501">  }</span>
+<span class="source-line-no">502</span><span id="line-502"></span>
+<span class="source-line-no">503</span><span id="line-503">  // Are payload's condensed bounds assignable to receiver's condensed extends bound (upper bound)?</span>
+<span class="source-line-no">504</span><span id="line-504">  private final boolean condensedTypeVariableBoundsAssignableToExtendsBound(final WildcardType receiver, final TypeVariable payload) {</span>
+<span class="source-line-no">505</span><span id="line-505">    assert receiver.getKind() == TypeKind.WILDCARD;</span>
+<span class="source-line-no">506</span><span id="line-506">    assert payload.getKind() == TypeKind.TYPEVAR;</span>
+<span class="source-line-no">507</span><span id="line-507">    // "...the upper bound of the type variable [a type variable has many bounds?] is assignable TO [...] the upper</span>
+<span class="source-line-no">508</span><span id="line-508">    // bound, if any, of the wildcard..."</span>
+<span class="source-line-no">509</span><span id="line-509">    final TypeMirror extendsBound = receiver.getExtendsBound();</span>
+<span class="source-line-no">510</span><span id="line-510">    // Condense arguments to eliminate useless type variables and intersection types so that Java covariant semantics</span>
+<span class="source-line-no">511</span><span id="line-511">    // will work properly in this case.</span>
+<span class="source-line-no">512</span><span id="line-512">    return extendsBound == null || covariantlyAssignable(List.of((ReferenceType)extendsBound), List.of(payload)); // No need to condense; #covariantlyAssignable(List, List) does this already</span>
+<span class="source-line-no">513</span><span id="line-513">  }</span>
+<span class="source-line-no">514</span><span id="line-514"></span>
+<span class="source-line-no">515</span><span id="line-515">  // Is payload's condensed extends bound (upper bound) covariantly assignable to receiver's condensed bounds?</span>
+<span class="source-line-no">516</span><span id="line-516">  private final boolean condensedTypeVariableBoundsAssignableFromExtendsBound(final TypeVariable receiver, final WildcardType payload) {</span>
+<span class="source-line-no">517</span><span id="line-517">    assert receiver.getKind() == TypeKind.TYPEVAR;</span>
+<span class="source-line-no">518</span><span id="line-518">    assert payload.getKind() == TypeKind.WILDCARD;</span>
+<span class="source-line-no">519</span><span id="line-519">    // "...the upper bound of the type variable [a type variable has many bounds?] is assignable [...] FROM the upper</span>
+<span class="source-line-no">520</span><span id="line-520">    // bound, if any, of the wildcard..."</span>
+<span class="source-line-no">521</span><span id="line-521">    final TypeMirror extendsBound = payload.getExtendsBound();</span>
+<span class="source-line-no">522</span><span id="line-522">    return extendsBound == null || covariantlyAssignable(List.of(receiver), List.of((ReferenceType)extendsBound));</span>
 <span class="source-line-no">523</span><span id="line-523">  }</span>
 <span class="source-line-no">524</span><span id="line-524"></span>
-<span class="source-line-no">525</span><span id="line-525">  private final boolean assignableFromSuperBound(final ReferenceType candidate, final WildcardType payload) {</span>
-<span class="source-line-no">526</span><span id="line-526">    assert payload.getKind() == TypeKind.WILDCARD;</span>
-<span class="source-line-no">527</span><span id="line-527">    assert actual(candidate);</span>
-<span class="source-line-no">528</span><span id="line-528">    final ReferenceType superBound = (ReferenceType)payload.getSuperBound();</span>
-<span class="source-line-no">529</span><span id="line-529">    return superBound == null || covariantlyAssignable(candidate, superBound);</span>
-<span class="source-line-no">530</span><span id="line-530">  }</span>
-<span class="source-line-no">531</span><span id="line-531"></span>
-<span class="source-line-no">532</span><span id="line-532">  // Get the raw type yielded by t, assuming t is the sort of type that can yield a raw type.</span>
-<span class="source-line-no">533</span><span id="line-533">  //</span>
-<span class="source-line-no">534</span><span id="line-534">  // An array type with a parameterized element type can yield a raw type.</span>
-<span class="source-line-no">535</span><span id="line-535">  //</span>
-<span class="source-line-no">536</span><span id="line-536">  // A declared type that is parameterized can yield a raw type.</span>
-<span class="source-line-no">537</span><span id="line-537">  //</span>
-<span class="source-line-no">538</span><span id="line-538">  // No other type yields a raw type.</span>
-<span class="source-line-no">539</span><span id="line-539">  private final TypeMirror rawType(final TypeMirror t) {</span>
-<span class="source-line-no">540</span><span id="line-540">    return switch (t.getKind()) {</span>
-<span class="source-line-no">541</span><span id="line-541">    case ARRAY -&gt; {</span>
-<span class="source-line-no">542</span><span id="line-542">      final TypeMirror et = elementType(t);</span>
-<span class="source-line-no">543</span><span id="line-543">      if (!parameterized(et)) {</span>
-<span class="source-line-no">544</span><span id="line-544">        throw new IllegalArgumentException("t is an array type whose element type is not parameterized so cannot yield a raw type");</span>
-<span class="source-line-no">545</span><span id="line-545">      }</span>
-<span class="source-line-no">546</span><span id="line-546">      yield arrayType(erasure(et));</span>
-<span class="source-line-no">547</span><span id="line-547">    }</span>
-<span class="source-line-no">548</span><span id="line-548">    case DECLARED -&gt; {</span>
-<span class="source-line-no">549</span><span id="line-549">      if (!parameterized(t)) {</span>
-<span class="source-line-no">550</span><span id="line-550">        throw new IllegalArgumentException("t is a declared type that is not parameterized so cannot yield a raw type");</span>
-<span class="source-line-no">551</span><span id="line-551">      }</span>
-<span class="source-line-no">552</span><span id="line-552">      yield erasure(t);</span>
-<span class="source-line-no">553</span><span id="line-553">    }</span>
-<span class="source-line-no">554</span><span id="line-554">    default -&gt; throw new IllegalArgumentException("t is a " + t.getKind() + " type and so cannot yield a raw type");</span>
-<span class="source-line-no">555</span><span id="line-555">    };</span>
-<span class="source-line-no">556</span><span id="line-556">  }</span>
-<span class="source-line-no">557</span><span id="line-557"></span>
-<span class="source-line-no">558</span><span id="line-558">  // Return t if its element declares a non-generic class, or if it is the raw type usage of a generic class.</span>
-<span class="source-line-no">559</span><span id="line-559">  private final TypeMirror nonGenericClassOrRawType(final TypeMirror t) {</span>
-<span class="source-line-no">560</span><span id="line-560">    return yieldsRawType(t) ? rawType(t) : t;</span>
-<span class="source-line-no">561</span><span id="line-561">  }</span>
-<span class="source-line-no">562</span><span id="line-562"></span>
-<span class="source-line-no">563</span><span id="line-563">  // Erase t and return its erasure. Erasing is a complex business that can involve the creation of new types.</span>
-<span class="source-line-no">564</span><span id="line-564">  private final TypeMirror erasure(final TypeMirror t) {</span>
-<span class="source-line-no">565</span><span id="line-565">    return this.tes.erasure(t);</span>
-<span class="source-line-no">566</span><span id="line-566">  }</span>
-<span class="source-line-no">567</span><span id="line-567"></span>
-<span class="source-line-no">568</span><span id="line-568">  // Return a possibly new ArrayType whose component type is the supplied componentType.</span>
-<span class="source-line-no">569</span><span id="line-569">  private final ArrayType arrayType(final TypeMirror componentType) {</span>
-<span class="source-line-no">570</span><span id="line-570">    return this.tes.arrayTypeOf(componentType);</span>
-<span class="source-line-no">571</span><span id="line-571">  }</span>
-<span class="source-line-no">572</span><span id="line-572"></span>
+<span class="source-line-no">525</span><span id="line-525">  // Is payload's super bound (lower bound) covariantly assignable to receiver's condensed bounds?</span>
+<span class="source-line-no">526</span><span id="line-526">  private final boolean condensedTypeVariableBoundsAssignableFromSuperBound(final TypeVariable receiver, final WildcardType payload) {</span>
+<span class="source-line-no">527</span><span id="line-527">    assert receiver.getKind() == TypeKind.TYPEVAR;</span>
+<span class="source-line-no">528</span><span id="line-528">    assert payload.getKind() == TypeKind.WILDCARD;</span>
+<span class="source-line-no">529</span><span id="line-529">    final TypeMirror superBound = payload.getSuperBound();</span>
+<span class="source-line-no">530</span><span id="line-530">    return superBound == null || covariantlyAssignable(List.of(receiver), List.of(superBound));</span>
+<span class="source-line-no">531</span><span id="line-531">  }</span>
+<span class="source-line-no">532</span><span id="line-532"></span>
+<span class="source-line-no">533</span><span id="line-533">  // Are payload's condensed bounds covariantly assignable to receiver's condensed bounds?</span>
+<span class="source-line-no">534</span><span id="line-534">  private final boolean condensedTypeVariableBoundsAssignableToCondensedTypeVariableBounds(final TypeVariable receiver, final TypeVariable payload) {</span>
+<span class="source-line-no">535</span><span id="line-535">    assert receiver.getKind() == TypeKind.TYPEVAR;</span>
+<span class="source-line-no">536</span><span id="line-536">    assert payload.getKind() == TypeKind.TYPEVAR;</span>
+<span class="source-line-no">537</span><span id="line-537">    return covariantlyAssignable(List.of(receiver), List.of(payload));</span>
+<span class="source-line-no">538</span><span id="line-538">  }</span>
+<span class="source-line-no">539</span><span id="line-539"></span>
+<span class="source-line-no">540</span><span id="line-540">  // Is payload's super bound (lower bound) covariantly assignable to receiver?</span>
+<span class="source-line-no">541</span><span id="line-541">  private final boolean assignableFromSuperBound(final ReferenceType receiver, final WildcardType payload) {</span>
+<span class="source-line-no">542</span><span id="line-542">    assert payload.getKind() == TypeKind.WILDCARD;</span>
+<span class="source-line-no">543</span><span id="line-543">    assert actual(receiver);</span>
+<span class="source-line-no">544</span><span id="line-544">    final ReferenceType superBound = (ReferenceType)payload.getSuperBound();</span>
+<span class="source-line-no">545</span><span id="line-545">    return superBound == null || covariantlyAssignable(receiver, superBound);</span>
+<span class="source-line-no">546</span><span id="line-546">  }</span>
+<span class="source-line-no">547</span><span id="line-547"></span>
+<span class="source-line-no">548</span><span id="line-548">  // Get the raw type yielded by t, assuming t is the sort of type that can yield a raw type.</span>
+<span class="source-line-no">549</span><span id="line-549">  //</span>
+<span class="source-line-no">550</span><span id="line-550">  // An array type with a parameterized element type can yield a raw type.</span>
+<span class="source-line-no">551</span><span id="line-551">  //</span>
+<span class="source-line-no">552</span><span id="line-552">  // A declared type that is parameterized can yield a raw type.</span>
+<span class="source-line-no">553</span><span id="line-553">  //</span>
+<span class="source-line-no">554</span><span id="line-554">  // No other type yields a raw type.</span>
+<span class="source-line-no">555</span><span id="line-555">  private final TypeMirror rawType(final TypeMirror t) {</span>
+<span class="source-line-no">556</span><span id="line-556">    return switch (t.getKind()) {</span>
+<span class="source-line-no">557</span><span id="line-557">    case ARRAY -&gt; {</span>
+<span class="source-line-no">558</span><span id="line-558">      final TypeMirror et = elementType(t);</span>
+<span class="source-line-no">559</span><span id="line-559">      if (!parameterized(et)) {</span>
+<span class="source-line-no">560</span><span id="line-560">        throw new IllegalArgumentException("t is an array type whose element type is not parameterized so cannot yield a raw type");</span>
+<span class="source-line-no">561</span><span id="line-561">      }</span>
+<span class="source-line-no">562</span><span id="line-562">      yield arrayType(erasure(et));</span>
+<span class="source-line-no">563</span><span id="line-563">    }</span>
+<span class="source-line-no">564</span><span id="line-564">    case DECLARED -&gt; {</span>
+<span class="source-line-no">565</span><span id="line-565">      if (!parameterized(t)) {</span>
+<span class="source-line-no">566</span><span id="line-566">        throw new IllegalArgumentException("t is a declared type that is not parameterized so cannot yield a raw type");</span>
+<span class="source-line-no">567</span><span id="line-567">      }</span>
+<span class="source-line-no">568</span><span id="line-568">      yield erasure(t);</span>
+<span class="source-line-no">569</span><span id="line-569">    }</span>
+<span class="source-line-no">570</span><span id="line-570">    default -&gt; throw new IllegalArgumentException("t is a " + t.getKind() + " type and so cannot yield a raw type");</span>
+<span class="source-line-no">571</span><span id="line-571">    };</span>
+<span class="source-line-no">572</span><span id="line-572">  }</span>
 <span class="source-line-no">573</span><span id="line-573"></span>
-<span class="source-line-no">574</span><span id="line-574">  /*</span>
-<span class="source-line-no">575</span><span id="line-575">   * Static methods.</span>
-<span class="source-line-no">576</span><span id="line-576">   */</span>
-<span class="source-line-no">577</span><span id="line-577"></span>
+<span class="source-line-no">574</span><span id="line-574">  // Return t if its element declares a non-generic class, or if it is the raw type usage of a generic class.</span>
+<span class="source-line-no">575</span><span id="line-575">  private final TypeMirror nonGenericClassOrRawType(final TypeMirror t) {</span>
+<span class="source-line-no">576</span><span id="line-576">    return yieldsRawType(t) ? rawType(t) : t;</span>
+<span class="source-line-no">577</span><span id="line-577">  }</span>
 <span class="source-line-no">578</span><span id="line-578"></span>
-<span class="source-line-no">579</span><span id="line-579">  // If t is a TypeVariable whose bounds are, for example, S extends String, replaces S with String and returns a List</span>
-<span class="source-line-no">580</span><span id="line-580">  // whose sole element is String.</span>
-<span class="source-line-no">581</span><span id="line-581">  //</span>
-<span class="source-line-no">582</span><span id="line-582">  // If t is an IntersectionType whose first and therefore only permitted bound is, for example, S extends String,</span>
-<span class="source-line-no">583</span><span id="line-583">  // replaces S in the list of bounds with String instead.</span>
-<span class="source-line-no">584</span><span id="line-584">  //</span>
-<span class="source-line-no">585</span><span id="line-585">  // In all other cases returns List.of(t).</span>
-<span class="source-line-no">586</span><span id="line-586">  private static final List&lt;? extends TypeMirror&gt; condense(final TypeMirror t) {</span>
-<span class="source-line-no">587</span><span id="line-587">    if (t == null) {</span>
-<span class="source-line-no">588</span><span id="line-588">      return List.of();</span>
-<span class="source-line-no">589</span><span id="line-589">    }</span>
-<span class="source-line-no">590</span><span id="line-590">    return switch (t.getKind()) {</span>
-<span class="source-line-no">591</span><span id="line-591">    case INTERSECTION -&gt; condense(((IntersectionType)t).getBounds()); // drop t; replace with its bounds</span>
-<span class="source-line-no">592</span><span id="line-592">    case TYPEVAR -&gt; condense(((TypeVariable)t).getUpperBound()); // drop t; replace with its bounds</span>
-<span class="source-line-no">593</span><span id="line-593">    default -&gt; List.of(t); // it doesn't have bounds, or it's a wildcard and we didn't say which bounds</span>
-<span class="source-line-no">594</span><span id="line-594">    };</span>
-<span class="source-line-no">595</span><span id="line-595">  }</span>
-<span class="source-line-no">596</span><span id="line-596"></span>
-<span class="source-line-no">597</span><span id="line-597">  private static final List&lt;? extends TypeMirror&gt; condense(final List&lt;? extends TypeMirror&gt; ts) {</span>
-<span class="source-line-no">598</span><span id="line-598">    if (ts == null || ts.isEmpty()) {</span>
-<span class="source-line-no">599</span><span id="line-599">      return List.of();</span>
-<span class="source-line-no">600</span><span id="line-600">    }</span>
-<span class="source-line-no">601</span><span id="line-601">    final TypeMirror t = ts.get(0);</span>
-<span class="source-line-no">602</span><span id="line-602">    return switch (t.getKind()) {</span>
-<span class="source-line-no">603</span><span id="line-603">    case INTERSECTION -&gt; {</span>
-<span class="source-line-no">604</span><span id="line-604">      final ArrayList&lt;TypeMirror&gt; newBounds = new ArrayList&lt;&gt;();</span>
-<span class="source-line-no">605</span><span id="line-605">      newBounds.addAll(((IntersectionType)t).getBounds()); // replace the first element (t) with its bounds</span>
-<span class="source-line-no">606</span><span id="line-606">      newBounds.addAll(ts.subList(1, ts.size()));</span>
-<span class="source-line-no">607</span><span id="line-607">      newBounds.trimToSize();</span>
-<span class="source-line-no">608</span><span id="line-608">      yield condense(Collections.unmodifiableList(newBounds));</span>
-<span class="source-line-no">609</span><span id="line-609">    }</span>
-<span class="source-line-no">610</span><span id="line-610">    case TYPEVAR -&gt; {</span>
-<span class="source-line-no">611</span><span id="line-611">      final ArrayList&lt;TypeMirror&gt; newBounds = new ArrayList&lt;&gt;();</span>
-<span class="source-line-no">612</span><span id="line-612">      newBounds.add(((TypeVariable)t).getUpperBound()); // replace the first element (t) with its bounds</span>
-<span class="source-line-no">613</span><span id="line-613">      newBounds.addAll(ts.subList(1, ts.size()));</span>
-<span class="source-line-no">614</span><span id="line-614">      newBounds.trimToSize();</span>
-<span class="source-line-no">615</span><span id="line-615">      yield condense(Collections.unmodifiableList(newBounds));</span>
-<span class="source-line-no">616</span><span id="line-616">    }</span>
-<span class="source-line-no">617</span><span id="line-617">    default -&gt; ts;</span>
-<span class="source-line-no">618</span><span id="line-618">    };</span>
-<span class="source-line-no">619</span><span id="line-619">  }</span>
-<span class="source-line-no">620</span><span id="line-620"></span>
-<span class="source-line-no">621</span><span id="line-621">  // Does e represent a generic declaration?</span>
-<span class="source-line-no">622</span><span id="line-622">  //</span>
-<span class="source-line-no">623</span><span id="line-623">  // A declaration is generic if it declares one or more type parameters.</span>
-<span class="source-line-no">624</span><span id="line-624">  //</span>
-<span class="source-line-no">625</span><span id="line-625">  // Since an annotation interface cannot declare type parameters, it follows that TypeElements representing annotation</span>
-<span class="source-line-no">626</span><span id="line-626">  // instances are never generic.</span>
-<span class="source-line-no">627</span><span id="line-627">  private static final boolean generic(final Element e) {</span>
-<span class="source-line-no">628</span><span id="line-628">    return switch (e.getKind()) {</span>
-<span class="source-line-no">629</span><span id="line-629">    case CLASS, CONSTRUCTOR, ENUM, INTERFACE, METHOD, RECORD -&gt; e instanceof Parameterizable p &amp;&amp; generic(p);</span>
-<span class="source-line-no">630</span><span id="line-630">    default -&gt; false;</span>
-<span class="source-line-no">631</span><span id="line-631">    };</span>
-<span class="source-line-no">632</span><span id="line-632">  }</span>
-<span class="source-line-no">633</span><span id="line-633"></span>
-<span class="source-line-no">634</span><span id="line-634">  // Is p generic?</span>
-<span class="source-line-no">635</span><span id="line-635">  //</span>
-<span class="source-line-no">636</span><span id="line-636">  // A Parameterizable is generic if it has one or more TypeParameterElements.</span>
-<span class="source-line-no">637</span><span id="line-637">  private static final boolean generic(final Parameterizable p) {</span>
-<span class="source-line-no">638</span><span id="line-638">    return !p.getTypeParameters().isEmpty();</span>
-<span class="source-line-no">639</span><span id="line-639">  }</span>
-<span class="source-line-no">640</span><span id="line-640"></span>
-<span class="source-line-no">641</span><span id="line-641">  // Is t the usage of a generic class, i.e. a usage (whether raw or parameterized) of a generic class declaration?</span>
-<span class="source-line-no">642</span><span id="line-642">  //</span>
-<span class="source-line-no">643</span><span id="line-643">  // t is deemed to be generic if it is a declared type whose defining element (its type declaration) is generic.</span>
-<span class="source-line-no">644</span><span id="line-644">  //</span>
-<span class="source-line-no">645</span><span id="line-645">  // Array types are never generic.</span>
-<span class="source-line-no">646</span><span id="line-646">  private static final boolean generic(final TypeMirror t) {</span>
-<span class="source-line-no">647</span><span id="line-647">    return t.getKind() == TypeKind.DECLARED &amp;&amp; generic(((DeclaredType)t).asElement());</span>
-<span class="source-line-no">648</span><span id="line-648">  }</span>
-<span class="source-line-no">649</span><span id="line-649"></span>
-<span class="source-line-no">650</span><span id="line-650">  // Is t a parameterized type (and not a raw type)?</span>
-<span class="source-line-no">651</span><span id="line-651">  //</span>
-<span class="source-line-no">652</span><span id="line-652">  // A type is parameterized if it is a declared type with a non-empty list of type arguments. No other type is</span>
-<span class="source-line-no">653</span><span id="line-653">  // parameterized.</span>
+<span class="source-line-no">579</span><span id="line-579">  // Erase t and return its erasure. Erasing is a complex business that can involve the creation of new types.</span>
+<span class="source-line-no">580</span><span id="line-580">  private final TypeMirror erasure(final TypeMirror t) {</span>
+<span class="source-line-no">581</span><span id="line-581">    return this.tes.erasure(t);</span>
+<span class="source-line-no">582</span><span id="line-582">  }</span>
+<span class="source-line-no">583</span><span id="line-583"></span>
+<span class="source-line-no">584</span><span id="line-584">  // Return a possibly new ArrayType whose component type is the supplied componentType.</span>
+<span class="source-line-no">585</span><span id="line-585">  private final ArrayType arrayType(final TypeMirror componentType) {</span>
+<span class="source-line-no">586</span><span id="line-586">    return this.tes.arrayTypeOf(componentType);</span>
+<span class="source-line-no">587</span><span id="line-587">  }</span>
+<span class="source-line-no">588</span><span id="line-588"></span>
+<span class="source-line-no">589</span><span id="line-589"></span>
+<span class="source-line-no">590</span><span id="line-590">  /*</span>
+<span class="source-line-no">591</span><span id="line-591">   * Static methods.</span>
+<span class="source-line-no">592</span><span id="line-592">   */</span>
+<span class="source-line-no">593</span><span id="line-593"></span>
+<span class="source-line-no">594</span><span id="line-594"></span>
+<span class="source-line-no">595</span><span id="line-595">  // If t is null, returns an empty List.</span>
+<span class="source-line-no">596</span><span id="line-596">  //</span>
+<span class="source-line-no">597</span><span id="line-597">  // If t is a type variable, returns the result of condensing its upper bound.</span>
+<span class="source-line-no">598</span><span id="line-598">  //</span>
+<span class="source-line-no">599</span><span id="line-599">  // If t is an intersection type, returns the result of condensing its bounds.</span>
+<span class="source-line-no">600</span><span id="line-600">  //</span>
+<span class="source-line-no">601</span><span id="line-601">  // In all other cases returns List.of(t).</span>
+<span class="source-line-no">602</span><span id="line-602">  //</span>
+<span class="source-line-no">603</span><span id="line-603">  // See #condense(List) below.</span>
+<span class="source-line-no">604</span><span id="line-604">  private static final List&lt;? extends TypeMirror&gt; condense(final TypeMirror t) {</span>
+<span class="source-line-no">605</span><span id="line-605">    return t == null ? List.of() : switch (t.getKind()) {</span>
+<span class="source-line-no">606</span><span id="line-606">    case INTERSECTION -&gt; condense(((IntersectionType)t).getBounds());</span>
+<span class="source-line-no">607</span><span id="line-607">    case TYPEVAR -&gt; condense(((TypeVariable)t).getUpperBound());</span>
+<span class="source-line-no">608</span><span id="line-608">    default -&gt; List.of(t); // t's bounds are defined solely by itself, or it's a wildcard and we didn't say which bounds</span>
+<span class="source-line-no">609</span><span id="line-609">    };</span>
+<span class="source-line-no">610</span><span id="line-610">  }</span>
+<span class="source-line-no">611</span><span id="line-611"></span>
+<span class="source-line-no">612</span><span id="line-612">  // If ts is null or empty, returns an empty List.</span>
+<span class="source-line-no">613</span><span id="line-613">  //</span>
+<span class="source-line-no">614</span><span id="line-614">  // If ts consists of a single element, returns the result of condensing t (see #condense(TypeMirror) above).</span>
+<span class="source-line-no">615</span><span id="line-615">  //</span>
+<span class="source-line-no">616</span><span id="line-616">  // If ts's first element (of several) is an intersection type i, returns the result of condensing the list formed by</span>
+<span class="source-line-no">617</span><span id="line-617">  // effectively replacing ts's first element with i's bounds.</span>
+<span class="source-line-no">618</span><span id="line-618">  //</span>
+<span class="source-line-no">619</span><span id="line-619">  // If ts's first element (of several) is a type variable tv, returns the result of condensing the list formed by</span>
+<span class="source-line-no">620</span><span id="line-620">  // effectively replacing ts's first element with tv's upper bound.</span>
+<span class="source-line-no">621</span><span id="line-621">  //</span>
+<span class="source-line-no">622</span><span id="line-622">  // In all other cases, returns ts.</span>
+<span class="source-line-no">623</span><span id="line-623">  private static final List&lt;? extends TypeMirror&gt; condense(final List&lt;? extends TypeMirror&gt; ts) {</span>
+<span class="source-line-no">624</span><span id="line-624">    final int size = ts == null ? 0 : ts.size();</span>
+<span class="source-line-no">625</span><span id="line-625">    if (size &lt;= 0) {</span>
+<span class="source-line-no">626</span><span id="line-626">      return List.of();</span>
+<span class="source-line-no">627</span><span id="line-627">    }</span>
+<span class="source-line-no">628</span><span id="line-628">    final TypeMirror ts0 = ts.get(0);</span>
+<span class="source-line-no">629</span><span id="line-629">    if (size == 1) {</span>
+<span class="source-line-no">630</span><span id="line-630">      return condense(ts0);</span>
+<span class="source-line-no">631</span><span id="line-631">    }</span>
+<span class="source-line-no">632</span><span id="line-632">    return switch (ts0.getKind()) {</span>
+<span class="source-line-no">633</span><span id="line-633">    case INTERSECTION -&gt; {</span>
+<span class="source-line-no">634</span><span id="line-634">      final ArrayList&lt;TypeMirror&gt; newBounds = new ArrayList&lt;&gt;();</span>
+<span class="source-line-no">635</span><span id="line-635">      newBounds.addAll(((IntersectionType)ts0).getBounds()); // first elements are now ts0's bounds, not ts0</span>
+<span class="source-line-no">636</span><span id="line-636">      newBounds.addAll(ts.subList(1, size)); // drop ts0; add whatever was left</span>
+<span class="source-line-no">637</span><span id="line-637">      newBounds.trimToSize();</span>
+<span class="source-line-no">638</span><span id="line-638">      yield condense(newBounds);</span>
+<span class="source-line-no">639</span><span id="line-639">    }</span>
+<span class="source-line-no">640</span><span id="line-640">    case TYPEVAR -&gt; {</span>
+<span class="source-line-no">641</span><span id="line-641">      final ArrayList&lt;TypeMirror&gt; newBounds = new ArrayList&lt;&gt;();</span>
+<span class="source-line-no">642</span><span id="line-642">      newBounds.add(((TypeVariable)ts0).getUpperBound()); // first element is now ts0's upper bound, not ts0</span>
+<span class="source-line-no">643</span><span id="line-643">      newBounds.addAll(ts.subList(1, size)); // drop ts0; add whatever was left</span>
+<span class="source-line-no">644</span><span id="line-644">      newBounds.trimToSize();</span>
+<span class="source-line-no">645</span><span id="line-645">      yield condense(newBounds);</span>
+<span class="source-line-no">646</span><span id="line-646">    }</span>
+<span class="source-line-no">647</span><span id="line-647">    default -&gt; ts;</span>
+<span class="source-line-no">648</span><span id="line-648">    };</span>
+<span class="source-line-no">649</span><span id="line-649">  }</span>
+<span class="source-line-no">650</span><span id="line-650"></span>
+<span class="source-line-no">651</span><span id="line-651">  // Does e represent a generic declaration?</span>
+<span class="source-line-no">652</span><span id="line-652">  //</span>
+<span class="source-line-no">653</span><span id="line-653">  // A declaration is generic if it declares one or more type parameters.</span>
 <span class="source-line-no">654</span><span id="line-654">  //</span>
-<span class="source-line-no">655</span><span id="line-655">  // "parameterized" means "supplies arguments for type parameters"</span>
-<span class="source-line-no">656</span><span id="line-656">  private static final boolean parameterized(final TypeMirror t) {</span>
-<span class="source-line-no">657</span><span id="line-657">    return t.getKind() == TypeKind.DECLARED &amp;&amp; !((DeclaredType)t).getTypeArguments().isEmpty();</span>
-<span class="source-line-no">658</span><span id="line-658">  }</span>
-<span class="source-line-no">659</span><span id="line-659"></span>
-<span class="source-line-no">660</span><span id="line-660">  // There are some cases, but not all, where CDI considers an array type to be something that can be parameterized, or</span>
-<span class="source-line-no">661</span><span id="line-661">  // else "bean type parameter" resolution would never work. See</span>
-<span class="source-line-no">662</span><span id="line-662">  // https://stackoverflow.com/questions/76493672/when-cdi-speaks-of-a-parameterized-type-does-it-also-incorrectly-mean-array-typ.</span>
-<span class="source-line-no">663</span><span id="line-663">  private static final boolean cdiParameterized(final TypeMirror t) {</span>
-<span class="source-line-no">664</span><span id="line-664">    return yieldsRawType(t);</span>
-<span class="source-line-no">665</span><span id="line-665">  }</span>
-<span class="source-line-no">666</span><span id="line-666"></span>
-<span class="source-line-no">667</span><span id="line-667">  // Can t yield a raw type?</span>
-<span class="source-line-no">668</span><span id="line-668">  //</span>
-<span class="source-line-no">669</span><span id="line-669">  // To yield a raw type, t must be either:</span>
-<span class="source-line-no">670</span><span id="line-670">  //</span>
-<span class="source-line-no">671</span><span id="line-671">  // * an array type with a parameterized element type</span>
-<span class="source-line-no">672</span><span id="line-672">  // * a declared type with at least one type argument</span>
-<span class="source-line-no">673</span><span id="line-673">  private static final boolean yieldsRawType(final TypeMirror t) {</span>
-<span class="source-line-no">674</span><span id="line-674">    return parameterized(t) || t.getKind() == TypeKind.ARRAY &amp;&amp; parameterized(elementType(t));</span>
-<span class="source-line-no">675</span><span id="line-675">  }</span>
-<span class="source-line-no">676</span><span id="line-676"></span>
-<span class="source-line-no">677</span><span id="line-677">  // Is t a raw type?</span>
-<span class="source-line-no">678</span><span id="line-678">  //</span>
-<span class="source-line-no">679</span><span id="line-679">  // A raw type is either "the erasure of a parameterized type" (so List&lt;String&gt;'s raw type is List, clearly not</span>
-<span class="source-line-no">680</span><span id="line-680">  // List&lt;?&gt;, and not List&lt;E&gt;) or "an array type whose element type is a raw type" (so List&lt;String&gt;[]'s raw type is</span>
-<span class="source-line-no">681</span><span id="line-681">  // List[]). (String is not a raw type; its element defines no type parameters.)</span>
-<span class="source-line-no">682</span><span id="line-682">  //</span>
-<span class="source-line-no">683</span><span id="line-683">  // No other type is a raw type.</span>
-<span class="source-line-no">684</span><span id="line-684">  private static final boolean raw(final TypeMirror t) {</span>
-<span class="source-line-no">685</span><span id="line-685">    return switch (t.getKind()) {</span>
-<span class="source-line-no">686</span><span id="line-686">    case ARRAY -&gt; raw(elementType((ArrayType)t));</span>
-<span class="source-line-no">687</span><span id="line-687">    case DECLARED -&gt; generic(t) &amp;&amp; ((DeclaredType)t).getTypeArguments().isEmpty();</span>
-<span class="source-line-no">688</span><span id="line-688">    case TYPEVAR -&gt; false; // called out explicitly just so you realize it</span>
-<span class="source-line-no">689</span><span id="line-689">    default -&gt; false;</span>
-<span class="source-line-no">690</span><span id="line-690">    };</span>
-<span class="source-line-no">691</span><span id="line-691">  }</span>
-<span class="source-line-no">692</span><span id="line-692"></span>
-<span class="source-line-no">693</span><span id="line-693">  private static final boolean declaredTypeNamed(final TypeMirror t, final CharSequence n) {</span>
-<span class="source-line-no">694</span><span id="line-694">    return t.getKind() == TypeKind.DECLARED &amp;&amp; named(((DeclaredType)t), n);</span>
-<span class="source-line-no">695</span><span id="line-695">  }</span>
-<span class="source-line-no">696</span><span id="line-696"></span>
-<span class="source-line-no">697</span><span id="line-697">  private static final boolean named(final DeclaredType t, final CharSequence n) {</span>
-<span class="source-line-no">698</span><span id="line-698">    // (No getKind() check on purpose.)</span>
-<span class="source-line-no">699</span><span id="line-699">    return ((TypeElement)t.asElement()).getQualifiedName().contentEquals(n);</span>
-<span class="source-line-no">700</span><span id="line-700">  }</span>
-<span class="source-line-no">701</span><span id="line-701"></span>
-<span class="source-line-no">702</span><span id="line-702">  private static final boolean allTypeArgumentsAre(final Iterable&lt;? extends TypeMirror&gt; typeArguments, final Predicate&lt;? super TypeMirror&gt; p) {</span>
-<span class="source-line-no">703</span><span id="line-703">    for (final TypeMirror t : typeArguments) {</span>
-<span class="source-line-no">704</span><span id="line-704">      if (!p.test(t)) {</span>
-<span class="source-line-no">705</span><span id="line-705">        return false;</span>
-<span class="source-line-no">706</span><span id="line-706">      }</span>
-<span class="source-line-no">707</span><span id="line-707">    }</span>
-<span class="source-line-no">708</span><span id="line-708">    return true;</span>
-<span class="source-line-no">709</span><span id="line-709">  }</span>
-<span class="source-line-no">710</span><span id="line-710"></span>
-<span class="source-line-no">711</span><span id="line-711">  private static final boolean isJavaLangObject(final Element e) {</span>
-<span class="source-line-no">712</span><span id="line-712">    return e.getKind() == ElementKind.CLASS &amp;&amp; ((TypeElement)e).getQualifiedName().contentEquals("java.lang.Object");</span>
-<span class="source-line-no">713</span><span id="line-713">  }</span>
-<span class="source-line-no">714</span><span id="line-714"></span>
-<span class="source-line-no">715</span><span id="line-715">  private static final boolean isJavaLangObject(final TypeMirror t) {</span>
-<span class="source-line-no">716</span><span id="line-716">    return t.getKind() == TypeKind.DECLARED &amp;&amp; isJavaLangObject(((DeclaredType)t).asElement());</span>
-<span class="source-line-no">717</span><span id="line-717">  }</span>
-<span class="source-line-no">718</span><span id="line-718"></span>
-<span class="source-line-no">719</span><span id="line-719">  // Is t an "actual type"?</span>
-<span class="source-line-no">720</span><span id="line-720">  //</span>
-<span class="source-line-no">721</span><span id="line-721">  // CDI mentions actual types but does not define what they are.</span>
-<span class="source-line-no">722</span><span id="line-722">  //</span>
-<span class="source-line-no">723</span><span id="line-723">  // A comment in a closed bug report (CDI-502)</span>
-<span class="source-line-no">724</span><span id="line-724">  // (https://issues.redhat.com/browse/CDI-502?focusedId=13036118&amp;page=com.atlassian.jira.plugin.system.issuetabpanels%3Acomment-tabpanel#comment-13036118)</span>
-<span class="source-line-no">725</span><span id="line-725">  // by one of the reference implementation's authors (Jozef Hartinger) provides the only definition:</span>
-<span class="source-line-no">726</span><span id="line-726">  //</span>
-<span class="source-line-no">727</span><span id="line-727">  // "An actual type is a type that is not a wildcard nor [sic] an unresolved [sic] type variable."</span>
-<span class="source-line-no">728</span><span id="line-728">  //</span>
-<span class="source-line-no">729</span><span id="line-729">  // More strictly, therefore, it seems an actual type is an array, declared or primitive type.</span>
-<span class="source-line-no">730</span><span id="line-730">  private static final boolean actual(final TypeMirror t) {</span>
-<span class="source-line-no">731</span><span id="line-731">    return switch (t.getKind()) {</span>
-<span class="source-line-no">732</span><span id="line-732">    case ARRAY, BOOLEAN, BYTE, CHAR, DECLARED, DOUBLE, FLOAT, INT, LONG, SHORT -&gt; true;</span>
-<span class="source-line-no">733</span><span id="line-733">    default -&gt; false;</span>
-<span class="source-line-no">734</span><span id="line-734">    };</span>
-<span class="source-line-no">735</span><span id="line-735">  }</span>
-<span class="source-line-no">736</span><span id="line-736"></span>
-<span class="source-line-no">737</span><span id="line-737">  private static final boolean unboundedTypeVariable(final TypeMirror t) {</span>
-<span class="source-line-no">738</span><span id="line-738">    return t instanceof TypeVariable tv &amp;&amp; tv.getKind() == TypeKind.TYPEVAR &amp;&amp; isJavaLangObject(tv.getUpperBound());</span>
-<span class="source-line-no">739</span><span id="line-739">  }</span>
-<span class="source-line-no">740</span><span id="line-740"></span>
-<span class="source-line-no">741</span><span id="line-741">  private static final TypeMirror elementType(final TypeMirror t) {</span>
-<span class="source-line-no">742</span><span id="line-742">    return t.getKind() == TypeKind.ARRAY ? elementType(((ArrayType)t).getComponentType()) : t;</span>
-<span class="source-line-no">743</span><span id="line-743">  }</span>
-<span class="source-line-no">744</span><span id="line-744"></span>
-<span class="source-line-no">745</span><span id="line-745">}</span>
+<span class="source-line-no">655</span><span id="line-655">  // Since an annotation interface cannot declare type parameters, it follows that TypeElements representing annotation</span>
+<span class="source-line-no">656</span><span id="line-656">  // instances are never generic.</span>
+<span class="source-line-no">657</span><span id="line-657">  private static final boolean generic(final Element e) {</span>
+<span class="source-line-no">658</span><span id="line-658">    return switch (e.getKind()) {</span>
+<span class="source-line-no">659</span><span id="line-659">    case CLASS, CONSTRUCTOR, ENUM, INTERFACE, METHOD, RECORD -&gt; !((Parameterizable)e).getTypeParameters().isEmpty();</span>
+<span class="source-line-no">660</span><span id="line-660">    default -&gt; false;</span>
+<span class="source-line-no">661</span><span id="line-661">    };</span>
+<span class="source-line-no">662</span><span id="line-662">  }</span>
+<span class="source-line-no">663</span><span id="line-663"></span>
+<span class="source-line-no">664</span><span id="line-664">  // Is t the usage of a generic class, i.e. a usage (whether raw or parameterized) of a generic class declaration?</span>
+<span class="source-line-no">665</span><span id="line-665">  //</span>
+<span class="source-line-no">666</span><span id="line-666">  // t is deemed to be generic if it is a declared type whose defining element (its type declaration) is generic.</span>
+<span class="source-line-no">667</span><span id="line-667">  //</span>
+<span class="source-line-no">668</span><span id="line-668">  // Array types are never generic.</span>
+<span class="source-line-no">669</span><span id="line-669">  private static final boolean generic(final TypeMirror t) {</span>
+<span class="source-line-no">670</span><span id="line-670">    return t.getKind() == TypeKind.DECLARED &amp;&amp; generic(((DeclaredType)t).asElement());</span>
+<span class="source-line-no">671</span><span id="line-671">  }</span>
+<span class="source-line-no">672</span><span id="line-672"></span>
+<span class="source-line-no">673</span><span id="line-673">  // Is t a parameterized type (and not a raw type) according to the rules of the Java Language Specification?</span>
+<span class="source-line-no">674</span><span id="line-674">  //</span>
+<span class="source-line-no">675</span><span id="line-675">  // A type is parameterized if it is a declared type with a non-empty list of type arguments. No other type is</span>
+<span class="source-line-no">676</span><span id="line-676">  // parameterized.</span>
+<span class="source-line-no">677</span><span id="line-677">  //</span>
+<span class="source-line-no">678</span><span id="line-678">  // "parameterized" means "supplies arguments for type parameters"</span>
+<span class="source-line-no">679</span><span id="line-679">  private static final boolean parameterized(final TypeMirror t) {</span>
+<span class="source-line-no">680</span><span id="line-680">    return t.getKind() == TypeKind.DECLARED &amp;&amp; !((DeclaredType)t).getTypeArguments().isEmpty();</span>
+<span class="source-line-no">681</span><span id="line-681">  }</span>
+<span class="source-line-no">682</span><span id="line-682"></span>
+<span class="source-line-no">683</span><span id="line-683">  // Is t a type that CDI considers to be "parameterized"?</span>
+<span class="source-line-no">684</span><span id="line-684">  //</span>
+<span class="source-line-no">685</span><span id="line-685">  // There are some cases, but not all, where CDI (incorrectly) considers an array type to be something that can be</span>
+<span class="source-line-no">686</span><span id="line-686">  // parameterized, or else "bean type parameter" resolution would never work. See</span>
+<span class="source-line-no">687</span><span id="line-687">  // https://stackoverflow.com/questions/76493672/when-cdi-speaks-of-a-parameterized-type-does-it-also-incorrectly-mean-array-typ.</span>
+<span class="source-line-no">688</span><span id="line-688">  //</span>
+<span class="source-line-no">689</span><span id="line-689">  // The semantics CDI wants to express are really: can t yield a raw type? See #yieldsRawType(TypeMirror) below.</span>
+<span class="source-line-no">690</span><span id="line-690">  private static final boolean cdiParameterized(final TypeMirror t) {</span>
+<span class="source-line-no">691</span><span id="line-691">    return yieldsRawType(t);</span>
+<span class="source-line-no">692</span><span id="line-692">  }</span>
+<span class="source-line-no">693</span><span id="line-693"></span>
+<span class="source-line-no">694</span><span id="line-694">  // Can t yield a raw type?</span>
+<span class="source-line-no">695</span><span id="line-695">  //</span>
+<span class="source-line-no">696</span><span id="line-696">  // To yield a raw type, t must be either:</span>
+<span class="source-line-no">697</span><span id="line-697">  //</span>
+<span class="source-line-no">698</span><span id="line-698">  // * an array type with a parameterized element type</span>
+<span class="source-line-no">699</span><span id="line-699">  // * a declared type with at least one type argument</span>
+<span class="source-line-no">700</span><span id="line-700">  private static final boolean yieldsRawType(final TypeMirror t) {</span>
+<span class="source-line-no">701</span><span id="line-701">    return parameterized(t) || t.getKind() == TypeKind.ARRAY &amp;&amp; parameterized(elementType(t));</span>
+<span class="source-line-no">702</span><span id="line-702">  }</span>
+<span class="source-line-no">703</span><span id="line-703"></span>
+<span class="source-line-no">704</span><span id="line-704">  // Is t a raw type, following the rules of the Java Language Specification, not CDI?</span>
+<span class="source-line-no">705</span><span id="line-705">  //</span>
+<span class="source-line-no">706</span><span id="line-706">  // A raw type is either "the erasure of a parameterized type" (so List&lt;String&gt;'s raw type is List, clearly not</span>
+<span class="source-line-no">707</span><span id="line-707">  // List&lt;?&gt;, and not List&lt;E&gt;) or "an array type whose element type is a raw type" (so List&lt;String&gt;[]'s raw type is</span>
+<span class="source-line-no">708</span><span id="line-708">  // List[]). (String is not a raw type; its element defines no type parameters.)</span>
+<span class="source-line-no">709</span><span id="line-709">  //</span>
+<span class="source-line-no">710</span><span id="line-710">  // No other type is a raw type.</span>
+<span class="source-line-no">711</span><span id="line-711">  //</span>
+<span class="source-line-no">712</span><span id="line-712">  // CDI gets confused and uses "raw" in different senses. The sense used here is that of the Java Language</span>
+<span class="source-line-no">713</span><span id="line-713">  // Specification.</span>
+<span class="source-line-no">714</span><span id="line-714">  private static final boolean raw(final TypeMirror t) {</span>
+<span class="source-line-no">715</span><span id="line-715">    return switch (t.getKind()) {</span>
+<span class="source-line-no">716</span><span id="line-716">    case ARRAY -&gt; raw(elementType((ArrayType)t));</span>
+<span class="source-line-no">717</span><span id="line-717">    case DECLARED -&gt; generic(t) &amp;&amp; ((DeclaredType)t).getTypeArguments().isEmpty();</span>
+<span class="source-line-no">718</span><span id="line-718">    case TYPEVAR -&gt; false; // called out explicitly just so you realize it</span>
+<span class="source-line-no">719</span><span id="line-719">    default -&gt; false;</span>
+<span class="source-line-no">720</span><span id="line-720">    };</span>
+<span class="source-line-no">721</span><span id="line-721">  }</span>
+<span class="source-line-no">722</span><span id="line-722"></span>
+<span class="source-line-no">723</span><span id="line-723">  // Is t a declared type that bears the supplied fully qualified name?</span>
+<span class="source-line-no">724</span><span id="line-724">  private static final boolean declaredTypeNamed(final TypeMirror t, final CharSequence n) {</span>
+<span class="source-line-no">725</span><span id="line-725">    return t.getKind() == TypeKind.DECLARED &amp;&amp; named(((DeclaredType)t), n);</span>
+<span class="source-line-no">726</span><span id="line-726">  }</span>
+<span class="source-line-no">727</span><span id="line-727"></span>
+<span class="source-line-no">728</span><span id="line-728">  // Regardless of its reported TypeKind, does t's declaring TypeElement bear the supplied fully qualified name?</span>
+<span class="source-line-no">729</span><span id="line-729">  //</span>
+<span class="source-line-no">730</span><span id="line-730">  // Throws ClassCastException if the return value of t.asElement() is not a TypeElement.</span>
+<span class="source-line-no">731</span><span id="line-731">  private static final boolean named(final DeclaredType t, final CharSequence n) {</span>
+<span class="source-line-no">732</span><span id="line-732">    // (No getKind() check on purpose.)</span>
+<span class="source-line-no">733</span><span id="line-733">    return ((TypeElement)t.asElement()).getQualifiedName().contentEquals(n);</span>
+<span class="source-line-no">734</span><span id="line-734">  }</span>
+<span class="source-line-no">735</span><span id="line-735"></span>
+<span class="source-line-no">736</span><span id="line-736">  // Do all supplied TypeMirrors pass the test represented by the supplied Predicate?</span>
+<span class="source-line-no">737</span><span id="line-737">  private static final boolean allTypeArgumentsAre(final Iterable&lt;? extends TypeMirror&gt; typeArguments, final Predicate&lt;? super TypeMirror&gt; p) {</span>
+<span class="source-line-no">738</span><span id="line-738">    for (final TypeMirror t : typeArguments) {</span>
+<span class="source-line-no">739</span><span id="line-739">      if (!p.test(t)) {</span>
+<span class="source-line-no">740</span><span id="line-740">        return false;</span>
+<span class="source-line-no">741</span><span id="line-741">      }</span>
+<span class="source-line-no">742</span><span id="line-742">    }</span>
+<span class="source-line-no">743</span><span id="line-743">    return true;</span>
+<span class="source-line-no">744</span><span id="line-744">  }</span>
+<span class="source-line-no">745</span><span id="line-745"></span>
+<span class="source-line-no">746</span><span id="line-746">  // Is e a TypeElement representing java.lang.Object?</span>
+<span class="source-line-no">747</span><span id="line-747">  private static final boolean isJavaLangObject(final Element e) {</span>
+<span class="source-line-no">748</span><span id="line-748">    return</span>
+<span class="source-line-no">749</span><span id="line-749">      e.getKind() == ElementKind.CLASS &amp;&amp;</span>
+<span class="source-line-no">750</span><span id="line-750">      ((QualifiedNameable)e).getQualifiedName().contentEquals("java.lang.Object");</span>
+<span class="source-line-no">751</span><span id="line-751">  }</span>
+<span class="source-line-no">752</span><span id="line-752"></span>
+<span class="source-line-no">753</span><span id="line-753">  // Is t a DeclaredType whose asElement() method returns an Element representing java.lang.Object?</span>
+<span class="source-line-no">754</span><span id="line-754">  private static final boolean isJavaLangObject(final TypeMirror t) {</span>
+<span class="source-line-no">755</span><span id="line-755">    return</span>
+<span class="source-line-no">756</span><span id="line-756">      t.getKind() == TypeKind.DECLARED &amp;&amp;</span>
+<span class="source-line-no">757</span><span id="line-757">      isJavaLangObject(((DeclaredType)t).asElement());</span>
+<span class="source-line-no">758</span><span id="line-758">  }</span>
+<span class="source-line-no">759</span><span id="line-759"></span>
+<span class="source-line-no">760</span><span id="line-760">  // Is t an "actual type"?</span>
+<span class="source-line-no">761</span><span id="line-761">  //</span>
+<span class="source-line-no">762</span><span id="line-762">  // CDI mentions actual types but does not define what they are. This method attempts to divine and implement the</span>
+<span class="source-line-no">763</span><span id="line-763">  // intent.</span>
+<span class="source-line-no">764</span><span id="line-764">  //</span>
+<span class="source-line-no">765</span><span id="line-765">  // A comment in a closed bug report (CDI-502)</span>
+<span class="source-line-no">766</span><span id="line-766">  // (https://issues.redhat.com/browse/CDI-502?focusedId=13036118&amp;page=com.atlassian.jira.plugin.system.issuetabpanels%3Acomment-tabpanel#comment-13036118)</span>
+<span class="source-line-no">767</span><span id="line-767">  // by one of the reference implementation's authors (Jozef Hartinger) provides the only definition:</span>
+<span class="source-line-no">768</span><span id="line-768">  //</span>
+<span class="source-line-no">769</span><span id="line-769">  // "An actual type is a type that is not a wildcard nor [sic] an unresolved [sic] type variable."</span>
+<span class="source-line-no">770</span><span id="line-770">  //</span>
+<span class="source-line-no">771</span><span id="line-771">  // The Java Language Specification does not mention anything about "actual types" or type variable resolution. CDI</span>
+<span class="source-line-no">772</span><span id="line-772">  // does not mention anything about type variable resolution.</span>
+<span class="source-line-no">773</span><span id="line-773">  //</span>
+<span class="source-line-no">774</span><span id="line-774">  // More strictly, therefore, the intent seems to be that an actual type is an array, declared or primitive type, and</span>
+<span class="source-line-no">775</span><span id="line-775">  // none other.</span>
+<span class="source-line-no">776</span><span id="line-776">  private static final boolean actual(final TypeMirror t) {</span>
+<span class="source-line-no">777</span><span id="line-777">    return switch (t.getKind()) {</span>
+<span class="source-line-no">778</span><span id="line-778">    case ARRAY, BOOLEAN, BYTE, CHAR, DECLARED, DOUBLE, FLOAT, INT, LONG, SHORT -&gt; true;</span>
+<span class="source-line-no">779</span><span id="line-779">    default -&gt; false;</span>
+<span class="source-line-no">780</span><span id="line-780">    };</span>
+<span class="source-line-no">781</span><span id="line-781">  }</span>
+<span class="source-line-no">782</span><span id="line-782"></span>
+<span class="source-line-no">783</span><span id="line-783">  // Is t an unbounded type variable?</span>
+<span class="source-line-no">784</span><span id="line-784">  //</span>
+<span class="source-line-no">785</span><span id="line-785">  // CDI does not define what an "unbounded type variable" is. This method attempts to divine and implement the intent.</span>
+<span class="source-line-no">786</span><span id="line-786">  //</span>
+<span class="source-line-no">787</span><span id="line-787">  // TODO: do we need to condense? Given T extends S and S extends Object, is T an unbounded TypeVariable or not?</span>
+<span class="source-line-no">788</span><span id="line-788">  private static final boolean unboundedTypeVariable(final TypeMirror t) {</span>
+<span class="source-line-no">789</span><span id="line-789">    return</span>
+<span class="source-line-no">790</span><span id="line-790">      t.getKind() == TypeKind.TYPEVAR &amp;&amp;</span>
+<span class="source-line-no">791</span><span id="line-791">      isJavaLangObject(((TypeVariable)t).getUpperBound());</span>
+<span class="source-line-no">792</span><span id="line-792">  }</span>
+<span class="source-line-no">793</span><span id="line-793"></span>
+<span class="source-line-no">794</span><span id="line-794">  // Returns the element type of t.</span>
+<span class="source-line-no">795</span><span id="line-795">  //</span>
+<span class="source-line-no">796</span><span id="line-796">  // The element type of an array type is the element type of its component type.</span>
+<span class="source-line-no">797</span><span id="line-797">  //</span>
+<span class="source-line-no">798</span><span id="line-798">  // The element type of every other kind of type is the type itself.</span>
+<span class="source-line-no">799</span><span id="line-799">  private static final TypeMirror elementType(final TypeMirror t) {</span>
+<span class="source-line-no">800</span><span id="line-800">    return t.getKind() == TypeKind.ARRAY ? elementType(((ArrayType)t).getComponentType()) : t;</span>
+<span class="source-line-no">801</span><span id="line-801">  }</span>
+<span class="source-line-no">802</span><span id="line-802"></span>
+<span class="source-line-no">803</span><span id="line-803">}</span>
 
 
 

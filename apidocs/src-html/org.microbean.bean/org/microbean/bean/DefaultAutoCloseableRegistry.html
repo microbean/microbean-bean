@@ -14,7 +14,7 @@
 <div class="source-container">
 <pre><span class="source-line-no">001</span><span id="line-1">/* -*- mode: Java; c-basic-offset: 2; indent-tabs-mode: nil; coding: utf-8-unix -*-</span>
 <span class="source-line-no">002</span><span id="line-2"> *</span>
-<span class="source-line-no">003</span><span id="line-3"> * Copyright © 2023 microBean™.</span>
+<span class="source-line-no">003</span><span id="line-3"> * Copyright © 2023–2024 microBean™.</span>
 <span class="source-line-no">004</span><span id="line-4"> *</span>
 <span class="source-line-no">005</span><span id="line-5"> * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with</span>
 <span class="source-line-no">006</span><span id="line-6"> * the License.  You may obtain a copy of the License at</span>
@@ -49,72 +49,78 @@
 <span class="source-line-no">035</span><span id="line-35">      throw new AssertionError(e.getMessage(), e);</span>
 <span class="source-line-no">036</span><span id="line-36">    }</span>
 <span class="source-line-no">037</span><span id="line-37">    dacr.closeables = null;</span>
-<span class="source-line-no">038</span><span id="line-38">    this.register(dacr); // critical</span>
-<span class="source-line-no">039</span><span id="line-39">    return dacr;</span>
-<span class="source-line-no">040</span><span id="line-40">  }</span>
-<span class="source-line-no">041</span><span id="line-41"></span>
-<span class="source-line-no">042</span><span id="line-42">  @Override // AutoCloseableRegistry</span>
-<span class="source-line-no">043</span><span id="line-43">  public final void close() {</span>
-<span class="source-line-no">044</span><span id="line-44">    final Set&lt;? extends AutoCloseable&gt; closeables;</span>
-<span class="source-line-no">045</span><span id="line-45">    synchronized (this) {</span>
-<span class="source-line-no">046</span><span id="line-46">      closeables = this.closeables;</span>
-<span class="source-line-no">047</span><span id="line-47">      if (closeables == null) {</span>
-<span class="source-line-no">048</span><span id="line-48">        this.closeables = Set.of(); // prevent registrations</span>
-<span class="source-line-no">049</span><span id="line-49">        return;</span>
-<span class="source-line-no">050</span><span id="line-50">      } else if (this.closed()) {</span>
+<span class="source-line-no">038</span><span id="line-38">    if (!this.register(dacr)) { // CRITICAL</span>
+<span class="source-line-no">039</span><span id="line-39">      throw new AssertionError();</span>
+<span class="source-line-no">040</span><span id="line-40">    }</span>
+<span class="source-line-no">041</span><span id="line-41">    return dacr;</span>
+<span class="source-line-no">042</span><span id="line-42">  }</span>
+<span class="source-line-no">043</span><span id="line-43"></span>
+<span class="source-line-no">044</span><span id="line-44">  @Override // AutoCloseableRegistry</span>
+<span class="source-line-no">045</span><span id="line-45">  public final void close() {</span>
+<span class="source-line-no">046</span><span id="line-46">    final Set&lt;? extends AutoCloseable&gt; closeables;</span>
+<span class="source-line-no">047</span><span id="line-47">    synchronized (this) {</span>
+<span class="source-line-no">048</span><span id="line-48">      closeables = this.closeables;</span>
+<span class="source-line-no">049</span><span id="line-49">      if (closeables == Set.&lt;AutoCloseable&gt;of()) {</span>
+<span class="source-line-no">050</span><span id="line-50">        // already closed</span>
 <span class="source-line-no">051</span><span id="line-51">        return;</span>
 <span class="source-line-no">052</span><span id="line-52">      }</span>
-<span class="source-line-no">053</span><span id="line-53">      this.closeables = Set.of(); // prevent recursion; causes closed() to return true</span>
+<span class="source-line-no">053</span><span id="line-53">      this.closeables = Set.of();</span>
 <span class="source-line-no">054</span><span id="line-54">    }</span>
-<span class="source-line-no">055</span><span id="line-55">    RuntimeException re = null;</span>
-<span class="source-line-no">056</span><span id="line-56">    for (final AutoCloseable c : closeables) {</span>
-<span class="source-line-no">057</span><span id="line-57">      try {</span>
-<span class="source-line-no">058</span><span id="line-58">        c.close();</span>
-<span class="source-line-no">059</span><span id="line-59">      } catch (final RuntimeException e) {</span>
-<span class="source-line-no">060</span><span id="line-60">        if (re == null) {</span>
-<span class="source-line-no">061</span><span id="line-61">          re = e;</span>
-<span class="source-line-no">062</span><span id="line-62">        } else {</span>
-<span class="source-line-no">063</span><span id="line-63">          re.addSuppressed(e);</span>
-<span class="source-line-no">064</span><span id="line-64">        }</span>
-<span class="source-line-no">065</span><span id="line-65">      } catch (final Exception e) {</span>
-<span class="source-line-no">066</span><span id="line-66">        if (e instanceof InterruptedException) {</span>
-<span class="source-line-no">067</span><span id="line-67">          Thread.currentThread().interrupt();</span>
+<span class="source-line-no">055</span><span id="line-55">    if (closeables == null) {</span>
+<span class="source-line-no">056</span><span id="line-56">      // nothing to close</span>
+<span class="source-line-no">057</span><span id="line-57">      return;</span>
+<span class="source-line-no">058</span><span id="line-58">    }</span>
+<span class="source-line-no">059</span><span id="line-59">    RuntimeException re = null;</span>
+<span class="source-line-no">060</span><span id="line-60">    for (final AutoCloseable c : closeables) {</span>
+<span class="source-line-no">061</span><span id="line-61">      try {</span>
+<span class="source-line-no">062</span><span id="line-62">        c.close();</span>
+<span class="source-line-no">063</span><span id="line-63">      } catch (final RuntimeException e) {</span>
+<span class="source-line-no">064</span><span id="line-64">        if (re == null) {</span>
+<span class="source-line-no">065</span><span id="line-65">          re = e;</span>
+<span class="source-line-no">066</span><span id="line-66">        } else {</span>
+<span class="source-line-no">067</span><span id="line-67">          re.addSuppressed(e);</span>
 <span class="source-line-no">068</span><span id="line-68">        }</span>
-<span class="source-line-no">069</span><span id="line-69">        if (re == null) {</span>
-<span class="source-line-no">070</span><span id="line-70">          re = new BeanException(e.getMessage(), e);</span>
-<span class="source-line-no">071</span><span id="line-71">        } else {</span>
-<span class="source-line-no">072</span><span id="line-72">          re.addSuppressed(e);</span>
-<span class="source-line-no">073</span><span id="line-73">        }</span>
-<span class="source-line-no">074</span><span id="line-74">      }</span>
-<span class="source-line-no">075</span><span id="line-75">    }</span>
-<span class="source-line-no">076</span><span id="line-76">    if (re != null) {</span>
-<span class="source-line-no">077</span><span id="line-77">      throw re;</span>
-<span class="source-line-no">078</span><span id="line-78">    }</span>
-<span class="source-line-no">079</span><span id="line-79">  }</span>
-<span class="source-line-no">080</span><span id="line-80"></span>
-<span class="source-line-no">081</span><span id="line-81">  @Override // AutoCloseable</span>
-<span class="source-line-no">082</span><span id="line-82">  public final synchronized boolean closed() {</span>
-<span class="source-line-no">083</span><span id="line-83">    return this.closeables == Set.&lt;AutoCloseable&gt;of();</span>
-<span class="source-line-no">084</span><span id="line-84">  }</span>
-<span class="source-line-no">085</span><span id="line-85"></span>
-<span class="source-line-no">086</span><span id="line-86">  @Override // AutoCloseableRegistry</span>
-<span class="source-line-no">087</span><span id="line-87">  public final boolean register(final AutoCloseable closeable) {</span>
-<span class="source-line-no">088</span><span id="line-88">    if (Objects.requireNonNull(closeable, "closeable") == this) {</span>
-<span class="source-line-no">089</span><span id="line-89">      throw new IllegalArgumentException("closeable == this");</span>
-<span class="source-line-no">090</span><span id="line-90">    }</span>
-<span class="source-line-no">091</span><span id="line-91">    synchronized (this) {</span>
-<span class="source-line-no">092</span><span id="line-92">      if (this.closeables == null) {</span>
-<span class="source-line-no">093</span><span id="line-93">        this.closeables = new LinkedHashSet&lt;&gt;();</span>
-<span class="source-line-no">094</span><span id="line-94">      }</span>
-<span class="source-line-no">095</span><span id="line-95">      return !this.closed() &amp;&amp; this.closeables.add(closeable);</span>
-<span class="source-line-no">096</span><span id="line-96">    }</span>
-<span class="source-line-no">097</span><span id="line-97">  }</span>
-<span class="source-line-no">098</span><span id="line-98"></span>
-<span class="source-line-no">099</span><span id="line-99">  public final synchronized int size() {</span>
-<span class="source-line-no">100</span><span id="line-100">    return this.closeables == null ? 0 : this.closeables.size();</span>
-<span class="source-line-no">101</span><span id="line-101">  }</span>
-<span class="source-line-no">102</span><span id="line-102"></span>
-<span class="source-line-no">103</span><span id="line-103">}</span>
+<span class="source-line-no">069</span><span id="line-69">      } catch (final Exception e) {</span>
+<span class="source-line-no">070</span><span id="line-70">        if (e instanceof InterruptedException) {</span>
+<span class="source-line-no">071</span><span id="line-71">          Thread.currentThread().interrupt();</span>
+<span class="source-line-no">072</span><span id="line-72">        }</span>
+<span class="source-line-no">073</span><span id="line-73">        if (re == null) {</span>
+<span class="source-line-no">074</span><span id="line-74">          re = new BeanException(e.getMessage(), e);</span>
+<span class="source-line-no">075</span><span id="line-75">        } else {</span>
+<span class="source-line-no">076</span><span id="line-76">          re.addSuppressed(e);</span>
+<span class="source-line-no">077</span><span id="line-77">        }</span>
+<span class="source-line-no">078</span><span id="line-78">      }</span>
+<span class="source-line-no">079</span><span id="line-79">    }</span>
+<span class="source-line-no">080</span><span id="line-80">    if (re != null) {</span>
+<span class="source-line-no">081</span><span id="line-81">      throw re;</span>
+<span class="source-line-no">082</span><span id="line-82">    }</span>
+<span class="source-line-no">083</span><span id="line-83">  }</span>
+<span class="source-line-no">084</span><span id="line-84"></span>
+<span class="source-line-no">085</span><span id="line-85">  @Override // AutoCloseable</span>
+<span class="source-line-no">086</span><span id="line-86">  public final synchronized boolean closed() {</span>
+<span class="source-line-no">087</span><span id="line-87">    return this.closeables == Set.&lt;AutoCloseable&gt;of();</span>
+<span class="source-line-no">088</span><span id="line-88">  }</span>
+<span class="source-line-no">089</span><span id="line-89"></span>
+<span class="source-line-no">090</span><span id="line-90">  @Override // AutoCloseableRegistry</span>
+<span class="source-line-no">091</span><span id="line-91">  public final boolean register(final AutoCloseable closeable) {</span>
+<span class="source-line-no">092</span><span id="line-92">    if (Objects.requireNonNull(closeable, "closeable") == this) {</span>
+<span class="source-line-no">093</span><span id="line-93">      throw new IllegalArgumentException("closeable == this");</span>
+<span class="source-line-no">094</span><span id="line-94">    }</span>
+<span class="source-line-no">095</span><span id="line-95">    synchronized (this) {</span>
+<span class="source-line-no">096</span><span id="line-96">      if (this.closed()) {</span>
+<span class="source-line-no">097</span><span id="line-97">        return false;</span>
+<span class="source-line-no">098</span><span id="line-98">      } else if (this.closeables == null) {</span>
+<span class="source-line-no">099</span><span id="line-99">        this.closeables = new LinkedHashSet&lt;&gt;();</span>
+<span class="source-line-no">100</span><span id="line-100">      }</span>
+<span class="source-line-no">101</span><span id="line-101">      return this.closeables.add(closeable);</span>
+<span class="source-line-no">102</span><span id="line-102">    }</span>
+<span class="source-line-no">103</span><span id="line-103">  }</span>
+<span class="source-line-no">104</span><span id="line-104"></span>
+<span class="source-line-no">105</span><span id="line-105">  public final synchronized int size() {</span>
+<span class="source-line-no">106</span><span id="line-106">    return this.closeables == null ? 0 : this.closeables.size();</span>
+<span class="source-line-no">107</span><span id="line-107">  }</span>
+<span class="source-line-no">108</span><span id="line-108"></span>
+<span class="source-line-no">109</span><span id="line-109">}</span>
 
 
 

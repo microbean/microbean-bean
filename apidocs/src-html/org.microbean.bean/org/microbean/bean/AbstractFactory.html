@@ -14,7 +14,7 @@
 <div class="source-container">
 <pre><span class="source-line-no">001</span><span id="line-1">/* -*- mode: Java; c-basic-offset: 2; indent-tabs-mode: nil; coding: utf-8-unix -*-</span>
 <span class="source-line-no">002</span><span id="line-2"> *</span>
-<span class="source-line-no">003</span><span id="line-3"> * Copyright © 2023 microBean™.</span>
+<span class="source-line-no">003</span><span id="line-3"> * Copyright © 2023–2024 microBean™.</span>
 <span class="source-line-no">004</span><span id="line-4"> *</span>
 <span class="source-line-no">005</span><span id="line-5"> * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with</span>
 <span class="source-line-no">006</span><span id="line-6"> * the License.  You may obtain a copy of the License at</span>
@@ -29,83 +29,81 @@
 <span class="source-line-no">015</span><span id="line-15"></span>
 <span class="source-line-no">016</span><span id="line-16">import java.util.Objects;</span>
 <span class="source-line-no">017</span><span id="line-17"></span>
-<span class="source-line-no">018</span><span id="line-18">public abstract class AbstractFactory&lt;I&gt; implements Factory&lt;I&gt; {</span>
-<span class="source-line-no">019</span><span id="line-19"></span>
-<span class="source-line-no">020</span><span id="line-20">  private final InterceptionsApplicator&lt;I&gt; interceptionsApplicator;</span>
+<span class="source-line-no">018</span><span id="line-18">// TODO: this is mildly fouled up. The spirit is right but the implementation is not so hot.</span>
+<span class="source-line-no">019</span><span id="line-19">@Deprecated</span>
+<span class="source-line-no">020</span><span id="line-20">public abstract class AbstractFactory&lt;I&gt; implements Factory&lt;I&gt; {</span>
 <span class="source-line-no">021</span><span id="line-21"></span>
-<span class="source-line-no">022</span><span id="line-22">  private final Initializer&lt;I&gt; initializer;</span>
+<span class="source-line-no">022</span><span id="line-22">  private static final Initializer&lt;?&gt; PASSTHROUGH_INITIALIZER = new AbstractInitializer&lt;Object&gt;();</span>
 <span class="source-line-no">023</span><span id="line-23"></span>
-<span class="source-line-no">024</span><span id="line-24">  private final Producer&lt;I&gt; producer;</span>
+<span class="source-line-no">024</span><span id="line-24">  private static final PostInitializer&lt;?&gt; PASSTHROUGH_POSTINITIALIZER = new AbstractPostInitializer&lt;Object&gt;();</span>
 <span class="source-line-no">025</span><span id="line-25"></span>
-<span class="source-line-no">026</span><span id="line-26">  private final boolean destroys;</span>
+<span class="source-line-no">026</span><span id="line-26">  private static final InterceptionsApplicator&lt;?&gt; PASSTHROUGH_INTERCEPTIONSAPPLICATOR = new AbstractInterceptionsApplicator&lt;Object&gt;();</span>
 <span class="source-line-no">027</span><span id="line-27"></span>
-<span class="source-line-no">028</span><span id="line-28">  private final Destructor&lt;I&gt; destructor;</span>
+<span class="source-line-no">028</span><span id="line-28">  private static final PreDestructor&lt;?&gt; PASSTHROUGH_PREDESTRUCTOR = new AbstractPreDestructor&lt;Object&gt;();</span>
 <span class="source-line-no">029</span><span id="line-29"></span>
-<span class="source-line-no">030</span><span id="line-30">  protected AbstractFactory(final Producer&lt;I&gt; producer) {</span>
-<span class="source-line-no">031</span><span id="line-31">    this(null, null, producer, null);</span>
-<span class="source-line-no">032</span><span id="line-32">  }</span>
+<span class="source-line-no">030</span><span id="line-30">  private final Producer&lt;I&gt; producer;</span>
+<span class="source-line-no">031</span><span id="line-31"></span>
+<span class="source-line-no">032</span><span id="line-32">  private final Initializer&lt;I&gt; initializer;</span>
 <span class="source-line-no">033</span><span id="line-33"></span>
-<span class="source-line-no">034</span><span id="line-34">  protected AbstractFactory(final Producer&lt;I&gt; producer, final Destructor&lt;I&gt; destructor) {</span>
-<span class="source-line-no">035</span><span id="line-35">    this(null, null, producer, destructor);</span>
-<span class="source-line-no">036</span><span id="line-36">  }</span>
+<span class="source-line-no">034</span><span id="line-34">  private final PostInitializer&lt;I&gt; postInitializer;</span>
+<span class="source-line-no">035</span><span id="line-35"></span>
+<span class="source-line-no">036</span><span id="line-36">  private final InterceptionsApplicator&lt;I&gt; interceptionsApplicator;</span>
 <span class="source-line-no">037</span><span id="line-37"></span>
-<span class="source-line-no">038</span><span id="line-38">  @SuppressWarnings("unchecked")</span>
-<span class="source-line-no">039</span><span id="line-39">  protected AbstractFactory(final InterceptionsApplicator&lt;I&gt; interceptionsApplicator, // applies business method interceptions</span>
-<span class="source-line-no">040</span><span id="line-40">                            final Initializer&lt;I&gt; initializer, // calls initializer methods and post-initialize methods</span>
-<span class="source-line-no">041</span><span id="line-41">                            final Producer&lt;I&gt; producer, // handles production, including possibly intercepted production</span>
-<span class="source-line-no">042</span><span id="line-42">                            final Destructor&lt;I&gt; destructor) { // calls pre-destroy methods and handles destruction</span>
-<span class="source-line-no">043</span><span id="line-43">    super();</span>
-<span class="source-line-no">044</span><span id="line-44">    this.interceptionsApplicator = interceptionsApplicator == null ? AbstractFactory::noopIntercept : interceptionsApplicator;</span>
-<span class="source-line-no">045</span><span id="line-45">    this.initializer = initializer == null ? (NoOpInitializer&lt;I&gt;)NoOpInitializer.INSTANCE : initializer;</span>
-<span class="source-line-no">046</span><span id="line-46">    this.producer = Objects.requireNonNull(producer);</span>
-<span class="source-line-no">047</span><span id="line-47">    if (destructor == null) {</span>
-<span class="source-line-no">048</span><span id="line-48">      this.destroys = false;</span>
-<span class="source-line-no">049</span><span id="line-49">      this.destructor = new Destructor&lt;I&gt;(); // this destructor is basically a no-op</span>
-<span class="source-line-no">050</span><span id="line-50">    } else {</span>
-<span class="source-line-no">051</span><span id="line-51">      this.destroys = true;</span>
-<span class="source-line-no">052</span><span id="line-52">      this.destructor = destructor;</span>
-<span class="source-line-no">053</span><span id="line-53">    }</span>
+<span class="source-line-no">038</span><span id="line-38">  private final PreDestructor&lt;I&gt; preDestructor;</span>
+<span class="source-line-no">039</span><span id="line-39"></span>
+<span class="source-line-no">040</span><span id="line-40">  private volatile boolean destroyed;</span>
+<span class="source-line-no">041</span><span id="line-41"></span>
+<span class="source-line-no">042</span><span id="line-42">  @SuppressWarnings("unchecked")</span>
+<span class="source-line-no">043</span><span id="line-43">  protected AbstractFactory(final Producer&lt;I&gt; producer, // production and destruction (including intercepted production)</span>
+<span class="source-line-no">044</span><span id="line-44">                            final Initializer&lt;I&gt; initializer, // initialization (fields and initializer methods)</span>
+<span class="source-line-no">045</span><span id="line-45">                            final PostInitializer&lt;I&gt; postInitializer, // post-initialization methods</span>
+<span class="source-line-no">046</span><span id="line-46">                            final InterceptionsApplicator&lt;I&gt; interceptionsApplicator, // applies business method interceptions</span>
+<span class="source-line-no">047</span><span id="line-47">                            final PreDestructor&lt;I&gt; preDestructor) { // pre-destroy methods</span>
+<span class="source-line-no">048</span><span id="line-48">    super();</span>
+<span class="source-line-no">049</span><span id="line-49">    this.producer = Objects.requireNonNull(producer, "producer");</span>
+<span class="source-line-no">050</span><span id="line-50">    this.initializer = initializer == null ? (Initializer&lt;I&gt;)PASSTHROUGH_INITIALIZER : initializer;</span>
+<span class="source-line-no">051</span><span id="line-51">    this.postInitializer = postInitializer == null ? (PostInitializer&lt;I&gt;)PASSTHROUGH_POSTINITIALIZER : postInitializer;</span>
+<span class="source-line-no">052</span><span id="line-52">    this.interceptionsApplicator = interceptionsApplicator == null ? (InterceptionsApplicator&lt;I&gt;)PASSTHROUGH_INTERCEPTIONSAPPLICATOR : interceptionsApplicator;</span>
+<span class="source-line-no">053</span><span id="line-53">    this.preDestructor = preDestructor == null ? (PreDestructor&lt;I&gt;)PASSTHROUGH_PREDESTRUCTOR : preDestructor;</span>
 <span class="source-line-no">054</span><span id="line-54">  }</span>
 <span class="source-line-no">055</span><span id="line-55"></span>
 <span class="source-line-no">056</span><span id="line-56">  @Override // Factory&lt;I&gt;</span>
 <span class="source-line-no">057</span><span id="line-57">  public I create(final Creation&lt;I&gt; c, final ReferenceSelector r) {</span>
 <span class="source-line-no">058</span><span id="line-58">    // Produce the product, initialize the product, apply business method interceptions to the product, return the</span>
 <span class="source-line-no">059</span><span id="line-59">    // product</span>
-<span class="source-line-no">060</span><span id="line-60">    return this.interceptionsApplicator.apply(this.initializer.initialize(this.producer.produce(c, r), c, r), c, r);</span>
+<span class="source-line-no">060</span><span id="line-60">    return this.interceptionsApplicator.apply(this.postInitializer.postInitialize(this.initializer.initialize(this.producer.produce(c, r), c, r), c, r), c, r);</span>
 <span class="source-line-no">061</span><span id="line-61">  }</span>
 <span class="source-line-no">062</span><span id="line-62"></span>
 <span class="source-line-no">063</span><span id="line-63">  @Override // Factory&lt;I&gt;</span>
 <span class="source-line-no">064</span><span id="line-64">  public boolean destroys() {</span>
-<span class="source-line-no">065</span><span id="line-65">    return this.destroys;</span>
+<span class="source-line-no">065</span><span id="line-65">    return !this.destroyed;</span>
 <span class="source-line-no">066</span><span id="line-66">  }</span>
 <span class="source-line-no">067</span><span id="line-67"></span>
 <span class="source-line-no">068</span><span id="line-68">  // MUST be idempotent</span>
 <span class="source-line-no">069</span><span id="line-69">  @Override // Factory&lt;I&gt;</span>
 <span class="source-line-no">070</span><span id="line-70">  @SuppressWarnings("try")</span>
-<span class="source-line-no">071</span><span id="line-71">  public void destroy(final I i, final AutoCloseable destructionRegistry, final ReferenceSelector references) {</span>
-<span class="source-line-no">072</span><span id="line-72">    this.destructor.destroy(i, destructionRegistry, references);</span>
-<span class="source-line-no">073</span><span id="line-73">  }</span>
-<span class="source-line-no">074</span><span id="line-74"></span>
-<span class="source-line-no">075</span><span id="line-75">  private static final &lt;I&gt; I noopIntercept(final I i, final Creation&lt;I&gt; c, final ReferenceSelector r) {</span>
-<span class="source-line-no">076</span><span id="line-76">    return i;</span>
-<span class="source-line-no">077</span><span id="line-77">  }</span>
-<span class="source-line-no">078</span><span id="line-78"></span>
-<span class="source-line-no">079</span><span id="line-79">  private static final class NoOpInitializer&lt;I&gt; extends Initializer&lt;I&gt; {</span>
-<span class="source-line-no">080</span><span id="line-80"></span>
-<span class="source-line-no">081</span><span id="line-81">    private static final NoOpInitializer&lt;?&gt; INSTANCE = new NoOpInitializer&lt;&gt;();</span>
-<span class="source-line-no">082</span><span id="line-82"></span>
-<span class="source-line-no">083</span><span id="line-83">    private NoOpInitializer() {</span>
-<span class="source-line-no">084</span><span id="line-84">      super();</span>
-<span class="source-line-no">085</span><span id="line-85">    }</span>
-<span class="source-line-no">086</span><span id="line-86"></span>
-<span class="source-line-no">087</span><span id="line-87">    @Override</span>
-<span class="source-line-no">088</span><span id="line-88">    protected final I performInitialization(final I i, final Creation&lt;I&gt; c, final ReferenceSelector r) {</span>
-<span class="source-line-no">089</span><span id="line-89">      return i;</span>
-<span class="source-line-no">090</span><span id="line-90">    }</span>
+<span class="source-line-no">071</span><span id="line-71">  public void destroy(final I i, final AutoCloseable destructionRegistry, final Creation&lt;I&gt; c, final ReferenceSelector rs) {</span>
+<span class="source-line-no">072</span><span id="line-72">    if (this.destroyed) {</span>
+<span class="source-line-no">073</span><span id="line-73">      return;</span>
+<span class="source-line-no">074</span><span id="line-74">    }</span>
+<span class="source-line-no">075</span><span id="line-75">    if (destructionRegistry == null) {</span>
+<span class="source-line-no">076</span><span id="line-76">      this.producer.dispose(this.preDestructor.preDestroy(i, c, rs), c, rs);</span>
+<span class="source-line-no">077</span><span id="line-77">    } else {</span>
+<span class="source-line-no">078</span><span id="line-78">      try (destructionRegistry) {</span>
+<span class="source-line-no">079</span><span id="line-79">        this.producer.dispose(this.preDestructor.preDestroy(i, c, rs), c, rs);</span>
+<span class="source-line-no">080</span><span id="line-80">      } catch (final RuntimeException | Error e) {</span>
+<span class="source-line-no">081</span><span id="line-81">        throw e;</span>
+<span class="source-line-no">082</span><span id="line-82">      } catch (final InterruptedException e) {</span>
+<span class="source-line-no">083</span><span id="line-83">        Thread.currentThread().interrupt();</span>
+<span class="source-line-no">084</span><span id="line-84">        throw new DestructionException(e.getMessage(), e);</span>
+<span class="source-line-no">085</span><span id="line-85">      } catch (final Exception e) {</span>
+<span class="source-line-no">086</span><span id="line-86">        throw new DestructionException(e.getMessage(), e);</span>
+<span class="source-line-no">087</span><span id="line-87">      }</span>
+<span class="source-line-no">088</span><span id="line-88">    }</span>
+<span class="source-line-no">089</span><span id="line-89">    this.destroyed = true;</span>
+<span class="source-line-no">090</span><span id="line-90">  }</span>
 <span class="source-line-no">091</span><span id="line-91"></span>
-<span class="source-line-no">092</span><span id="line-92">  }</span>
-<span class="source-line-no">093</span><span id="line-93"></span>
-<span class="source-line-no">094</span><span id="line-94">}</span>
+<span class="source-line-no">092</span><span id="line-92">}</span>
 
 
 

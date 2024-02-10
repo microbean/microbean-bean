@@ -14,7 +14,7 @@
 <div class="source-container">
 <pre><span class="source-line-no">001</span><span id="line-1">/* -*- mode: Java; c-basic-offset: 2; indent-tabs-mode: nil; coding: utf-8-unix -*-</span>
 <span class="source-line-no">002</span><span id="line-2"> *</span>
-<span class="source-line-no">003</span><span id="line-3"> * Copyright © 2023 microBean™.</span>
+<span class="source-line-no">003</span><span id="line-3"> * Copyright © 2023–2024 microBean™.</span>
 <span class="source-line-no">004</span><span id="line-4"> *</span>
 <span class="source-line-no">005</span><span id="line-5"> * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with</span>
 <span class="source-line-no">006</span><span id="line-6"> * the License.  You may obtain a copy of the License at</span>
@@ -33,63 +33,69 @@
 <span class="source-line-no">019</span><span id="line-19"></span>
 <span class="source-line-no">020</span><span id="line-20">import java.util.Objects;</span>
 <span class="source-line-no">021</span><span id="line-21">import java.util.Optional;</span>
-<span class="source-line-no">022</span><span id="line-22"></span>
-<span class="source-line-no">023</span><span id="line-23">import org.microbean.constant.Constables;</span>
-<span class="source-line-no">024</span><span id="line-24"></span>
-<span class="source-line-no">025</span><span id="line-25">import static java.lang.constant.ConstantDescs.BSM_INVOKE;</span>
-<span class="source-line-no">026</span><span id="line-26">import static java.lang.constant.ConstantDescs.CD_Object;</span>
-<span class="source-line-no">027</span><span id="line-27">import static java.lang.constant.ConstantDescs.CD_boolean;</span>
-<span class="source-line-no">028</span><span id="line-28">import static java.lang.constant.ConstantDescs.FALSE;</span>
-<span class="source-line-no">029</span><span id="line-29">import static java.lang.constant.ConstantDescs.TRUE;</span>
-<span class="source-line-no">030</span><span id="line-30"></span>
-<span class="source-line-no">031</span><span id="line-31">public final class Singleton&lt;I&gt; implements Factory&lt;I&gt; {</span>
-<span class="source-line-no">032</span><span id="line-32"></span>
-<span class="source-line-no">033</span><span id="line-33">  private static final ClassDesc CD_Singleton = ClassDesc.of(Singleton.class.getName());</span>
-<span class="source-line-no">034</span><span id="line-34"></span>
-<span class="source-line-no">035</span><span id="line-35">  private volatile I singleton;</span>
-<span class="source-line-no">036</span><span id="line-36"></span>
-<span class="source-line-no">037</span><span id="line-37">  private final I product;</span>
-<span class="source-line-no">038</span><span id="line-38"></span>
-<span class="source-line-no">039</span><span id="line-39">  public Singleton(final I product) {</span>
-<span class="source-line-no">040</span><span id="line-40">    this(product, false);</span>
-<span class="source-line-no">041</span><span id="line-41">  }</span>
-<span class="source-line-no">042</span><span id="line-42"></span>
-<span class="source-line-no">043</span><span id="line-43">  public Singleton(final I product, final boolean preCreate) {</span>
-<span class="source-line-no">044</span><span id="line-44">    super();</span>
-<span class="source-line-no">045</span><span id="line-45">    this.product = Objects.requireNonNull(product, "product");</span>
-<span class="source-line-no">046</span><span id="line-46">    this.singleton = preCreate ? product : null;</span>
-<span class="source-line-no">047</span><span id="line-47">  }</span>
-<span class="source-line-no">048</span><span id="line-48"></span>
-<span class="source-line-no">049</span><span id="line-49">  @Override</span>
-<span class="source-line-no">050</span><span id="line-50">  public final boolean destroys() {</span>
-<span class="source-line-no">051</span><span id="line-51">    return false;</span>
-<span class="source-line-no">052</span><span id="line-52">  }</span>
-<span class="source-line-no">053</span><span id="line-53"></span>
-<span class="source-line-no">054</span><span id="line-54">  @Override</span>
-<span class="source-line-no">055</span><span id="line-55">  public final I singleton() {</span>
-<span class="source-line-no">056</span><span id="line-56">    return this.singleton;</span>
-<span class="source-line-no">057</span><span id="line-57">  }</span>
-<span class="source-line-no">058</span><span id="line-58"></span>
-<span class="source-line-no">059</span><span id="line-59">  @Override</span>
-<span class="source-line-no">060</span><span id="line-60">  public final I create(final Creation&lt;I&gt; c, final ReferenceSelector references) {</span>
-<span class="source-line-no">061</span><span id="line-61">    if (this.singleton == null) {</span>
-<span class="source-line-no">062</span><span id="line-62">      this.singleton = this.product;</span>
-<span class="source-line-no">063</span><span id="line-63">    }</span>
-<span class="source-line-no">064</span><span id="line-64">    return this.product;</span>
-<span class="source-line-no">065</span><span id="line-65">  }</span>
-<span class="source-line-no">066</span><span id="line-66"></span>
-<span class="source-line-no">067</span><span id="line-67">  @Override // Constable</span>
-<span class="source-line-no">068</span><span id="line-68">  public final Optional&lt;DynamicConstantDesc&lt;Singleton&lt;I&gt;&gt;&gt; describeConstable() {</span>
-<span class="source-line-no">069</span><span id="line-69">    return Constables.describeConstable(this.product)</span>
-<span class="source-line-no">070</span><span id="line-70">      .map(productDesc -&gt; DynamicConstantDesc.of(BSM_INVOKE,</span>
-<span class="source-line-no">071</span><span id="line-71">                                                 MethodHandleDesc.ofConstructor(CD_Singleton,</span>
-<span class="source-line-no">072</span><span id="line-72">                                                                                CD_Object,</span>
-<span class="source-line-no">073</span><span id="line-73">                                                                                CD_boolean),</span>
-<span class="source-line-no">074</span><span id="line-74">                                                 productDesc,</span>
-<span class="source-line-no">075</span><span id="line-75">                                                 this.singleton == null ? FALSE : TRUE));</span>
-<span class="source-line-no">076</span><span id="line-76">  }</span>
-<span class="source-line-no">077</span><span id="line-77"></span>
-<span class="source-line-no">078</span><span id="line-78">}</span>
+<span class="source-line-no">022</span><span id="line-22">import java.util.Set;</span>
+<span class="source-line-no">023</span><span id="line-23"></span>
+<span class="source-line-no">024</span><span id="line-24">import org.microbean.constant.Constables;</span>
+<span class="source-line-no">025</span><span id="line-25"></span>
+<span class="source-line-no">026</span><span id="line-26">import static java.lang.constant.ConstantDescs.BSM_INVOKE;</span>
+<span class="source-line-no">027</span><span id="line-27">import static java.lang.constant.ConstantDescs.CD_Object;</span>
+<span class="source-line-no">028</span><span id="line-28">import static java.lang.constant.ConstantDescs.CD_boolean;</span>
+<span class="source-line-no">029</span><span id="line-29">import static java.lang.constant.ConstantDescs.FALSE;</span>
+<span class="source-line-no">030</span><span id="line-30">import static java.lang.constant.ConstantDescs.TRUE;</span>
+<span class="source-line-no">031</span><span id="line-31"></span>
+<span class="source-line-no">032</span><span id="line-32">public final class Singleton&lt;I&gt; implements Factory&lt;I&gt; {</span>
+<span class="source-line-no">033</span><span id="line-33"></span>
+<span class="source-line-no">034</span><span id="line-34">  private static final ClassDesc CD_Singleton = ClassDesc.of(Singleton.class.getName());</span>
+<span class="source-line-no">035</span><span id="line-35"></span>
+<span class="source-line-no">036</span><span id="line-36">  private volatile I singleton;</span>
+<span class="source-line-no">037</span><span id="line-37"></span>
+<span class="source-line-no">038</span><span id="line-38">  private final I product;</span>
+<span class="source-line-no">039</span><span id="line-39"></span>
+<span class="source-line-no">040</span><span id="line-40">  public Singleton(final I product) {</span>
+<span class="source-line-no">041</span><span id="line-41">    this(product, false);</span>
+<span class="source-line-no">042</span><span id="line-42">  }</span>
+<span class="source-line-no">043</span><span id="line-43"></span>
+<span class="source-line-no">044</span><span id="line-44">  public Singleton(final I product, final boolean preCreate) {</span>
+<span class="source-line-no">045</span><span id="line-45">    super();</span>
+<span class="source-line-no">046</span><span id="line-46">    this.product = Objects.requireNonNull(product, "product");</span>
+<span class="source-line-no">047</span><span id="line-47">    this.singleton = preCreate ? product : null;</span>
+<span class="source-line-no">048</span><span id="line-48">  }</span>
+<span class="source-line-no">049</span><span id="line-49"></span>
+<span class="source-line-no">050</span><span id="line-50">  @Override // Factory&lt;I&gt; (Aggregate)</span>
+<span class="source-line-no">051</span><span id="line-51">  public final Set&lt;Dependency&gt; dependencies() {</span>
+<span class="source-line-no">052</span><span id="line-52">    return Set.of();</span>
+<span class="source-line-no">053</span><span id="line-53">  }</span>
+<span class="source-line-no">054</span><span id="line-54"></span>
+<span class="source-line-no">055</span><span id="line-55">  @Override // Factory&lt;I&gt;</span>
+<span class="source-line-no">056</span><span id="line-56">  public final boolean destroys() {</span>
+<span class="source-line-no">057</span><span id="line-57">    return false;</span>
+<span class="source-line-no">058</span><span id="line-58">  }</span>
+<span class="source-line-no">059</span><span id="line-59"></span>
+<span class="source-line-no">060</span><span id="line-60">  @Override // Factory&lt;I&gt;</span>
+<span class="source-line-no">061</span><span id="line-61">  public final I singleton() {</span>
+<span class="source-line-no">062</span><span id="line-62">    return this.singleton;</span>
+<span class="source-line-no">063</span><span id="line-63">  }</span>
+<span class="source-line-no">064</span><span id="line-64"></span>
+<span class="source-line-no">065</span><span id="line-65">  @Override // Factory&lt;I&gt;</span>
+<span class="source-line-no">066</span><span id="line-66">  public final I create(final Creation&lt;I&gt; c, final ReferenceSelector rs) {</span>
+<span class="source-line-no">067</span><span id="line-67">    if (this.singleton == null) {</span>
+<span class="source-line-no">068</span><span id="line-68">      this.singleton = this.product;</span>
+<span class="source-line-no">069</span><span id="line-69">    }</span>
+<span class="source-line-no">070</span><span id="line-70">    return this.product;</span>
+<span class="source-line-no">071</span><span id="line-71">  }</span>
+<span class="source-line-no">072</span><span id="line-72"></span>
+<span class="source-line-no">073</span><span id="line-73">  @Override // Factory&lt;I&gt; (Constable)</span>
+<span class="source-line-no">074</span><span id="line-74">  public final Optional&lt;DynamicConstantDesc&lt;Singleton&lt;I&gt;&gt;&gt; describeConstable() {</span>
+<span class="source-line-no">075</span><span id="line-75">    return Constables.describeConstable(this.product)</span>
+<span class="source-line-no">076</span><span id="line-76">      .map(productDesc -&gt; DynamicConstantDesc.of(BSM_INVOKE,</span>
+<span class="source-line-no">077</span><span id="line-77">                                                 MethodHandleDesc.ofConstructor(CD_Singleton,</span>
+<span class="source-line-no">078</span><span id="line-78">                                                                                CD_Object,</span>
+<span class="source-line-no">079</span><span id="line-79">                                                                                CD_boolean),</span>
+<span class="source-line-no">080</span><span id="line-80">                                                 productDesc,</span>
+<span class="source-line-no">081</span><span id="line-81">                                                 this.singleton == null ? FALSE : TRUE));</span>
+<span class="source-line-no">082</span><span id="line-82">  }</span>
+<span class="source-line-no">083</span><span id="line-83"></span>
+<span class="source-line-no">084</span><span id="line-84">}</span>
 
 
 
