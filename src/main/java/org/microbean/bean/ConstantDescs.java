@@ -28,7 +28,7 @@ public final class ConstantDescs {
   public static final ClassDesc CD_DefaultBeanSet = ClassDesc.of("org.microbean.bean.DefaultBeanSet");
 
   public static final ClassDesc CD_Dependency = ClassDesc.of("org.microbean.bean.Dependency");
-  
+
   public static final ClassDesc CD_Factory = ClassDesc.of("org.microbean.bean.Factory");
 
   public static final ClassDesc CD_Id = ClassDesc.of("org.microbean.bean.Id");

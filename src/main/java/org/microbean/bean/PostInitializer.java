@@ -13,6 +13,8 @@
  */
 package org.microbean.bean;
 
+// Subordinate to Factory<I>.
+// Calls postConstruct() methods.
 public interface PostInitializer<I> {
 
   // TODO: c and r go together, always, so anytime you need an r you need a c.

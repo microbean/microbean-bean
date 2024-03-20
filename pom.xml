@@ -42,6 +42,19 @@
     <dependencies>
 
 
+      <!-- Imports. -->
+
+
+      <!-- Manages dependencies used only by tests. -->
+      <dependency>
+        <groupId>org.jboss.weld</groupId>
+        <artifactId>weld-core-bom</artifactId>
+        <version>5.1.2.Final</version>
+        <type>pom</type>
+        <scope>import</scope>
+      </dependency>
+
+
       <!-- Normal dependencies. -->
 
 
@@ -118,6 +131,12 @@
 
     <!-- Test-scoped dependencies. -->
 
+
+    <dependency>
+      <groupId>org.jboss.weld.se</groupId>
+      <artifactId>weld-se-core</artifactId>
+      <scope>test</scope>
+    </dependency>
 
     <dependency>
       <groupId>org.junit.jupiter</groupId>

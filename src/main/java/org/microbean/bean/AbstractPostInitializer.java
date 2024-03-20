@@ -18,7 +18,7 @@ public class AbstractPostInitializer<I> implements PostInitializer<I> {
   public AbstractPostInitializer() {
     super();
   }
-  
+
   @Override
   public I postInitialize(final I i, final Creation<I> c, final ReferenceSelector r) {
     return i;
