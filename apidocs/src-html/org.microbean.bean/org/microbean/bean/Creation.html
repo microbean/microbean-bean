@@ -157,13 +157,15 @@
 <span class="source-line-no">143</span><span id="line-143">   * @param c the {@link Creation} to cast and return; may be {@code null}</span>
 <span class="source-line-no">144</span><span id="line-144">   *</span>
 <span class="source-line-no">145</span><span id="line-145">   * @return the {@link Creation}, cast to an appropriate type, or {@code null}</span>
-<span class="source-line-no">146</span><span id="line-146">   */</span>
-<span class="source-line-no">147</span><span id="line-147">  @SuppressWarnings("unchecked")</span>
-<span class="source-line-no">148</span><span id="line-148">  public static &lt;I&gt; Creation&lt;I&gt; cast(final Creation&lt;?&gt; c) {</span>
-<span class="source-line-no">149</span><span id="line-149">    return (Creation&lt;I&gt;)c;</span>
-<span class="source-line-no">150</span><span id="line-150">  }</span>
-<span class="source-line-no">151</span><span id="line-151"></span>
-<span class="source-line-no">152</span><span id="line-152">}</span>
+<span class="source-line-no">146</span><span id="line-146">   *</span>
+<span class="source-line-no">147</span><span id="line-147">   * @exception ClassCastException if the cast could not be performed for any reason</span>
+<span class="source-line-no">148</span><span id="line-148">   */</span>
+<span class="source-line-no">149</span><span id="line-149">  @SuppressWarnings("unchecked")</span>
+<span class="source-line-no">150</span><span id="line-150">  public static &lt;I&gt; Creation&lt;I&gt; cast(final Creation&lt;?&gt; c) {</span>
+<span class="source-line-no">151</span><span id="line-151">    return (Creation&lt;I&gt;)c;</span>
+<span class="source-line-no">152</span><span id="line-152">  }</span>
+<span class="source-line-no">153</span><span id="line-153"></span>
+<span class="source-line-no">154</span><span id="line-154">}</span>
 
 
 

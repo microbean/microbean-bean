@@ -27,12 +27,14 @@
 <span class="source-line-no">013</span><span id="line-13"> */</span>
 <span class="source-line-no">014</span><span id="line-14">package org.microbean.bean;</span>
 <span class="source-line-no">015</span><span id="line-15"></span>
-<span class="source-line-no">016</span><span id="line-16">public interface Initializer&lt;I&gt; extends Aggregate {</span>
-<span class="source-line-no">017</span><span id="line-17"></span>
-<span class="source-line-no">018</span><span id="line-18">  // TODO: c and r go together, always, so anytime you need an r you need a c.</span>
-<span class="source-line-no">019</span><span id="line-19">  public I initialize(final I i, final Creation&lt;I&gt; c, final ReferenceSelector r);</span>
-<span class="source-line-no">020</span><span id="line-20"></span>
-<span class="source-line-no">021</span><span id="line-21">}</span>
+<span class="source-line-no">016</span><span id="line-16">// Subordinate to Factory&lt;I&gt;.</span>
+<span class="source-line-no">017</span><span id="line-17">// Calls initializer methods.</span>
+<span class="source-line-no">018</span><span id="line-18">public interface Initializer&lt;I&gt; extends Aggregate {</span>
+<span class="source-line-no">019</span><span id="line-19"></span>
+<span class="source-line-no">020</span><span id="line-20">  // TODO: c and r go together, always, so anytime you need an r you need a c.</span>
+<span class="source-line-no">021</span><span id="line-21">  public I initialize(final I i, final Creation&lt;I&gt; c, final ReferenceSelector r);</span>
+<span class="source-line-no">022</span><span id="line-22"></span>
+<span class="source-line-no">023</span><span id="line-23">}</span>
 
 
 

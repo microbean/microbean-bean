@@ -27,13 +27,15 @@
 <span class="source-line-no">013</span><span id="line-13"> */</span>
 <span class="source-line-no">014</span><span id="line-14">package org.microbean.bean;</span>
 <span class="source-line-no">015</span><span id="line-15"></span>
-<span class="source-line-no">016</span><span id="line-16">@FunctionalInterface</span>
-<span class="source-line-no">017</span><span id="line-17">public interface PreDestructor&lt;I&gt; {</span>
-<span class="source-line-no">018</span><span id="line-18"></span>
-<span class="source-line-no">019</span><span id="line-19">  // TODO: c and rs go together, always, so anytime you need an rs you need a c.</span>
-<span class="source-line-no">020</span><span id="line-20">  public I preDestroy(final I i, final Creation&lt;I&gt; c, final ReferenceSelector rs);</span>
-<span class="source-line-no">021</span><span id="line-21"></span>
-<span class="source-line-no">022</span><span id="line-22">}</span>
+<span class="source-line-no">016</span><span id="line-16">// Subordinate to Factory&lt;I&gt;.</span>
+<span class="source-line-no">017</span><span id="line-17">// Calls preDestroy() methods.</span>
+<span class="source-line-no">018</span><span id="line-18">@FunctionalInterface</span>
+<span class="source-line-no">019</span><span id="line-19">public interface PreDestructor&lt;I&gt; {</span>
+<span class="source-line-no">020</span><span id="line-20"></span>
+<span class="source-line-no">021</span><span id="line-21">  // TODO: c and rs go together, always, so anytime you need an rs you need a c.</span>
+<span class="source-line-no">022</span><span id="line-22">  public I preDestroy(final I i, final Creation&lt;I&gt; c, final ReferenceSelector rs);</span>
+<span class="source-line-no">023</span><span id="line-23"></span>
+<span class="source-line-no">024</span><span id="line-24">}</span>
 
 
 

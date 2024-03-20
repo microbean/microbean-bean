@@ -27,16 +27,17 @@
 <span class="source-line-no">013</span><span id="line-13"> */</span>
 <span class="source-line-no">014</span><span id="line-14">package org.microbean.bean;</span>
 <span class="source-line-no">015</span><span id="line-15"></span>
-<span class="source-line-no">016</span><span id="line-16">// An applicator of business method interceptions. This is used during assembly of a Factory implementation and should</span>
-<span class="source-line-no">017</span><span id="line-17">// be used probably only when "around-invoke" interceptions are in effect.</span>
-<span class="source-line-no">018</span><span id="line-18">@FunctionalInterface</span>
-<span class="source-line-no">019</span><span id="line-19">public interface InterceptionsApplicator&lt;I&gt; {</span>
-<span class="source-line-no">020</span><span id="line-20"></span>
-<span class="source-line-no">021</span><span id="line-21">  // i is the contextual instance</span>
-<span class="source-line-no">022</span><span id="line-22">  // TODO: c and rs go together, always, so anytime you need an rs you need a c.</span>
-<span class="source-line-no">023</span><span id="line-23">  public I apply(final I i, final Creation&lt;I&gt; c, final ReferenceSelector rs);</span>
-<span class="source-line-no">024</span><span id="line-24"></span>
-<span class="source-line-no">025</span><span id="line-25">}</span>
+<span class="source-line-no">016</span><span id="line-16">// Subordinate to Factory&lt;T&gt;.</span>
+<span class="source-line-no">017</span><span id="line-17">// An applicator of business method interceptions. This is used during assembly of a Factory implementation and should</span>
+<span class="source-line-no">018</span><span id="line-18">// be used probably only when "around-invoke" interceptions are in effect.</span>
+<span class="source-line-no">019</span><span id="line-19">@FunctionalInterface</span>
+<span class="source-line-no">020</span><span id="line-20">public interface InterceptionsApplicator&lt;I&gt; {</span>
+<span class="source-line-no">021</span><span id="line-21"></span>
+<span class="source-line-no">022</span><span id="line-22">  // i is the contextual instance</span>
+<span class="source-line-no">023</span><span id="line-23">  // TODO: c and rs go together, always, so anytime you need an rs you need a c.</span>
+<span class="source-line-no">024</span><span id="line-24">  public I apply(final I i, final Creation&lt;I&gt; c, final ReferenceSelector rs);</span>
+<span class="source-line-no">025</span><span id="line-25"></span>
+<span class="source-line-no">026</span><span id="line-26">}</span>
 
 
 

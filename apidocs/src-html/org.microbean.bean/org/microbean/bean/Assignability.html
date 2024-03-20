@@ -468,7 +468,7 @@
 <span class="source-line-no">454</span><span id="line-454">  // (Is there one bound in (condensed) payloadBounds that matches all bounds in (condensed) receiver bounds?</span>
 <span class="source-line-no">455</span><span id="line-455">  //</span>
 <span class="source-line-no">456</span><span id="line-456">  // Throws ClassCastException if, after condensing, any encountered bound is not either an ArrayType or a DeclaredType.</span>
-<span class="source-line-no">457</span><span id="line-457">  private final boolean covariantlyAssignable(List&lt;? extends TypeMirror&gt; receiverBounds, List&lt;? extends TypeMirror&gt; payloadBounds) {</span>
+<span class="source-line-no">457</span><span id="line-457">  private final boolean covariantlyAssignable(final List&lt;? extends TypeMirror&gt; receiverBounds, List&lt;? extends TypeMirror&gt; payloadBounds) {</span>
 <span class="source-line-no">458</span><span id="line-458">    payloadBounds = condense(payloadBounds);</span>
 <span class="source-line-no">459</span><span id="line-459">    for (final TypeMirror condensedReceiverBound : condense(receiverBounds)) { // eliminate type variables via condense() call</span>
 <span class="source-line-no">460</span><span id="line-460">      if (!covariantlyAssignable((ReferenceType)condensedReceiverBound, payloadBounds)) {</span>
