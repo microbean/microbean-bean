@@ -39,7 +39,7 @@ public interface Factory<I> extends Aggregate, Constable {
   public default Set<Dependency> dependencies() {
     return Set.of();
   }
-  
+
   public default I singleton() {
     return null;
   }

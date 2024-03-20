@@ -454,7 +454,7 @@ public final class Assignability implements Constable {
   // (Is there one bound in (condensed) payloadBounds that matches all bounds in (condensed) receiver bounds?
   //
   // Throws ClassCastException if, after condensing, any encountered bound is not either an ArrayType or a DeclaredType.
-  private final boolean covariantlyAssignable(List<? extends TypeMirror> receiverBounds, List<? extends TypeMirror> payloadBounds) {
+  private final boolean covariantlyAssignable(final List<? extends TypeMirror> receiverBounds, List<? extends TypeMirror> payloadBounds) {
     payloadBounds = condense(payloadBounds);
     for (final TypeMirror condensedReceiverBound : condense(receiverBounds)) { // eliminate type variables via condense() call
       if (!covariantlyAssignable((ReferenceType)condensedReceiverBound, payloadBounds)) {

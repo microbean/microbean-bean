@@ -29,7 +29,6 @@ import java.util.Optional;
 import java.util.function.Predicate;
 
 import javax.lang.model.type.DeclaredType;
-import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
 
 import org.microbean.constant.Constables;
@@ -39,7 +38,6 @@ import org.microbean.lang.Equality;
 import org.microbean.lang.Lang;
 import org.microbean.lang.NameTypeMirrorComparator;
 import org.microbean.lang.SpecializationDepthTypeMirrorComparator;
-import org.microbean.lang.TestingTypeMirrorComparator;
 
 import org.microbean.lang.type.DelegatingTypeMirror;
 

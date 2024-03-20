@@ -30,7 +30,7 @@ public interface Producer<I> extends Aggregate {
   public default Set<Dependency> dependencies() {
     return Set.of();
   }
-  
+
   // TODO: c and rs go together, always, so anytime you need an rs you need a c.
   public default void dispose(final I i, final Creation<I> c, final ReferenceSelector rs) {
     if (i instanceof AutoCloseable ac) {

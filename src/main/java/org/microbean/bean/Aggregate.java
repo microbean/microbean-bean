@@ -19,5 +19,5 @@ import java.util.Set;
 public interface Aggregate {
 
   public Set<Dependency> dependencies();
-  
+
 }

@@ -13,6 +13,8 @@
  */
 package org.microbean.bean;
 
+// Subordinate to Factory<I>.
+// Calls preDestroy() methods.
 @FunctionalInterface
 public interface PreDestructor<I> {
 

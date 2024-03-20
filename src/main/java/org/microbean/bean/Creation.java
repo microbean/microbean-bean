@@ -143,6 +143,8 @@ public interface Creation<I> extends AutoCloseable, Cloneable {
    * @param c the {@link Creation} to cast and return; may be {@code null}
    *
    * @return the {@link Creation}, cast to an appropriate type, or {@code null}
+   *
+   * @exception ClassCastException if the cast could not be performed for any reason
    */
   @SuppressWarnings("unchecked")
   public static <I> Creation<I> cast(final Creation<?> c) {
