@@ -34,7 +34,7 @@
 <span class="source-line-no">020</span><span id="line-20"></span>
 <span class="source-line-no">021</span><span id="line-21">import java.util.Objects;</span>
 <span class="source-line-no">022</span><span id="line-22">import java.util.Optional;</span>
-<span class="source-line-no">023</span><span id="line-23">import java.util.Set;</span>
+<span class="source-line-no">023</span><span id="line-23">import java.util.SequencedSet;</span>
 <span class="source-line-no">024</span><span id="line-24"></span>
 <span class="source-line-no">025</span><span id="line-25">import static java.lang.constant.ConstantDescs.BSM_INVOKE;</span>
 <span class="source-line-no">026</span><span id="line-26"></span>
@@ -42,11 +42,11 @@
 <span class="source-line-no">028</span><span id="line-28">import static org.microbean.bean.ConstantDescs.CD_Factory;</span>
 <span class="source-line-no">029</span><span id="line-29">import static org.microbean.bean.ConstantDescs.CD_Id;</span>
 <span class="source-line-no">030</span><span id="line-30"></span>
-<span class="source-line-no">031</span><span id="line-31">public final record Bean&lt;I&gt;(Id id, Factory&lt;I&gt; factory) implements Aggregate, Alternate, Constable {</span>
+<span class="source-line-no">031</span><span id="line-31">public final record Bean&lt;I&gt;(Id id, Factory&lt;I&gt; factory) implements Aggregate, Constable, Ranked {</span>
 <span class="source-line-no">032</span><span id="line-32"></span>
 <span class="source-line-no">033</span><span id="line-33">  public Bean {</span>
-<span class="source-line-no">034</span><span id="line-34">    id = Objects.requireNonNull(id, "id");</span>
-<span class="source-line-no">035</span><span id="line-35">    factory = Objects.requireNonNull(factory, "factory");</span>
+<span class="source-line-no">034</span><span id="line-34">    Objects.requireNonNull(id, "id");</span>
+<span class="source-line-no">035</span><span id="line-35">    Objects.requireNonNull(factory, "factory");</span>
 <span class="source-line-no">036</span><span id="line-36">  }</span>
 <span class="source-line-no">037</span><span id="line-37"></span>
 <span class="source-line-no">038</span><span id="line-38">  @Override // Alternate</span>
@@ -60,7 +60,7 @@
 <span class="source-line-no">046</span><span id="line-46">  }</span>
 <span class="source-line-no">047</span><span id="line-47"></span>
 <span class="source-line-no">048</span><span id="line-48">  @Override // Aggregate</span>
-<span class="source-line-no">049</span><span id="line-49">  public final Set&lt;Dependency&gt; dependencies() {</span>
+<span class="source-line-no">049</span><span id="line-49">  public final SequencedSet&lt;Dependency&gt; dependencies() {</span>
 <span class="source-line-no">050</span><span id="line-50">    return this.factory().dependencies();</span>
 <span class="source-line-no">051</span><span id="line-51">  }</span>
 <span class="source-line-no">052</span><span id="line-52"></span>

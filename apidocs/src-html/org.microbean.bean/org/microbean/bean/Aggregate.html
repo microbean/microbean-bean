@@ -27,14 +27,42 @@
 <span class="source-line-no">013</span><span id="line-13"> */</span>
 <span class="source-line-no">014</span><span id="line-14">package org.microbean.bean;</span>
 <span class="source-line-no">015</span><span id="line-15"></span>
-<span class="source-line-no">016</span><span id="line-16">import java.util.Set;</span>
-<span class="source-line-no">017</span><span id="line-17"></span>
-<span class="source-line-no">018</span><span id="line-18">// Something that has dependencies.</span>
-<span class="source-line-no">019</span><span id="line-19">public interface Aggregate {</span>
-<span class="source-line-no">020</span><span id="line-20"></span>
-<span class="source-line-no">021</span><span id="line-21">  public Set&lt;Dependency&gt; dependencies();</span>
-<span class="source-line-no">022</span><span id="line-22"></span>
-<span class="source-line-no">023</span><span id="line-23">}</span>
+<span class="source-line-no">016</span><span id="line-16">import java.util.Collection;</span>
+<span class="source-line-no">017</span><span id="line-17">import java.util.Collections;</span>
+<span class="source-line-no">018</span><span id="line-18">import java.util.LinkedHashSet;</span>
+<span class="source-line-no">019</span><span id="line-19">import java.util.List;</span>
+<span class="source-line-no">020</span><span id="line-20">import java.util.SequencedSet;</span>
+<span class="source-line-no">021</span><span id="line-21"></span>
+<span class="source-line-no">022</span><span id="line-22">/**</span>
+<span class="source-line-no">023</span><span id="line-23"> * An object with {@linkplain Dependency dependencies}.</span>
+<span class="source-line-no">024</span><span id="line-24"> *</span>
+<span class="source-line-no">025</span><span id="line-25"> * @author &lt;a href="https://about.me/lairdnelson/" target="_top"&gt;Laird Nelson&lt;/a&gt;</span>
+<span class="source-line-no">026</span><span id="line-26"> *</span>
+<span class="source-line-no">027</span><span id="line-27"> * @see #dependencies()</span>
+<span class="source-line-no">028</span><span id="line-28"> */</span>
+<span class="source-line-no">029</span><span id="line-29">public interface Aggregate {</span>
+<span class="source-line-no">030</span><span id="line-30"></span>
+<span class="source-line-no">031</span><span id="line-31">  public static final SequencedSet&lt;Dependency&gt; EMPTY_DEPENDENCIES = Collections.unmodifiableSequencedSet(new LinkedHashSet&lt;&gt;(0));</span>
+<span class="source-line-no">032</span><span id="line-32"></span>
+<span class="source-line-no">033</span><span id="line-33">  /**</span>
+<span class="source-line-no">034</span><span id="line-34">   * Returns an unmodifiable {@link SequencedSet} of {@link Dependency} instances.</span>
+<span class="source-line-no">035</span><span id="line-35">   *</span>
+<span class="source-line-no">036</span><span id="line-36">   * @return an unmodifiable {@link SequencedSet} of {@link Dependency} instances; never {@code null}</span>
+<span class="source-line-no">037</span><span id="line-37">   *</span>
+<span class="source-line-no">038</span><span id="line-38">   * @see Dependency</span>
+<span class="source-line-no">039</span><span id="line-39">   */</span>
+<span class="source-line-no">040</span><span id="line-40">  public default SequencedSet&lt;Dependency&gt; dependencies() {</span>
+<span class="source-line-no">041</span><span id="line-41">    return EMPTY_DEPENDENCIES;</span>
+<span class="source-line-no">042</span><span id="line-42">  }</span>
+<span class="source-line-no">043</span><span id="line-43"></span>
+<span class="source-line-no">044</span><span id="line-44">  public default List&lt;Assignment&gt; assign(final Request&lt;?&gt; r) {</span>
+<span class="source-line-no">045</span><span id="line-45">    final Collection&lt;? extends Dependency&gt; ds = this.dependencies();</span>
+<span class="source-line-no">046</span><span id="line-46">    return ds == null || ds.isEmpty() ? List.of() : ds.stream()</span>
+<span class="source-line-no">047</span><span id="line-47">      .map(d -&gt; Assignment.of(d, r))</span>
+<span class="source-line-no">048</span><span id="line-48">      .toList();</span>
+<span class="source-line-no">049</span><span id="line-49">  }</span>
+<span class="source-line-no">050</span><span id="line-50"></span>
+<span class="source-line-no">051</span><span id="line-51">}</span>
 
 
 
