@@ -76,35 +76,36 @@
 <span class="source-line-no">062</span><span id="line-62">    final TypeMatcher tm = beanSelectionCriteria.typeMatcher();</span>
 <span class="source-line-no">063</span><span id="line-63">    element = DelegatingElement.of(element, tm.typeAndElementSource());</span>
 <span class="source-line-no">064</span><span id="line-64">    if (element.getKind().isVariable()) {</span>
-<span class="source-line-no">065</span><span id="line-65">      beanSelectionCriteria = new BeanSelectionCriteria(tm, element.asType(), beanSelectionCriteria.attributes());</span>
-<span class="source-line-no">066</span><span id="line-66">    }</span>
-<span class="source-line-no">067</span><span id="line-67">  }</span>
-<span class="source-line-no">068</span><span id="line-68"></span>
+<span class="source-line-no">065</span><span id="line-65">      // Replace the bsc so its type is the element's</span>
+<span class="source-line-no">066</span><span id="line-66">      beanSelectionCriteria = new BeanSelectionCriteria(tm, element.asType(), beanSelectionCriteria.attributes());</span>
+<span class="source-line-no">067</span><span id="line-67">    }</span>
+<span class="source-line-no">068</span><span id="line-68">  }</span>
 <span class="source-line-no">069</span><span id="line-69"></span>
-<span class="source-line-no">070</span><span id="line-70">  /*</span>
-<span class="source-line-no">071</span><span id="line-71">   * Instance methods.</span>
-<span class="source-line-no">072</span><span id="line-72">   */</span>
-<span class="source-line-no">073</span><span id="line-73"></span>
+<span class="source-line-no">070</span><span id="line-70"></span>
+<span class="source-line-no">071</span><span id="line-71">  /*</span>
+<span class="source-line-no">072</span><span id="line-72">   * Instance methods.</span>
+<span class="source-line-no">073</span><span id="line-73">   */</span>
 <span class="source-line-no">074</span><span id="line-74"></span>
-<span class="source-line-no">075</span><span id="line-75">  /**</span>
-<span class="source-line-no">076</span><span id="line-76">   * Returns an {@link Optional} providing access to a {@link DynamicConstantDesc} describing this {@link Dependency}.</span>
-<span class="source-line-no">077</span><span id="line-77">   *</span>
-<span class="source-line-no">078</span><span id="line-78">   * @return an {@link Optional} providing access to a {@link DynamicConstantDesc} describing this {@link Dependency};</span>
-<span class="source-line-no">079</span><span id="line-79">   * never {@code null}</span>
-<span class="source-line-no">080</span><span id="line-80">   */</span>
-<span class="source-line-no">081</span><span id="line-81">  @Override // Constable</span>
-<span class="source-line-no">082</span><span id="line-82">  public final Optional&lt;DynamicConstantDesc&lt;Dependency&gt;&gt; describeConstable() {</span>
-<span class="source-line-no">083</span><span id="line-83">    return ((DelegatingElement)this.element()).describeConstable()</span>
-<span class="source-line-no">084</span><span id="line-84">      .flatMap(eDesc -&gt; this.beanSelectionCriteria().describeConstable()</span>
-<span class="source-line-no">085</span><span id="line-85">               .map(bscDesc -&gt; DynamicConstantDesc.of(BSM_INVOKE,</span>
-<span class="source-line-no">086</span><span id="line-86">                                                      MethodHandleDesc.ofConstructor(CD_Dependency,</span>
-<span class="source-line-no">087</span><span id="line-87">                                                                                     CD_Element,</span>
-<span class="source-line-no">088</span><span id="line-88">                                                                                     CD_BeanSelectionCriteria),</span>
-<span class="source-line-no">089</span><span id="line-89">                                                      bscDesc,</span>
-<span class="source-line-no">090</span><span id="line-90">                                                      eDesc)));</span>
-<span class="source-line-no">091</span><span id="line-91">  }</span>
-<span class="source-line-no">092</span><span id="line-92"></span>
-<span class="source-line-no">093</span><span id="line-93">}</span>
+<span class="source-line-no">075</span><span id="line-75"></span>
+<span class="source-line-no">076</span><span id="line-76">  /**</span>
+<span class="source-line-no">077</span><span id="line-77">   * Returns an {@link Optional} providing access to a {@link DynamicConstantDesc} describing this {@link Dependency}.</span>
+<span class="source-line-no">078</span><span id="line-78">   *</span>
+<span class="source-line-no">079</span><span id="line-79">   * @return an {@link Optional} providing access to a {@link DynamicConstantDesc} describing this {@link Dependency};</span>
+<span class="source-line-no">080</span><span id="line-80">   * never {@code null}</span>
+<span class="source-line-no">081</span><span id="line-81">   */</span>
+<span class="source-line-no">082</span><span id="line-82">  @Override // Constable</span>
+<span class="source-line-no">083</span><span id="line-83">  public final Optional&lt;DynamicConstantDesc&lt;Dependency&gt;&gt; describeConstable() {</span>
+<span class="source-line-no">084</span><span id="line-84">    return ((DelegatingElement)this.element()).describeConstable()</span>
+<span class="source-line-no">085</span><span id="line-85">      .flatMap(eDesc -&gt; this.beanSelectionCriteria().describeConstable()</span>
+<span class="source-line-no">086</span><span id="line-86">               .map(bscDesc -&gt; DynamicConstantDesc.of(BSM_INVOKE,</span>
+<span class="source-line-no">087</span><span id="line-87">                                                      MethodHandleDesc.ofConstructor(CD_Dependency,</span>
+<span class="source-line-no">088</span><span id="line-88">                                                                                     CD_Element,</span>
+<span class="source-line-no">089</span><span id="line-89">                                                                                     CD_BeanSelectionCriteria),</span>
+<span class="source-line-no">090</span><span id="line-90">                                                      bscDesc,</span>
+<span class="source-line-no">091</span><span id="line-91">                                                      eDesc)));</span>
+<span class="source-line-no">092</span><span id="line-92">  }</span>
+<span class="source-line-no">093</span><span id="line-93"></span>
+<span class="source-line-no">094</span><span id="line-94">}</span>
 
 
 

@@ -30,61 +30,55 @@
 <span class="source-line-no">016</span><span id="line-16">import java.util.Collection;</span>
 <span class="source-line-no">017</span><span id="line-17">import java.util.List;</span>
 <span class="source-line-no">018</span><span id="line-18"></span>
-<span class="source-line-no">019</span><span id="line-19">public class AmbiguousReductionException extends ReductionException {</span>
-<span class="source-line-no">020</span><span id="line-20"></span>
-<span class="source-line-no">021</span><span id="line-21">  private static final long serialVersionUID = 1L;</span>
-<span class="source-line-no">022</span><span id="line-22"></span>
-<span class="source-line-no">023</span><span id="line-23">  private final transient Collection&lt;?&gt; alternates;</span>
-<span class="source-line-no">024</span><span id="line-24"></span>
-<span class="source-line-no">025</span><span id="line-25">  public AmbiguousReductionException() {</span>
-<span class="source-line-no">026</span><span id="line-26">    this(null, null, null, null);</span>
-<span class="source-line-no">027</span><span id="line-27">  }</span>
-<span class="source-line-no">028</span><span id="line-28"></span>
-<span class="source-line-no">029</span><span id="line-29">  public AmbiguousReductionException(final Collection&lt;?&gt; alternates,</span>
-<span class="source-line-no">030</span><span id="line-30">                                     final String message) {</span>
-<span class="source-line-no">031</span><span id="line-31">    this(null, alternates, message, null);</span>
-<span class="source-line-no">032</span><span id="line-32">  }</span>
-<span class="source-line-no">033</span><span id="line-33"></span>
-<span class="source-line-no">034</span><span id="line-34">  public AmbiguousReductionException(final Object criteria,</span>
-<span class="source-line-no">035</span><span id="line-35">                                     final Collection&lt;?&gt; alternates,</span>
-<span class="source-line-no">036</span><span id="line-36">                                     final String message) {</span>
-<span class="source-line-no">037</span><span id="line-37">    this(criteria, alternates, message, null);</span>
-<span class="source-line-no">038</span><span id="line-38">  }</span>
-<span class="source-line-no">039</span><span id="line-39"></span>
-<span class="source-line-no">040</span><span id="line-40">  public AmbiguousReductionException(final Collection&lt;?&gt; alternates,</span>
-<span class="source-line-no">041</span><span id="line-41">                                     final Throwable cause) {</span>
-<span class="source-line-no">042</span><span id="line-42">    this(null, alternates, null, cause);</span>
-<span class="source-line-no">043</span><span id="line-43">  }</span>
-<span class="source-line-no">044</span><span id="line-44"></span>
+<span class="source-line-no">019</span><span id="line-19">/**</span>
+<span class="source-line-no">020</span><span id="line-20"> * A {@link ReductionException} indicating that many contextual instances could not be reduced to one.</span>
+<span class="source-line-no">021</span><span id="line-21"> *</span>
+<span class="source-line-no">022</span><span id="line-22"> * @author &lt;a href="https://about.me/lairdnelson" target="_top"&gt;Laird Nelson&lt;/a&gt;</span>
+<span class="source-line-no">023</span><span id="line-23"> */</span>
+<span class="source-line-no">024</span><span id="line-24">public class AmbiguousReductionException extends ReductionException {</span>
+<span class="source-line-no">025</span><span id="line-25"></span>
+<span class="source-line-no">026</span><span id="line-26">  private static final long serialVersionUID = 1L;</span>
+<span class="source-line-no">027</span><span id="line-27"></span>
+<span class="source-line-no">028</span><span id="line-28">  private final transient Collection&lt;?&gt; alternates;</span>
+<span class="source-line-no">029</span><span id="line-29"></span>
+<span class="source-line-no">030</span><span id="line-30"></span>
+<span class="source-line-no">031</span><span id="line-31">  /*</span>
+<span class="source-line-no">032</span><span id="line-32">   * Constructors.</span>
+<span class="source-line-no">033</span><span id="line-33">   */</span>
+<span class="source-line-no">034</span><span id="line-34"></span>
+<span class="source-line-no">035</span><span id="line-35"></span>
+<span class="source-line-no">036</span><span id="line-36">  /**</span>
+<span class="source-line-no">037</span><span id="line-37">   * Creates a new {@link AmbiguousReductionException}.</span>
+<span class="source-line-no">038</span><span id="line-38">   *</span>
+<span class="source-line-no">039</span><span id="line-39">   * @param criteria the criteria by which a reduction was supposed to be effected; may be {@code null}</span>
+<span class="source-line-no">040</span><span id="line-40">   *</span>
+<span class="source-line-no">041</span><span id="line-41">   * @param alternates the contextual instances that could not be reduced; may be {@code null}</span>
+<span class="source-line-no">042</span><span id="line-42">   *</span>
+<span class="source-line-no">043</span><span id="line-43">   * @param message a detail message describing the exception; may be {@code null}</span>
+<span class="source-line-no">044</span><span id="line-44">   */</span>
 <span class="source-line-no">045</span><span id="line-45">  public AmbiguousReductionException(final Object criteria,</span>
 <span class="source-line-no">046</span><span id="line-46">                                     final Collection&lt;?&gt; alternates,</span>
-<span class="source-line-no">047</span><span id="line-47">                                     final Throwable cause) {</span>
-<span class="source-line-no">048</span><span id="line-48">    this(criteria, alternates, null, cause);</span>
-<span class="source-line-no">049</span><span id="line-49">  }</span>
-<span class="source-line-no">050</span><span id="line-50"></span>
-<span class="source-line-no">051</span><span id="line-51">  public AmbiguousReductionException(final Collection&lt;?&gt; alternates,</span>
-<span class="source-line-no">052</span><span id="line-52">                                     final String message,</span>
-<span class="source-line-no">053</span><span id="line-53">                                     final Throwable cause) {</span>
-<span class="source-line-no">054</span><span id="line-54">    this(null, alternates, message, cause);</span>
-<span class="source-line-no">055</span><span id="line-55">  }</span>
-<span class="source-line-no">056</span><span id="line-56"></span>
-<span class="source-line-no">057</span><span id="line-57">  public AmbiguousReductionException(final Object criteria,</span>
-<span class="source-line-no">058</span><span id="line-58">                                     final Collection&lt;?&gt; alternates,</span>
-<span class="source-line-no">059</span><span id="line-59">                                     final String message,</span>
-<span class="source-line-no">060</span><span id="line-60">                                     final Throwable cause) {</span>
-<span class="source-line-no">061</span><span id="line-61">    super(criteria, message, cause);</span>
-<span class="source-line-no">062</span><span id="line-62">    if (alternates == null || alternates.isEmpty()) {</span>
-<span class="source-line-no">063</span><span id="line-63">      this.alternates = List.of();</span>
-<span class="source-line-no">064</span><span id="line-64">    } else {</span>
-<span class="source-line-no">065</span><span id="line-65">      this.alternates = List.copyOf(alternates);</span>
-<span class="source-line-no">066</span><span id="line-66">    }</span>
-<span class="source-line-no">067</span><span id="line-67">  }</span>
-<span class="source-line-no">068</span><span id="line-68"></span>
-<span class="source-line-no">069</span><span id="line-69">  public final Collection&lt;?&gt; alternates() {</span>
-<span class="source-line-no">070</span><span id="line-70">    return this.alternates;</span>
-<span class="source-line-no">071</span><span id="line-71">  }</span>
-<span class="source-line-no">072</span><span id="line-72"></span>
-<span class="source-line-no">073</span><span id="line-73">}</span>
+<span class="source-line-no">047</span><span id="line-47">                                     final String message) {</span>
+<span class="source-line-no">048</span><span id="line-48">    super(criteria, message, null);</span>
+<span class="source-line-no">049</span><span id="line-49">    if (alternates == null || alternates.isEmpty()) {</span>
+<span class="source-line-no">050</span><span id="line-50">      this.alternates = List.of();</span>
+<span class="source-line-no">051</span><span id="line-51">    } else {</span>
+<span class="source-line-no">052</span><span id="line-52">      this.alternates = List.copyOf(alternates);</span>
+<span class="source-line-no">053</span><span id="line-53">    }</span>
+<span class="source-line-no">054</span><span id="line-54">  }</span>
+<span class="source-line-no">055</span><span id="line-55"></span>
+<span class="source-line-no">056</span><span id="line-56">  /**</span>
+<span class="source-line-no">057</span><span id="line-57">   * Returns the contextual instances that could not be reduced.</span>
+<span class="source-line-no">058</span><span id="line-58">   *</span>
+<span class="source-line-no">059</span><span id="line-59">   * &lt;p&gt;This method never returns {@code null}.&lt;/p&gt;</span>
+<span class="source-line-no">060</span><span id="line-60">   *</span>
+<span class="source-line-no">061</span><span id="line-61">   * @return a non-{@code null}, immutable {@link Collection} of contextual instances</span>
+<span class="source-line-no">062</span><span id="line-62">   */</span>
+<span class="source-line-no">063</span><span id="line-63">  public final Collection&lt;?&gt; alternates() {</span>
+<span class="source-line-no">064</span><span id="line-64">    return this.alternates;</span>
+<span class="source-line-no">065</span><span id="line-65">  }</span>
+<span class="source-line-no">066</span><span id="line-66"></span>
+<span class="source-line-no">067</span><span id="line-67">}</span>
 
 
 

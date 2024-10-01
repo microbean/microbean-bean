@@ -28,52 +28,90 @@
 <span class="source-line-no">014</span><span id="line-14">package org.microbean.bean;</span>
 <span class="source-line-no">015</span><span id="line-15"></span>
 <span class="source-line-no">016</span><span id="line-16">import java.util.List;</span>
-<span class="source-line-no">017</span><span id="line-17">import java.util.Objects;</span>
-<span class="source-line-no">018</span><span id="line-18"></span>
-<span class="source-line-no">019</span><span id="line-19">import java.util.concurrent.ConcurrentHashMap;</span>
-<span class="source-line-no">020</span><span id="line-20"></span>
-<span class="source-line-no">021</span><span id="line-21">import java.util.function.BiFunction;</span>
-<span class="source-line-no">022</span><span id="line-22">import java.util.function.Function;</span>
-<span class="source-line-no">023</span><span id="line-23"></span>
-<span class="source-line-no">024</span><span id="line-24">public interface Reducible&lt;C, T&gt; {</span>
-<span class="source-line-no">025</span><span id="line-25"></span>
-<span class="source-line-no">026</span><span id="line-26">  public T reduce(final C criteria);</span>
-<span class="source-line-no">027</span><span id="line-27"></span>
-<span class="source-line-no">028</span><span id="line-28">  public static &lt;C, E&gt; Reducible&lt;C, E&gt; of(final Selectable&lt;C, E&gt; selectable,</span>
-<span class="source-line-no">029</span><span id="line-29">                                          final Reducer&lt;C, E&gt; r) {</span>
-<span class="source-line-no">030</span><span id="line-30">    return of(selectable, r, Reducer::fail);</span>
-<span class="source-line-no">031</span><span id="line-31">  }</span>
-<span class="source-line-no">032</span><span id="line-32"></span>
-<span class="source-line-no">033</span><span id="line-33">  public static &lt;C, E&gt; Reducible&lt;C, E&gt; of(final Selectable&lt;C, E&gt; selectable,</span>
-<span class="source-line-no">034</span><span id="line-34">                                          final Reducer&lt;C, E&gt; r,</span>
-<span class="source-line-no">035</span><span id="line-35">                                          final BiFunction&lt;? super List&lt;? extends E&gt;, ? super C, ? extends E&gt; failureHandler) {</span>
-<span class="source-line-no">036</span><span id="line-36">    Objects.requireNonNull(selectable, "selectable");</span>
-<span class="source-line-no">037</span><span id="line-37">    Objects.requireNonNull(r, "r");</span>
-<span class="source-line-no">038</span><span id="line-38">    final BiFunction&lt;? super List&lt;? extends E&gt;, ? super C, ? extends E&gt; fh =</span>
-<span class="source-line-no">039</span><span id="line-39">      failureHandler == null ? Reducer::fail : failureHandler;</span>
-<span class="source-line-no">040</span><span id="line-40">    return c -&gt; r.reduce(selectable.select(c), c, fh);</span>
-<span class="source-line-no">041</span><span id="line-41">  }</span>
-<span class="source-line-no">042</span><span id="line-42"></span>
-<span class="source-line-no">043</span><span id="line-43">  public static &lt;C, E&gt; Reducible&lt;C, E&gt; ofCaching(final Selectable&lt;C, E&gt; selectable,</span>
-<span class="source-line-no">044</span><span id="line-44">                                                 final Reducer&lt;C, E&gt; r) {</span>
-<span class="source-line-no">045</span><span id="line-45">    return ofCaching(selectable, r, Reducer::fail);</span>
-<span class="source-line-no">046</span><span id="line-46">  }</span>
-<span class="source-line-no">047</span><span id="line-47"></span>
-<span class="source-line-no">048</span><span id="line-48">  public static &lt;C, E&gt; Reducible&lt;C, E&gt; ofCaching(final Selectable&lt;C, E&gt; selectable,</span>
-<span class="source-line-no">049</span><span id="line-49">                                                 final Reducer&lt;C, E&gt; r,</span>
-<span class="source-line-no">050</span><span id="line-50">                                                 final BiFunction&lt;? super List&lt;? extends E&gt;, ? super C, ? extends E&gt; failureHandler) {</span>
-<span class="source-line-no">051</span><span id="line-51">    return ofCaching(selectable, r, failureHandler, new ConcurrentHashMap&lt;C, E&gt;()::computeIfAbsent);</span>
-<span class="source-line-no">052</span><span id="line-52">  }</span>
-<span class="source-line-no">053</span><span id="line-53"></span>
-<span class="source-line-no">054</span><span id="line-54">  public static &lt;C, E&gt; Reducible&lt;C, E&gt; ofCaching(final Selectable&lt;C, E&gt; selectable,</span>
-<span class="source-line-no">055</span><span id="line-55">                                                 final Reducer&lt;C, E&gt; r,</span>
-<span class="source-line-no">056</span><span id="line-56">                                                 final BiFunction&lt;? super List&lt;? extends E&gt;, ? super C, ? extends E&gt; failureHandler,</span>
-<span class="source-line-no">057</span><span id="line-57">                                                 final BiFunction&lt;? super C, Function&lt;C, E&gt;, ? extends E&gt; computeIfAbsent) {</span>
-<span class="source-line-no">058</span><span id="line-58">    final Reducible&lt;C, E&gt; rd = of(selectable, r, failureHandler);</span>
-<span class="source-line-no">059</span><span id="line-59">    return c -&gt; computeIfAbsent.apply(c, rd::reduce);</span>
-<span class="source-line-no">060</span><span id="line-60">  }</span>
+<span class="source-line-no">017</span><span id="line-17">import java.util.Map;</span>
+<span class="source-line-no">018</span><span id="line-18">import java.util.Objects;</span>
+<span class="source-line-no">019</span><span id="line-19"></span>
+<span class="source-line-no">020</span><span id="line-20">import java.util.concurrent.ConcurrentHashMap;</span>
+<span class="source-line-no">021</span><span id="line-21"></span>
+<span class="source-line-no">022</span><span id="line-22">import java.util.function.BiFunction;</span>
+<span class="source-line-no">023</span><span id="line-23">import java.util.function.Function;</span>
+<span class="source-line-no">024</span><span id="line-24"></span>
+<span class="source-line-no">025</span><span id="line-25">/**</span>
+<span class="source-line-no">026</span><span id="line-26"> * A {@linkplain FunctionalInterface functional interface} whose implementations can reduce an unspecified notional</span>
+<span class="source-line-no">027</span><span id="line-27"> * collection of elements to a single element according to some &lt;em&gt;criteria&lt;/em&gt;.</span>
+<span class="source-line-no">028</span><span id="line-28"> *</span>
+<span class="source-line-no">029</span><span id="line-29"> * &lt;p&gt;This interface is related to, but should not be confused with, the {@link Reducer} interface, which can be used to</span>
+<span class="source-line-no">030</span><span id="line-30"> * build {@link Reducible} instances.&lt;/p&gt;</span>
+<span class="source-line-no">031</span><span id="line-31"> *</span>
+<span class="source-line-no">032</span><span id="line-32"> * @param &lt;C&gt; the type of criteria</span>
+<span class="source-line-no">033</span><span id="line-33"> *</span>
+<span class="source-line-no">034</span><span id="line-34"> * @param &lt;T&gt; the element type</span>
+<span class="source-line-no">035</span><span id="line-35"> *</span>
+<span class="source-line-no">036</span><span id="line-36"> * @author &lt;a href="https://about.me/lairdnelson" target="_top"&gt;Laird Nelson&lt;/a&gt;</span>
+<span class="source-line-no">037</span><span id="line-37"> *</span>
+<span class="source-line-no">038</span><span id="line-38"> * @see #reduce(Object)</span>
+<span class="source-line-no">039</span><span id="line-39"> *</span>
+<span class="source-line-no">040</span><span id="line-40"> * @see Reducer</span>
+<span class="source-line-no">041</span><span id="line-41"> */</span>
+<span class="source-line-no">042</span><span id="line-42">@FunctionalInterface</span>
+<span class="source-line-no">043</span><span id="line-43">public interface Reducible&lt;C, T&gt; {</span>
+<span class="source-line-no">044</span><span id="line-44"></span>
+<span class="source-line-no">045</span><span id="line-45"></span>
+<span class="source-line-no">046</span><span id="line-46">  /**</span>
+<span class="source-line-no">047</span><span id="line-47">   * Given a criteria object, which may be {@code null}, returns an object that represents the &lt;em&gt;reduction&lt;/em&gt; of a</span>
+<span class="source-line-no">048</span><span id="line-48">   * notional collection of objects.</span>
+<span class="source-line-no">049</span><span id="line-49">   *</span>
+<span class="source-line-no">050</span><span id="line-50">   * &lt;p&gt;Most {@link Reducible} implementations will return determine values from invocations of this method, but there</span>
+<span class="source-line-no">051</span><span id="line-51">   * is no requirement to do so.&lt;/p&gt;</span>
+<span class="source-line-no">052</span><span id="line-52">   *</span>
+<span class="source-line-no">053</span><span id="line-53">   * @param criteria the criteria; may be {@code null} to indicate no criteria</span>
+<span class="source-line-no">054</span><span id="line-54">   *</span>
+<span class="source-line-no">055</span><span id="line-55">   * @return a single object, or {@code null}</span>
+<span class="source-line-no">056</span><span id="line-56">   *</span>
+<span class="source-line-no">057</span><span id="line-57">   * @exception ReductionException if reduction could not occur or if an error occurs</span>
+<span class="source-line-no">058</span><span id="line-58">   */</span>
+<span class="source-line-no">059</span><span id="line-59">  public T reduce(final C criteria);</span>
+<span class="source-line-no">060</span><span id="line-60"></span>
 <span class="source-line-no">061</span><span id="line-61"></span>
-<span class="source-line-no">062</span><span id="line-62">}</span>
+<span class="source-line-no">062</span><span id="line-62">  /*</span>
+<span class="source-line-no">063</span><span id="line-63">   * Static methods.</span>
+<span class="source-line-no">064</span><span id="line-64">   */</span>
+<span class="source-line-no">065</span><span id="line-65"></span>
+<span class="source-line-no">066</span><span id="line-66"></span>
+<span class="source-line-no">067</span><span id="line-67">  public static &lt;C, E&gt; Reducible&lt;C, E&gt; of(final Selectable&lt;C, E&gt; selectable,</span>
+<span class="source-line-no">068</span><span id="line-68">                                          final Reducer&lt;C, E&gt; r) {</span>
+<span class="source-line-no">069</span><span id="line-69">    return of(selectable, r, Reducer::fail);</span>
+<span class="source-line-no">070</span><span id="line-70">  }</span>
+<span class="source-line-no">071</span><span id="line-71"></span>
+<span class="source-line-no">072</span><span id="line-72">  public static &lt;C, E&gt; Reducible&lt;C, E&gt; of(final Selectable&lt;C, E&gt; selectable,</span>
+<span class="source-line-no">073</span><span id="line-73">                                          final Reducer&lt;C, E&gt; r,</span>
+<span class="source-line-no">074</span><span id="line-74">                                          final BiFunction&lt;? super List&lt;? extends E&gt;, ? super C, ? extends E&gt; failureHandler) {</span>
+<span class="source-line-no">075</span><span id="line-75">    Objects.requireNonNull(selectable, "selectable");</span>
+<span class="source-line-no">076</span><span id="line-76">    Objects.requireNonNull(r, "r");</span>
+<span class="source-line-no">077</span><span id="line-77">    final BiFunction&lt;? super List&lt;? extends E&gt;, ? super C, ? extends E&gt; fh = Objects.requireNonNull(failureHandler, "failureHandler");</span>
+<span class="source-line-no">078</span><span id="line-78">    return c -&gt; r.reduce(selectable.select(c), c, fh);</span>
+<span class="source-line-no">079</span><span id="line-79">  }</span>
+<span class="source-line-no">080</span><span id="line-80"></span>
+<span class="source-line-no">081</span><span id="line-81">  public static &lt;C, E&gt; Reducible&lt;C, E&gt; ofCaching(final Selectable&lt;C, E&gt; selectable,</span>
+<span class="source-line-no">082</span><span id="line-82">                                                 final Reducer&lt;C, E&gt; r) {</span>
+<span class="source-line-no">083</span><span id="line-83">    return ofCaching(selectable, r, Reducer::fail);</span>
+<span class="source-line-no">084</span><span id="line-84">  }</span>
+<span class="source-line-no">085</span><span id="line-85"></span>
+<span class="source-line-no">086</span><span id="line-86">  public static &lt;C, E&gt; Reducible&lt;C, E&gt; ofCaching(final Selectable&lt;C, E&gt; selectable,</span>
+<span class="source-line-no">087</span><span id="line-87">                                                 final Reducer&lt;C, E&gt; r,</span>
+<span class="source-line-no">088</span><span id="line-88">                                                 final BiFunction&lt;? super List&lt;? extends E&gt;, ? super C, ? extends E&gt; failureHandler) {</span>
+<span class="source-line-no">089</span><span id="line-89">    return ofCaching(selectable, r, failureHandler, new ConcurrentHashMap&lt;C, E&gt;()::computeIfAbsent);</span>
+<span class="source-line-no">090</span><span id="line-90">  }</span>
+<span class="source-line-no">091</span><span id="line-91"></span>
+<span class="source-line-no">092</span><span id="line-92">  public static &lt;C, E&gt; Reducible&lt;C, E&gt; ofCaching(final Selectable&lt;C, E&gt; selectable,</span>
+<span class="source-line-no">093</span><span id="line-93">                                                 final Reducer&lt;C, E&gt; r,</span>
+<span class="source-line-no">094</span><span id="line-94">                                                 final BiFunction&lt;? super List&lt;? extends E&gt;, ? super C, ? extends E&gt; failureHandler,</span>
+<span class="source-line-no">095</span><span id="line-95">                                                 final BiFunction&lt;? super C, Function&lt;C, E&gt;, ? extends E&gt; computeIfAbsent) {</span>
+<span class="source-line-no">096</span><span id="line-96">    final Reducible&lt;C, E&gt; rd = of(selectable, r, failureHandler);</span>
+<span class="source-line-no">097</span><span id="line-97">    return c -&gt; computeIfAbsent.apply(c, rd::reduce);</span>
+<span class="source-line-no">098</span><span id="line-98">  }</span>
+<span class="source-line-no">099</span><span id="line-99"></span>
+<span class="source-line-no">100</span><span id="line-100">}</span>
 
 
 

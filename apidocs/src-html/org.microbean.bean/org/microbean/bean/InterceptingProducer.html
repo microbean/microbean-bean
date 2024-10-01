@@ -40,7 +40,7 @@
 <span class="source-line-no">026</span><span id="line-26">import static org.microbean.interceptor.Interceptions.ofConstruction;</span>
 <span class="source-line-no">027</span><span id="line-27"></span>
 <span class="source-line-no">028</span><span id="line-28">// Applies around-construct logic to contextual instance production.</span>
-<span class="source-line-no">029</span><span id="line-29">public final class InterceptingProducer&lt;I&gt; extends AbstractProducer&lt;I&gt; {</span>
+<span class="source-line-no">029</span><span id="line-29">public final class InterceptingProducer&lt;I&gt; implements Producer&lt;I&gt; {</span>
 <span class="source-line-no">030</span><span id="line-30"></span>
 <span class="source-line-no">031</span><span id="line-31">  private final InterceptionFunction f;</span>
 <span class="source-line-no">032</span><span id="line-32"></span>
@@ -72,7 +72,7 @@
 <span class="source-line-no">058</span><span id="line-58">  @SuppressWarnings("unchecked")</span>
 <span class="source-line-no">059</span><span id="line-59">  public final I produce(final Request&lt;I&gt; r) {</span>
 <span class="source-line-no">060</span><span id="line-60">    return (I)this.f.apply(this.dependencies().stream()</span>
-<span class="source-line-no">061</span><span id="line-61">                           .map(d -&gt; Assignment.of(d, r).value())</span>
+<span class="source-line-no">061</span><span id="line-61">                           .map(d -&gt; new Assignment(d, r).value())</span>
 <span class="source-line-no">062</span><span id="line-62">                           .toArray());</span>
 <span class="source-line-no">063</span><span id="line-63">  }</span>
 <span class="source-line-no">064</span><span id="line-64"></span>

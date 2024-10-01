@@ -27,17 +27,57 @@
 <span class="source-line-no">013</span><span id="line-13"> */</span>
 <span class="source-line-no">014</span><span id="line-14">package org.microbean.bean;</span>
 <span class="source-line-no">015</span><span id="line-15"></span>
-<span class="source-line-no">016</span><span id="line-16">public interface Request&lt;I&gt; extends Creation&lt;I&gt;, ReferenceSelector {</span>
-<span class="source-line-no">017</span><span id="line-17"></span>
-<span class="source-line-no">018</span><span id="line-18">  public BeanReduction&lt;I&gt; beanReduction();</span>
-<span class="source-line-no">019</span><span id="line-19"></span>
-<span class="source-line-no">020</span><span id="line-20">  public &lt;J&gt; Request&lt;J&gt; newChild(final BeanReduction&lt;J&gt; beanReduction);</span>
-<span class="source-line-no">021</span><span id="line-21"></span>
-<span class="source-line-no">022</span><span id="line-22">  public default &lt;R&gt; R reference(final BeanSelectionCriteria beanSelectionCriteria) {</span>
-<span class="source-line-no">023</span><span id="line-23">    return this.reference(beanSelectionCriteria, this.cast());</span>
-<span class="source-line-no">024</span><span id="line-24">  }</span>
-<span class="source-line-no">025</span><span id="line-25"></span>
-<span class="source-line-no">026</span><span id="line-26">}</span>
+<span class="source-line-no">016</span><span id="line-16">/**</span>
+<span class="source-line-no">017</span><span id="line-17"> * A request for a contextual reference of a particular type, along with functionality to help fulfil the request.</span>
+<span class="source-line-no">018</span><span id="line-18"> *</span>
+<span class="source-line-no">019</span><span id="line-19"> * @param &lt;I&gt; the type of the contextual reference</span>
+<span class="source-line-no">020</span><span id="line-20"> *</span>
+<span class="source-line-no">021</span><span id="line-21"> * @author &lt;a href="https://about.me/lairdnelson" target="_top"&gt;Laird Nelson&lt;/a&gt;</span>
+<span class="source-line-no">022</span><span id="line-22"> *</span>
+<span class="source-line-no">023</span><span id="line-23"> * @see #beanReduction()</span>
+<span class="source-line-no">024</span><span id="line-24"> *</span>
+<span class="source-line-no">025</span><span id="line-25"> * @see ReferenceSelector</span>
+<span class="source-line-no">026</span><span id="line-26"> *</span>
+<span class="source-line-no">027</span><span id="line-27"> * @see Creation</span>
+<span class="source-line-no">028</span><span id="line-28"> */</span>
+<span class="source-line-no">029</span><span id="line-29">public interface Request&lt;I&gt; extends Creation&lt;I&gt;, ReferenceSelector {</span>
+<span class="source-line-no">030</span><span id="line-30"></span>
+<span class="source-line-no">031</span><span id="line-31">  /**</span>
+<span class="source-line-no">032</span><span id="line-32">   * Returns the {@link BeanReduction} describing this {@link Request} in progress.</span>
+<span class="source-line-no">033</span><span id="line-33">   *</span>
+<span class="source-line-no">034</span><span id="line-34">   * @return the {@link BeanReduction} describing this {@link Request} in progress; never {@code null}</span>
+<span class="source-line-no">035</span><span id="line-35">   *</span>
+<span class="source-line-no">036</span><span id="line-36">   * @idempotency Implementations of this method must be idempotent and deterministic.</span>
+<span class="source-line-no">037</span><span id="line-37">   *</span>
+<span class="source-line-no">038</span><span id="line-38">   * @nullability Implementations of this method must not return {@code null}.</span>
+<span class="source-line-no">039</span><span id="line-39">   *</span>
+<span class="source-line-no">040</span><span id="line-40">   * @threadsafety Implementations of this method must be safe for concurrent use by multiple threads.</span>
+<span class="source-line-no">041</span><span id="line-41">   *</span>
+<span class="source-line-no">042</span><span id="line-42">   * @see BeanReduction</span>
+<span class="source-line-no">043</span><span id="line-43">   */</span>
+<span class="source-line-no">044</span><span id="line-44">  public BeanReduction&lt;I&gt; beanReduction();</span>
+<span class="source-line-no">045</span><span id="line-45"></span>
+<span class="source-line-no">046</span><span id="line-46">  // Returns a new "child" Request, where "childness" means "in the service of the parent". So a request for a</span>
+<span class="source-line-no">047</span><span id="line-47">  // CoffeeMaker is the logical parent of a request for a Heater, which is the new child.</span>
+<span class="source-line-no">048</span><span id="line-48">  //</span>
+<span class="source-line-no">049</span><span id="line-49">  // It is very common for a Request implementation to also be (or house) an AutoCloseableRegistry implementation. So if</span>
+<span class="source-line-no">050</span><span id="line-50">  // the Heater object is in "none"/dependent scope, it should get added to the parent's set of AutoCloseables to be</span>
+<span class="source-line-no">051</span><span id="line-51">  // closed when the parent goes out of scope, and if a child request for a Fuse object gets created, then the Fuse</span>
+<span class="source-line-no">052</span><span id="line-52">  // should be added to the child's set of AutoCloseables, and so on.</span>
+<span class="source-line-no">053</span><span id="line-53">  //</span>
+<span class="source-line-no">054</span><span id="line-54">  // See AutoCloseableRegistry#newChild() for how that part works.</span>
+<span class="source-line-no">055</span><span id="line-55">  //</span>
+<span class="source-line-no">056</span><span id="line-56">  // Note that the semantics of *this* newChild(BeanReduction) method don't have the same "tree node"-like quality as</span>
+<span class="source-line-no">057</span><span id="line-57">  // AutoCloseableRegistry#newChild(). That is, there's no requirement that a child Request retain a reference to its</span>
+<span class="source-line-no">058</span><span id="line-58">  // parent Request.</span>
+<span class="source-line-no">059</span><span id="line-59">  public &lt;J&gt; Request&lt;J&gt; newChild(final BeanReduction&lt;J&gt; beanReduction);</span>
+<span class="source-line-no">060</span><span id="line-60"></span>
+<span class="source-line-no">061</span><span id="line-61">  @SuppressWarnings("unchecked")</span>
+<span class="source-line-no">062</span><span id="line-62">  public default &lt;R&gt; R reference(final BeanSelectionCriteria beanSelectionCriteria) {</span>
+<span class="source-line-no">063</span><span id="line-63">    return this.reference(beanSelectionCriteria, (Creation&lt;R&gt;)this);</span>
+<span class="source-line-no">064</span><span id="line-64">  }</span>
+<span class="source-line-no">065</span><span id="line-65"></span>
+<span class="source-line-no">066</span><span id="line-66">}</span>
 
 
 

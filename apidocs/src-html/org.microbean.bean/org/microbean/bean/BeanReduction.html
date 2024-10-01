@@ -30,28 +30,86 @@
 <span class="source-line-no">016</span><span id="line-16">import java.util.List;</span>
 <span class="source-line-no">017</span><span id="line-17">import java.util.Objects;</span>
 <span class="source-line-no">018</span><span id="line-18"></span>
-<span class="source-line-no">019</span><span id="line-19">public record BeanReduction&lt;I&gt;(BeanSelection beanSelection, Bean&lt;I&gt; bean) {</span>
-<span class="source-line-no">020</span><span id="line-20"></span>
-<span class="source-line-no">021</span><span id="line-21">  public BeanReduction(final BeanSelectionCriteria beanSelectionCriteria, final Bean&lt;I&gt; bean) {</span>
-<span class="source-line-no">022</span><span id="line-22">    this(new BeanSelection(beanSelectionCriteria, List.of(bean)), bean);</span>
-<span class="source-line-no">023</span><span id="line-23">  }</span>
-<span class="source-line-no">024</span><span id="line-24"></span>
-<span class="source-line-no">025</span><span id="line-25">  public BeanReduction {</span>
-<span class="source-line-no">026</span><span id="line-26">    if (!beanSelection.contains(Objects.requireNonNull(bean, "bean"))) {</span>
-<span class="source-line-no">027</span><span id="line-27">      throw new IllegalArgumentException("beanSelection: " + beanSelection + "; bean: " + bean);</span>
-<span class="source-line-no">028</span><span id="line-28">    }</span>
-<span class="source-line-no">029</span><span id="line-29">  }</span>
-<span class="source-line-no">030</span><span id="line-30"></span>
-<span class="source-line-no">031</span><span id="line-31">  public final BeanSelectionCriteria beanSelectionCriteria() {</span>
-<span class="source-line-no">032</span><span id="line-32">    return this.beanSelection().beanSelectionCriteria();</span>
-<span class="source-line-no">033</span><span id="line-33">  }</span>
-<span class="source-line-no">034</span><span id="line-34"></span>
-<span class="source-line-no">035</span><span id="line-35">  @SuppressWarnings("unchecked")</span>
-<span class="source-line-no">036</span><span id="line-36">  public &lt;J&gt; BeanReduction&lt;J&gt; cast() {</span>
-<span class="source-line-no">037</span><span id="line-37">    return (BeanReduction&lt;J&gt;)this;</span>
-<span class="source-line-no">038</span><span id="line-38">  }</span>
-<span class="source-line-no">039</span><span id="line-39"></span>
-<span class="source-line-no">040</span><span id="line-40">}</span>
+<span class="source-line-no">019</span><span id="line-19">/**</span>
+<span class="source-line-no">020</span><span id="line-20"> * A representation of the reduction that has occurred of a {@link BeanSelection}, yielding a single {@link Bean}.</span>
+<span class="source-line-no">021</span><span id="line-21"> *</span>
+<span class="source-line-no">022</span><span id="line-22"> * &lt;p&gt;A {@link BeanReduction} provides, in addition to a result, a mechanism for determining that a selection has</span>
+<span class="source-line-no">023</span><span id="line-23"> * occurred according to some criteria.&lt;/p&gt;</span>
+<span class="source-line-no">024</span><span id="line-24"> *</span>
+<span class="source-line-no">025</span><span id="line-25"> * @param &lt;I&gt; the type of contextual instances the associated {@link Bean} creates</span>
+<span class="source-line-no">026</span><span id="line-26"> *</span>
+<span class="source-line-no">027</span><span id="line-27"> * @param beanSelection a non-{@code null} {@link BeanSelection} that {@linkplain BeanSelection#contains(Bean) contains}</span>
+<span class="source-line-no">028</span><span id="line-28"> * the &lt;a href="#param-bean"&gt;{@code bean}&lt;/a&gt; record component</span>
+<span class="source-line-no">029</span><span id="line-29"> *</span>
+<span class="source-line-no">030</span><span id="line-30"> * @param bean a non-{@code null} {@link Bean}</span>
+<span class="source-line-no">031</span><span id="line-31"> *</span>
+<span class="source-line-no">032</span><span id="line-32"> * @author &lt;a href="https://about.me/lairdnelson" target="_top"&gt;Laird Nelson&lt;/a&gt;</span>
+<span class="source-line-no">033</span><span id="line-33"> *</span>
+<span class="source-line-no">034</span><span id="line-34"> * @see BeanSelection</span>
+<span class="source-line-no">035</span><span id="line-35"> */</span>
+<span class="source-line-no">036</span><span id="line-36">public record BeanReduction&lt;I&gt;(BeanSelection beanSelection, Bean&lt;I&gt; bean) {</span>
+<span class="source-line-no">037</span><span id="line-37"></span>
+<span class="source-line-no">038</span><span id="line-38"></span>
+<span class="source-line-no">039</span><span id="line-39">  /*</span>
+<span class="source-line-no">040</span><span id="line-40">   * Constructors.</span>
+<span class="source-line-no">041</span><span id="line-41">   */</span>
+<span class="source-line-no">042</span><span id="line-42"></span>
+<span class="source-line-no">043</span><span id="line-43"></span>
+<span class="source-line-no">044</span><span id="line-44">  /**</span>
+<span class="source-line-no">045</span><span id="line-45">   * Creates a new {@link BeanReduction} from an implicit {@link BeanSelection} that selects only the given {@link</span>
+<span class="source-line-no">046</span><span id="line-46">   * Bean}.</span>
+<span class="source-line-no">047</span><span id="line-47">   *</span>
+<span class="source-line-no">048</span><span id="line-48">   * @param beanSelectionCriteria a {@link BeanSelectionCriteria}; may be {@code null}</span>
+<span class="source-line-no">049</span><span id="line-49">   *</span>
+<span class="source-line-no">050</span><span id="line-50">   * @param bean the {@link Bean} that is both the sole selection and the reduction; must not be {@code null}</span>
+<span class="source-line-no">051</span><span id="line-51">   *</span>
+<span class="source-line-no">052</span><span id="line-52">   * @exception NullPointerException if {@code bean} is {@code null}</span>
+<span class="source-line-no">053</span><span id="line-53">   *</span>
+<span class="source-line-no">054</span><span id="line-54">   * @exception IllegalArgumentException if the supplied {@link BeanSelectionCriteria} does not {@linkplain</span>
+<span class="source-line-no">055</span><span id="line-55">   * BeanSelectionCriteria#selects(Bean) select} the supplied {@link Bean}</span>
+<span class="source-line-no">056</span><span id="line-56">   *</span>
+<span class="source-line-no">057</span><span id="line-57">   * @see BeanSelection</span>
+<span class="source-line-no">058</span><span id="line-58">   */</span>
+<span class="source-line-no">059</span><span id="line-59">  public BeanReduction(final BeanSelectionCriteria beanSelectionCriteria, final Bean&lt;I&gt; bean) {</span>
+<span class="source-line-no">060</span><span id="line-60">    this(new BeanSelection(beanSelectionCriteria, List.of(bean)), bean);</span>
+<span class="source-line-no">061</span><span id="line-61">  }</span>
+<span class="source-line-no">062</span><span id="line-62"></span>
+<span class="source-line-no">063</span><span id="line-63">  /**</span>
+<span class="source-line-no">064</span><span id="line-64">   * Creates a new {@link BeanReduction}.</span>
+<span class="source-line-no">065</span><span id="line-65">   *</span>
+<span class="source-line-no">066</span><span id="line-66">   * @param beanSelection a {@link BeanSelection}; must not be {@code null}</span>
+<span class="source-line-no">067</span><span id="line-67">   *</span>
+<span class="source-line-no">068</span><span id="line-68">   * @param bean the {@link Bean} representing the reduction; must not be {@code null}</span>
+<span class="source-line-no">069</span><span id="line-69">   *</span>
+<span class="source-line-no">070</span><span id="line-70">   * @exception NullPointerException if either {@code beanSelection} or {@code bean} is {@code null}</span>
+<span class="source-line-no">071</span><span id="line-71">   *</span>
+<span class="source-line-no">072</span><span id="line-72">   * @exception IllegalArgumentException if {@code bean} is not {@linkplain BeanSelection#contains(Bean) contained} by</span>
+<span class="source-line-no">073</span><span id="line-73">   * {@code beanSelection}</span>
+<span class="source-line-no">074</span><span id="line-74">   */</span>
+<span class="source-line-no">075</span><span id="line-75">  public BeanReduction {</span>
+<span class="source-line-no">076</span><span id="line-76">    if (!beanSelection.contains(Objects.requireNonNull(bean, "bean"))) {</span>
+<span class="source-line-no">077</span><span id="line-77">      throw new IllegalArgumentException("beanSelection: " + beanSelection + "; bean: " + bean);</span>
+<span class="source-line-no">078</span><span id="line-78">    }</span>
+<span class="source-line-no">079</span><span id="line-79">  }</span>
+<span class="source-line-no">080</span><span id="line-80"></span>
+<span class="source-line-no">081</span><span id="line-81"></span>
+<span class="source-line-no">082</span><span id="line-82">  /*</span>
+<span class="source-line-no">083</span><span id="line-83">   * Instance methods.</span>
+<span class="source-line-no">084</span><span id="line-84">   */</span>
+<span class="source-line-no">085</span><span id="line-85"></span>
+<span class="source-line-no">086</span><span id="line-86"></span>
+<span class="source-line-no">087</span><span id="line-87">  /**</span>
+<span class="source-line-no">088</span><span id="line-88">   * Returns this {@link BeanReduction}'s {@link #beanSelection() BeanSelection}'s {@link</span>
+<span class="source-line-no">089</span><span id="line-89">   * BeanSelection#beanSelectionCriteria() BeanSelectionCriteria}.</span>
+<span class="source-line-no">090</span><span id="line-90">   *</span>
+<span class="source-line-no">091</span><span id="line-91">   * @return this {@link BeanReduction}'s {@link #beanSelection() BeanSelection}'s {@link</span>
+<span class="source-line-no">092</span><span id="line-92">   * BeanSelection#beanSelectionCriteria() BeanSelectionCriteria}.</span>
+<span class="source-line-no">093</span><span id="line-93">   */</span>
+<span class="source-line-no">094</span><span id="line-94">  public final BeanSelectionCriteria beanSelectionCriteria() {</span>
+<span class="source-line-no">095</span><span id="line-95">    return this.beanSelection().beanSelectionCriteria();</span>
+<span class="source-line-no">096</span><span id="line-96">  }</span>
+<span class="source-line-no">097</span><span id="line-97"></span>
+<span class="source-line-no">098</span><span id="line-98">}</span>
 
 
 

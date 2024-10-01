@@ -31,74 +31,108 @@
 <span class="source-line-no">017</span><span id="line-17">import java.lang.constant.DynamicConstantDesc;</span>
 <span class="source-line-no">018</span><span id="line-18">import java.lang.constant.MethodHandleDesc;</span>
 <span class="source-line-no">019</span><span id="line-19"></span>
-<span class="source-line-no">020</span><span id="line-20">import java.util.List;</span>
-<span class="source-line-no">021</span><span id="line-21">import java.util.Objects;</span>
-<span class="source-line-no">022</span><span id="line-22">import java.util.Optional;</span>
-<span class="source-line-no">023</span><span id="line-23"></span>
-<span class="source-line-no">024</span><span id="line-24">import org.microbean.constant.Constables;</span>
+<span class="source-line-no">020</span><span id="line-20">import java.util.ArrayList;</span>
+<span class="source-line-no">021</span><span id="line-21">import java.util.Collections;</span>
+<span class="source-line-no">022</span><span id="line-22">import java.util.List;</span>
+<span class="source-line-no">023</span><span id="line-23">import java.util.Objects;</span>
+<span class="source-line-no">024</span><span id="line-24">import java.util.Optional;</span>
 <span class="source-line-no">025</span><span id="line-25"></span>
-<span class="source-line-no">026</span><span id="line-26">import org.microbean.qualifier.NamedAttributeMap;</span>
+<span class="source-line-no">026</span><span id="line-26">import javax.lang.model.type.TypeMirror;</span>
 <span class="source-line-no">027</span><span id="line-27"></span>
-<span class="source-line-no">028</span><span id="line-28">import org.microbean.scope.ScopeMember;</span>
+<span class="source-line-no">028</span><span id="line-28">import org.microbean.constant.Constables;</span>
 <span class="source-line-no">029</span><span id="line-29"></span>
-<span class="source-line-no">030</span><span id="line-30">import static java.lang.constant.ConstantDescs.BSM_INVOKE;</span>
-<span class="source-line-no">031</span><span id="line-31">import static java.lang.constant.ConstantDescs.CD_boolean;</span>
-<span class="source-line-no">032</span><span id="line-32">import static java.lang.constant.ConstantDescs.CD_int;</span>
-<span class="source-line-no">033</span><span id="line-33">import static java.lang.constant.ConstantDescs.CD_List;</span>
-<span class="source-line-no">034</span><span id="line-34">import static java.lang.constant.ConstantDescs.FALSE;</span>
-<span class="source-line-no">035</span><span id="line-35">import static java.lang.constant.ConstantDescs.TRUE;</span>
-<span class="source-line-no">036</span><span id="line-36"></span>
-<span class="source-line-no">037</span><span id="line-37">import static org.microbean.bean.ConstantDescs.CD_Id;</span>
-<span class="source-line-no">038</span><span id="line-38">import static org.microbean.bean.ConstantDescs.CD_BeanTypeList;</span>
-<span class="source-line-no">039</span><span id="line-39"></span>
-<span class="source-line-no">040</span><span id="line-40">import static org.microbean.qualifier.ConstantDescs.CD_NamedAttributeMap;</span>
-<span class="source-line-no">041</span><span id="line-41"></span>
-<span class="source-line-no">042</span><span id="line-42">public final record Id(BeanTypeList types,</span>
-<span class="source-line-no">043</span><span id="line-43">                       List&lt;NamedAttributeMap&lt;?&gt;&gt; attributes,</span>
-<span class="source-line-no">044</span><span id="line-44">                       NamedAttributeMap&lt;?&gt; governingScopeId,</span>
-<span class="source-line-no">045</span><span id="line-45">                       boolean alternate,</span>
-<span class="source-line-no">046</span><span id="line-46">                       int rank)</span>
-<span class="source-line-no">047</span><span id="line-47">  implements Constable, Ranked, ScopeMember {</span>
-<span class="source-line-no">048</span><span id="line-48"></span>
-<span class="source-line-no">049</span><span id="line-49">  public Id(final BeanTypeList types,</span>
-<span class="source-line-no">050</span><span id="line-50">            final List&lt;NamedAttributeMap&lt;?&gt;&gt; attributes,</span>
-<span class="source-line-no">051</span><span id="line-51">            final NamedAttributeMap&lt;?&gt; governingScopeId) {</span>
-<span class="source-line-no">052</span><span id="line-52">    this(types, attributes, governingScopeId, false, Ranked.DEFAULT_RANK);</span>
-<span class="source-line-no">053</span><span id="line-53">  }</span>
-<span class="source-line-no">054</span><span id="line-54"></span>
-<span class="source-line-no">055</span><span id="line-55">  public Id(final BeanTypeList types,</span>
-<span class="source-line-no">056</span><span id="line-56">            final List&lt;NamedAttributeMap&lt;?&gt;&gt; attributes,</span>
-<span class="source-line-no">057</span><span id="line-57">            final NamedAttributeMap&lt;?&gt; governingScopeId,</span>
-<span class="source-line-no">058</span><span id="line-58">            final int rank) {</span>
-<span class="source-line-no">059</span><span id="line-59">    this(types, attributes, governingScopeId, false, rank);</span>
-<span class="source-line-no">060</span><span id="line-60">  }</span>
-<span class="source-line-no">061</span><span id="line-61"></span>
-<span class="source-line-no">062</span><span id="line-62">  public Id {</span>
-<span class="source-line-no">063</span><span id="line-63">    Objects.requireNonNull(types, "types");</span>
-<span class="source-line-no">064</span><span id="line-64">    attributes = List.copyOf(attributes);</span>
-<span class="source-line-no">065</span><span id="line-65">    Objects.requireNonNull(governingScopeId, "governingScopeId");</span>
-<span class="source-line-no">066</span><span id="line-66">  }</span>
-<span class="source-line-no">067</span><span id="line-67"></span>
-<span class="source-line-no">068</span><span id="line-68">  @Override // Constable</span>
-<span class="source-line-no">069</span><span id="line-69">  public final Optional&lt;DynamicConstantDesc&lt;Id&gt;&gt; describeConstable() {</span>
-<span class="source-line-no">070</span><span id="line-70">    return Constables.describeConstable(this.attributes())</span>
-<span class="source-line-no">071</span><span id="line-71">      .flatMap(attributesDesc -&gt; this.governingScopeId().describeConstable()</span>
-<span class="source-line-no">072</span><span id="line-72">               .flatMap(governingScopeIdDesc -&gt; types.describeConstable()</span>
-<span class="source-line-no">073</span><span id="line-73">                        .map(typesDesc -&gt; DynamicConstantDesc.of(BSM_INVOKE,</span>
-<span class="source-line-no">074</span><span id="line-74">                                                                 MethodHandleDesc.ofConstructor(CD_Id,</span>
-<span class="source-line-no">075</span><span id="line-75">                                                                                                CD_BeanTypeList,</span>
-<span class="source-line-no">076</span><span id="line-76">                                                                                                CD_List,</span>
-<span class="source-line-no">077</span><span id="line-77">                                                                                                CD_NamedAttributeMap,</span>
-<span class="source-line-no">078</span><span id="line-78">                                                                                                CD_boolean,</span>
-<span class="source-line-no">079</span><span id="line-79">                                                                                                CD_int),</span>
-<span class="source-line-no">080</span><span id="line-80">                                                                 typesDesc,</span>
-<span class="source-line-no">081</span><span id="line-81">                                                                 attributesDesc,</span>
-<span class="source-line-no">082</span><span id="line-82">                                                                 governingScopeIdDesc,</span>
-<span class="source-line-no">083</span><span id="line-83">                                                                 this.alternate() ? TRUE : FALSE,</span>
-<span class="source-line-no">084</span><span id="line-84">                                                                 this.rank()))));</span>
-<span class="source-line-no">085</span><span id="line-85">  }</span>
-<span class="source-line-no">086</span><span id="line-86"></span>
-<span class="source-line-no">087</span><span id="line-87">}</span>
+<span class="source-line-no">030</span><span id="line-30">import org.microbean.qualifier.NamedAttributeMap;</span>
+<span class="source-line-no">031</span><span id="line-31"></span>
+<span class="source-line-no">032</span><span id="line-32">import org.microbean.scope.ScopeMember;</span>
+<span class="source-line-no">033</span><span id="line-33"></span>
+<span class="source-line-no">034</span><span id="line-34">import static java.lang.constant.ConstantDescs.BSM_INVOKE;</span>
+<span class="source-line-no">035</span><span id="line-35">import static java.lang.constant.ConstantDescs.CD_boolean;</span>
+<span class="source-line-no">036</span><span id="line-36">import static java.lang.constant.ConstantDescs.CD_int;</span>
+<span class="source-line-no">037</span><span id="line-37">import static java.lang.constant.ConstantDescs.CD_List;</span>
+<span class="source-line-no">038</span><span id="line-38">import static java.lang.constant.ConstantDescs.FALSE;</span>
+<span class="source-line-no">039</span><span id="line-39">import static java.lang.constant.ConstantDescs.TRUE;</span>
+<span class="source-line-no">040</span><span id="line-40"></span>
+<span class="source-line-no">041</span><span id="line-41">import static org.microbean.bean.BeanTypes.legalBeanType;</span>
+<span class="source-line-no">042</span><span id="line-42">import static org.microbean.bean.ConstantDescs.CD_Id;</span>
+<span class="source-line-no">043</span><span id="line-43"></span>
+<span class="source-line-no">044</span><span id="line-44">import static org.microbean.qualifier.ConstantDescs.CD_NamedAttributeMap;</span>
+<span class="source-line-no">045</span><span id="line-45"></span>
+<span class="source-line-no">046</span><span id="line-46">public final record Id(List&lt;TypeMirror&gt; types,</span>
+<span class="source-line-no">047</span><span id="line-47">                       List&lt;NamedAttributeMap&lt;?&gt;&gt; attributes,</span>
+<span class="source-line-no">048</span><span id="line-48">                       NamedAttributeMap&lt;?&gt; governingScopeId,</span>
+<span class="source-line-no">049</span><span id="line-49">                       boolean alternate,</span>
+<span class="source-line-no">050</span><span id="line-50">                       int rank)</span>
+<span class="source-line-no">051</span><span id="line-51">  implements Constable, Ranked, ScopeMember {</span>
+<span class="source-line-no">052</span><span id="line-52"></span>
+<span class="source-line-no">053</span><span id="line-53">  public Id(final List&lt;TypeMirror&gt; types,</span>
+<span class="source-line-no">054</span><span id="line-54">            final List&lt;NamedAttributeMap&lt;?&gt;&gt; attributes,</span>
+<span class="source-line-no">055</span><span id="line-55">            final NamedAttributeMap&lt;?&gt; governingScopeId) {</span>
+<span class="source-line-no">056</span><span id="line-56">    this(types, attributes, governingScopeId, false, Ranked.DEFAULT_RANK);</span>
+<span class="source-line-no">057</span><span id="line-57">  }</span>
+<span class="source-line-no">058</span><span id="line-58"></span>
+<span class="source-line-no">059</span><span id="line-59">  public Id(final List&lt;TypeMirror&gt; types,</span>
+<span class="source-line-no">060</span><span id="line-60">            final List&lt;NamedAttributeMap&lt;?&gt;&gt; attributes,</span>
+<span class="source-line-no">061</span><span id="line-61">            final NamedAttributeMap&lt;?&gt; governingScopeId,</span>
+<span class="source-line-no">062</span><span id="line-62">            final int rank) {</span>
+<span class="source-line-no">063</span><span id="line-63">    this(types, attributes, governingScopeId, false, rank);</span>
+<span class="source-line-no">064</span><span id="line-64">  }</span>
+<span class="source-line-no">065</span><span id="line-65"></span>
+<span class="source-line-no">066</span><span id="line-66">  public Id {</span>
+<span class="source-line-no">067</span><span id="line-67">    // The code below jumps through some hoops to avoid copying the types list if possible.</span>
+<span class="source-line-no">068</span><span id="line-68">    int size = types.size();</span>
+<span class="source-line-no">069</span><span id="line-69">    if (size == 0) {</span>
+<span class="source-line-no">070</span><span id="line-70">      throw new IllegalArgumentException("types.isEmpty()");</span>
+<span class="source-line-no">071</span><span id="line-71">    }</span>
+<span class="source-line-no">072</span><span id="line-72">    int i = 0;</span>
+<span class="source-line-no">073</span><span id="line-73">    for (; i &lt; size; i++) {</span>
+<span class="source-line-no">074</span><span id="line-74">      if (!legalBeanType(types.get(i))) {</span>
+<span class="source-line-no">075</span><span id="line-75">        break;</span>
+<span class="source-line-no">076</span><span id="line-76">      }</span>
+<span class="source-line-no">077</span><span id="line-77">    }</span>
+<span class="source-line-no">078</span><span id="line-78">    if (i == size) {</span>
+<span class="source-line-no">079</span><span id="line-79">      types = List.copyOf(types);</span>
+<span class="source-line-no">080</span><span id="line-80">    } else {</span>
+<span class="source-line-no">081</span><span id="line-81">      final ArrayList&lt;TypeMirror&gt; newTypes = new ArrayList&lt;&gt;(size);</span>
+<span class="source-line-no">082</span><span id="line-82">      for (int j = 0; j &lt; i; j++) {</span>
+<span class="source-line-no">083</span><span id="line-83">        newTypes.add(types.get(j)); // the type is known to be legal</span>
+<span class="source-line-no">084</span><span id="line-84">      }</span>
+<span class="source-line-no">085</span><span id="line-85">      ++i; // skip past the illegal type i was pointing to</span>
+<span class="source-line-no">086</span><span id="line-86">      for (; i &lt; size; i++) {</span>
+<span class="source-line-no">087</span><span id="line-87">        final TypeMirror t = types.get(i);</span>
+<span class="source-line-no">088</span><span id="line-88">        if (legalBeanType(t)) {</span>
+<span class="source-line-no">089</span><span id="line-89">          newTypes.add(t);</span>
+<span class="source-line-no">090</span><span id="line-90">        }</span>
+<span class="source-line-no">091</span><span id="line-91">      }</span>
+<span class="source-line-no">092</span><span id="line-92">      if (newTypes.isEmpty()) {</span>
+<span class="source-line-no">093</span><span id="line-93">        throw new IllegalArgumentException("types contains no legal bean types: " + types);</span>
+<span class="source-line-no">094</span><span id="line-94">      }</span>
+<span class="source-line-no">095</span><span id="line-95">      newTypes.trimToSize();</span>
+<span class="source-line-no">096</span><span id="line-96">      types = Collections.unmodifiableList(newTypes);</span>
+<span class="source-line-no">097</span><span id="line-97">    }</span>
+<span class="source-line-no">098</span><span id="line-98">    attributes = List.copyOf(attributes);</span>
+<span class="source-line-no">099</span><span id="line-99">    Objects.requireNonNull(governingScopeId, "governingScopeId");</span>
+<span class="source-line-no">100</span><span id="line-100">  }</span>
+<span class="source-line-no">101</span><span id="line-101"></span>
+<span class="source-line-no">102</span><span id="line-102">  @Override // Constable</span>
+<span class="source-line-no">103</span><span id="line-103">  public final Optional&lt;DynamicConstantDesc&lt;Id&gt;&gt; describeConstable() {</span>
+<span class="source-line-no">104</span><span id="line-104">    return Constables.describeConstable(this.attributes())</span>
+<span class="source-line-no">105</span><span id="line-105">      .flatMap(attributesDesc -&gt; this.governingScopeId().describeConstable()</span>
+<span class="source-line-no">106</span><span id="line-106">               .flatMap(governingScopeIdDesc -&gt; Constables.describeConstable(this.types())</span>
+<span class="source-line-no">107</span><span id="line-107">                        .map(typesDesc -&gt; DynamicConstantDesc.of(BSM_INVOKE,</span>
+<span class="source-line-no">108</span><span id="line-108">                                                                 MethodHandleDesc.ofConstructor(CD_Id,</span>
+<span class="source-line-no">109</span><span id="line-109">                                                                                                CD_List,</span>
+<span class="source-line-no">110</span><span id="line-110">                                                                                                CD_List,</span>
+<span class="source-line-no">111</span><span id="line-111">                                                                                                CD_NamedAttributeMap,</span>
+<span class="source-line-no">112</span><span id="line-112">                                                                                                CD_boolean,</span>
+<span class="source-line-no">113</span><span id="line-113">                                                                                                CD_int),</span>
+<span class="source-line-no">114</span><span id="line-114">                                                                 typesDesc,</span>
+<span class="source-line-no">115</span><span id="line-115">                                                                 attributesDesc,</span>
+<span class="source-line-no">116</span><span id="line-116">                                                                 governingScopeIdDesc,</span>
+<span class="source-line-no">117</span><span id="line-117">                                                                 this.alternate() ? TRUE : FALSE,</span>
+<span class="source-line-no">118</span><span id="line-118">                                                                 this.rank()))));</span>
+<span class="source-line-no">119</span><span id="line-119">  }</span>
+<span class="source-line-no">120</span><span id="line-120"></span>
+<span class="source-line-no">121</span><span id="line-121">}</span>
 
 
 
