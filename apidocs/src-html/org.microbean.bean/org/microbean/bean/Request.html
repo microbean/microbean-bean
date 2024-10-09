@@ -57,27 +57,30 @@
 <span class="source-line-no">043</span><span id="line-43">   */</span>
 <span class="source-line-no">044</span><span id="line-44">  public BeanReduction&lt;I&gt; beanReduction();</span>
 <span class="source-line-no">045</span><span id="line-45"></span>
-<span class="source-line-no">046</span><span id="line-46">  // Returns a new "child" Request, where "childness" means "in the service of the parent". So a request for a</span>
+<span class="source-line-no">046</span><span id="line-46">  // Returns a "child" Request, where "childness" means "in the service of the parent". So a request for a</span>
 <span class="source-line-no">047</span><span id="line-47">  // CoffeeMaker is the logical parent of a request for a Heater, which is the new child.</span>
 <span class="source-line-no">048</span><span id="line-48">  //</span>
-<span class="source-line-no">049</span><span id="line-49">  // It is very common for a Request implementation to also be (or house) an AutoCloseableRegistry implementation. So if</span>
-<span class="source-line-no">050</span><span id="line-50">  // the Heater object is in "none"/dependent scope, it should get added to the parent's set of AutoCloseables to be</span>
-<span class="source-line-no">051</span><span id="line-51">  // closed when the parent goes out of scope, and if a child request for a Fuse object gets created, then the Fuse</span>
-<span class="source-line-no">052</span><span id="line-52">  // should be added to the child's set of AutoCloseables, and so on.</span>
-<span class="source-line-no">053</span><span id="line-53">  //</span>
-<span class="source-line-no">054</span><span id="line-54">  // See AutoCloseableRegistry#newChild() for how that part works.</span>
-<span class="source-line-no">055</span><span id="line-55">  //</span>
-<span class="source-line-no">056</span><span id="line-56">  // Note that the semantics of *this* newChild(BeanReduction) method don't have the same "tree node"-like quality as</span>
-<span class="source-line-no">057</span><span id="line-57">  // AutoCloseableRegistry#newChild(). That is, there's no requirement that a child Request retain a reference to its</span>
-<span class="source-line-no">058</span><span id="line-58">  // parent Request.</span>
-<span class="source-line-no">059</span><span id="line-59">  public &lt;J&gt; Request&lt;J&gt; newChild(final BeanReduction&lt;J&gt; beanReduction);</span>
-<span class="source-line-no">060</span><span id="line-60"></span>
-<span class="source-line-no">061</span><span id="line-61">  @SuppressWarnings("unchecked")</span>
-<span class="source-line-no">062</span><span id="line-62">  public default &lt;R&gt; R reference(final BeanSelectionCriteria beanSelectionCriteria) {</span>
-<span class="source-line-no">063</span><span id="line-63">    return this.reference(beanSelectionCriteria, (Creation&lt;R&gt;)this);</span>
-<span class="source-line-no">064</span><span id="line-64">  }</span>
-<span class="source-line-no">065</span><span id="line-65"></span>
-<span class="source-line-no">066</span><span id="line-66">}</span>
+<span class="source-line-no">049</span><span id="line-49">  // If the supplied BeanReduction is equal to this Request's current beanReduction(), it is permissible for this</span>
+<span class="source-line-no">050</span><span id="line-50">  // Request to be returned instead.</span>
+<span class="source-line-no">051</span><span id="line-51">  //</span>
+<span class="source-line-no">052</span><span id="line-52">  // It is very common for a Request implementation to also be (or house) an AutoCloseableRegistry implementation. So if</span>
+<span class="source-line-no">053</span><span id="line-53">  // the Heater object is in "none"/dependent scope, it should get added to the CoffeeMaker parent's set of</span>
+<span class="source-line-no">054</span><span id="line-54">  // AutoCloseables to be closed when the parent goes out of scope, and if a child request for a Fuse object gets</span>
+<span class="source-line-no">055</span><span id="line-55">  // created, then the Fuse should be added to the Heater child's set of AutoCloseables, and so on.</span>
+<span class="source-line-no">056</span><span id="line-56">  //</span>
+<span class="source-line-no">057</span><span id="line-57">  // See AutoCloseableRegistry#newChild() for how that part works.</span>
+<span class="source-line-no">058</span><span id="line-58">  //</span>
+<span class="source-line-no">059</span><span id="line-59">  // Note that the semantics of this newChild(BeanReduction) method don't have the same "tree node"-like quality as</span>
+<span class="source-line-no">060</span><span id="line-60">  // AutoCloseableRegistry#newChild(). That is, there's no requirement that a child Request retain a reference to its</span>
+<span class="source-line-no">061</span><span id="line-61">  // parent Request.</span>
+<span class="source-line-no">062</span><span id="line-62">  public &lt;J&gt; Request&lt;J&gt; child(final BeanReduction&lt;J&gt; beanReduction);</span>
+<span class="source-line-no">063</span><span id="line-63"></span>
+<span class="source-line-no">064</span><span id="line-64">  @SuppressWarnings("unchecked")</span>
+<span class="source-line-no">065</span><span id="line-65">  public default &lt;R&gt; R reference(final AttributedType attributedType) {</span>
+<span class="source-line-no">066</span><span id="line-66">    return this.reference(attributedType, (Creation&lt;R&gt;)this);</span>
+<span class="source-line-no">067</span><span id="line-67">  }</span>
+<span class="source-line-no">068</span><span id="line-68"></span>
+<span class="source-line-no">069</span><span id="line-69">}</span>
 
 
 

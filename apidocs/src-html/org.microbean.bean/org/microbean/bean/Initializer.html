@@ -17,23 +17,24 @@
 <span class="source-line-no">003</span><span id="line-3"> * Copyright © 2023–2024 microBean™.</span>
 <span class="source-line-no">004</span><span id="line-4"> *</span>
 <span class="source-line-no">005</span><span id="line-5"> * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with</span>
-<span class="source-line-no">006</span><span id="line-6"> * the License.  You may obtain a copy of the License at</span>
+<span class="source-line-no">006</span><span id="line-6"> * the License. You may obtain a copy of the License at</span>
 <span class="source-line-no">007</span><span id="line-7"> *</span>
 <span class="source-line-no">008</span><span id="line-8"> *     http://www.apache.org/licenses/LICENSE-2.0</span>
 <span class="source-line-no">009</span><span id="line-9"> *</span>
 <span class="source-line-no">010</span><span id="line-10"> * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on</span>
-<span class="source-line-no">011</span><span id="line-11"> * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  See the License for the</span>
+<span class="source-line-no">011</span><span id="line-11"> * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the</span>
 <span class="source-line-no">012</span><span id="line-12"> * specific language governing permissions and limitations under the License.</span>
 <span class="source-line-no">013</span><span id="line-13"> */</span>
 <span class="source-line-no">014</span><span id="line-14">package org.microbean.bean;</span>
 <span class="source-line-no">015</span><span id="line-15"></span>
-<span class="source-line-no">016</span><span id="line-16">// Subordinate to Factory&lt;I&gt;.</span>
+<span class="source-line-no">016</span><span id="line-16">// Subordinate to Factory&lt;I&gt; (really to PostInitializer&lt;I&gt;). Normally applied to Producer&lt;I&gt; output.</span>
 <span class="source-line-no">017</span><span id="line-17">// Calls initializer methods.</span>
-<span class="source-line-no">018</span><span id="line-18">public interface Initializer&lt;I&gt; extends Aggregate {</span>
-<span class="source-line-no">019</span><span id="line-19"></span>
-<span class="source-line-no">020</span><span id="line-20">  public I initialize(final I i, final Request&lt;I&gt; r);</span>
-<span class="source-line-no">021</span><span id="line-21"></span>
-<span class="source-line-no">022</span><span id="line-22">}</span>
+<span class="source-line-no">018</span><span id="line-18">// Note that this deliberately extends Aggregate, providing access to dependencies.</span>
+<span class="source-line-no">019</span><span id="line-19">public interface Initializer&lt;I&gt; extends Aggregate {</span>
+<span class="source-line-no">020</span><span id="line-20"></span>
+<span class="source-line-no">021</span><span id="line-21">  public I initialize(final I i, final Request&lt;I&gt; r);</span>
+<span class="source-line-no">022</span><span id="line-22"></span>
+<span class="source-line-no">023</span><span id="line-23">}</span>
 
 
 

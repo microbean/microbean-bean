@@ -70,15 +70,15 @@
 <span class="source-line-no">056</span><span id="line-56">   *</span>
 <span class="source-line-no">057</span><span id="line-57">   * &lt;p&gt;Implementations of this method must return determinate values.&lt;/p&gt;</span>
 <span class="source-line-no">058</span><span id="line-58">   *</span>
-<span class="source-line-no">059</span><span id="line-59">   * @param elements the {@link List} to reduce; must not be {@code null}; represents a successful selection from a</span>
-<span class="source-line-no">060</span><span id="line-60">   * larger collection of elements</span>
+<span class="source-line-no">059</span><span id="line-59">   * @param elements an immutable {@link List} to reduce; must not be {@code null}; represents a successful selection</span>
+<span class="source-line-no">060</span><span id="line-60">   * from a larger collection of elements</span>
 <span class="source-line-no">061</span><span id="line-61">   *</span>
 <span class="source-line-no">062</span><span id="line-62">   * @param c the criteria effectively describing the initial selection and the desired reduction; may be {@code null}</span>
 <span class="source-line-no">063</span><span id="line-63">   * to indicate no criteria; may be ignored if not needed by an implementation</span>
 <span class="source-line-no">064</span><span id="line-64">   *</span>
 <span class="source-line-no">065</span><span id="line-65">   * @param failureHandler a {@link BiFunction} receiving a failed reduction (usually a portion of the supplied {@code</span>
 <span class="source-line-no">066</span><span id="line-66">   * elements}), and the selection and reduction criteria, that returns a substitute reduction (or, more commonly,</span>
-<span class="source-line-no">067</span><span id="line-67">   * throws an exception); must not be {@code null}</span>
+<span class="source-line-no">067</span><span id="line-67">   * throws an exception); must not be {@code null}; must be invoked if reduction fails or undefined behavior may result</span>
 <span class="source-line-no">068</span><span id="line-68">   *</span>
 <span class="source-line-no">069</span><span id="line-69">   * @return a single, possibly {@code null}, element normally drawn or computed from the supplied {@code elements}, or</span>
 <span class="source-line-no">070</span><span id="line-70">   * a synthetic value returned by an invocation of the supplied {@code failureHandler}'s {@link</span>
@@ -172,7 +172,7 @@
 <span class="source-line-no">158</span><span id="line-158">                                              final BiFunction&lt;? super List&lt;? extends T&gt;, ? super C, ? extends T&gt; fh) {</span>
 <span class="source-line-no">159</span><span id="line-159">    return fh.apply(l, c);</span>
 <span class="source-line-no">160</span><span id="line-160">  }</span>
-<span class="source-line-no">161</span><span id="line-161">  </span>
+<span class="source-line-no">161</span><span id="line-161"></span>
 <span class="source-line-no">162</span><span id="line-162">}</span>
 
 
