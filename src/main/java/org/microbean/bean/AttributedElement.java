@@ -34,8 +34,6 @@ import org.microbean.qualifier.NamedAttributeMap;
 import static java.lang.constant.ConstantDescs.BSM_INVOKE;
 import static java.lang.constant.ConstantDescs.CD_List;
 
-import static org.microbean.lang.ConstantDescs.CD_Element;
-
 /**
  * An {@link Element} that has been decorated with {@linkplain NamedAttributeMap attributes}.
  *
@@ -49,6 +47,8 @@ import static org.microbean.lang.ConstantDescs.CD_Element;
  */
 public final record AttributedElement(Element element, List<NamedAttributeMap<?>> attributes) implements Constable {
 
+  private static final ClassDesc CD_Element = ClassDesc.of("javax.lang.model.element.Element");
+  
   public AttributedElement {
     Objects.requireNonNull(element, "element");
     attributes = List.copyOf(attributes);

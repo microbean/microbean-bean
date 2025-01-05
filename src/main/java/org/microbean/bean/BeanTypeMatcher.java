@@ -1,14 +1,14 @@
 /* -*- mode: Java; c-basic-offset: 2; indent-tabs-mode: nil; coding: utf-8-unix -*-
  *
- * Copyright © 2023–2024 microBean™.
+ * Copyright © 2023–2025 microBean™.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
- * the License.  You may obtain a copy of the License at
+ * the License. You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
- * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  See the License for the
+ * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
  */
 package org.microbean.bean;
@@ -36,7 +36,7 @@ import javax.lang.model.type.TypeMirror;
 import javax.lang.model.type.TypeVariable;
 import javax.lang.model.type.WildcardType;
 
-import org.microbean.lang.TypeAndElementSource;
+import org.microbean.construct.Domain;
 
 /**
  * A {@link Matcher} encapsulating <a
@@ -66,14 +66,14 @@ public final class BeanTypeMatcher extends AbstractTypeMatcher implements Matche
   /**
    * Creates a new {@link BeanTypeMatcher}.
    *
-   * @param tes a {@link TypeAndElementSource}; must not be {@code null}
+   * @param domain a {@link Domain}; must not be {@code null}
    *
    * @exception NullPointerException if {@code tes} is {@code null}
    *
-   * @see TypeAndElementSource
+   * @see Domain
    */
-  public BeanTypeMatcher(final TypeAndElementSource tes) {
-    super(tes);
+  public BeanTypeMatcher(final Domain domain) {
+    super(domain);
   }
 
 
@@ -120,7 +120,7 @@ public final class BeanTypeMatcher extends AbstractTypeMatcher implements Matche
       case ARRAY    -> switch (payload.getKind()) {
         // "...array types are considered to match only if their element types [note: not component types] are
         // identical ['identical' is actually undefined in the specification]..."
-        case ARRAY                                                -> this.identical(Types.elementType((ArrayType)receiver), Types.elementType((ArrayType)payload));
+        case ARRAY                                                -> this.identical(this.domain().elementType((ArrayType)receiver), this.domain().elementType((ArrayType)payload));
         case BOOLEAN, BYTE, CHAR, DOUBLE, FLOAT, INT, LONG, SHORT -> false;
         case DECLARED                                             -> false;
         default                                                   -> throw illegalPayload(payload);
@@ -229,22 +229,22 @@ public final class BeanTypeMatcher extends AbstractTypeMatcher implements Matche
     assert payload.getKind() == TypeKind.DECLARED;
     return switch (payload) {
 
-      case DeclaredType parameterizedPayload when Types.parameterized(payload) -> switch (receiver) {
+      case DeclaredType parameterizedPayload when parameterized(payload) -> switch (receiver) {
         // "A parameterized bean type [parameterizedPayload] is considered assignable..."
 
-        case DeclaredType rawReceiver when !Types.generic(receiver) || Types.raw(receiver) ->
-          // "...to a [non-generic class or] raw required type [rawReceiver] if the [non-generic class or] raw types are
-          // identical [undefined] and all type parameters [type arguments] of the bean type [parameterizedPayload] are
-          // either unbounded type variables [undefined] or java.lang.Object."
-          this.identical(this.nonGenericClassOrRawType(rawReceiver),
+        case DeclaredType nonGenericOrRawReceiver when !generic(receiver) || raw(receiver) ->
+          // "...to a [non-generic class or] raw required type [nonGenericOrRawReceiver] if the [non-generic class or]
+          // raw types are identical [undefined] and all type parameters [type arguments] of the bean type
+          // [parameterizedPayload] are either unbounded type variables [undefined] or java.lang.Object."
+          this.identical(this.nonGenericClassOrRawType(nonGenericOrRawReceiver),
                          this.nonGenericClassOrRawType(parameterizedPayload)) &&
           allTypeArgumentsAre(parameterizedPayload.getTypeArguments(),
-                              ((Predicate<TypeMirror>)this::unboundedTypeVariable).or(this.types()::isJavaLangObject));
+                              ((Predicate<TypeMirror>)this::unboundedTypeVariable).or(this.domain()::javaLangObject));
 
         case DeclaredType parameterizedReceiver -> {
           // "...to a parameterized required type [parameterizedReceiver]..."
 
-          if (this.identical(this.types().rawType(parameterizedReceiver), this.types().rawType(parameterizedPayload))) {
+          if (this.identical(this.rawType(parameterizedReceiver), this.rawType(parameterizedPayload))) {
             // "...if they have identical raw type [really if their declarations/elements are 'identical']..."
 
             final List<? extends TypeMirror> rtas = parameterizedReceiver.getTypeArguments();
@@ -330,9 +330,9 @@ public final class BeanTypeMatcher extends AbstractTypeMatcher implements Matche
                     //   of the two types is an array type with a parameterized element type..."
                     //
                     // That, in turn, designates any type capable of properly yielding a raw type, while ruling out
-                    // those that can't! That means it is exactly equal to our yieldsRawType(TypeMirror) method, and so
-                    // that's what cdiParameterized(TypeMirror) returns (go see for yourself).
-                    if (cdiParameterized(rta)) { // really just yieldsRawType(rta)
+                    // those that can't! That means it is exactly equal to the Types#yieldsRawType(TypeMirror) method,
+                    // and so that's what cdiParameterized(TypeMirror) returns (go see for yourself).
+                    if (cdiParameterized(rta)) { // really just Types#yieldsRawType(rta)
                       assert cdiParameterized(pta); // ...because otherwise their raw types would not have been "identical"
                       // "...the bean type parameter [type argument] is assignable to the required type parameter [type
                       // argument] according to [all of] these rules [including 'matching']..."
@@ -468,13 +468,13 @@ public final class BeanTypeMatcher extends AbstractTypeMatcher implements Matche
       case DeclaredType nonGenericOrRawPayload -> switch (receiver) {
         // "A [non-generic or] raw bean type [nonGenericOrRawPayload] is considered assignable..."
 
-        case DeclaredType parameterizedReceiver when Types.parameterized(receiver) ->
+        case DeclaredType parameterizedReceiver when parameterized(receiver) ->
           // "...to a parameterized required type [parameterizedReceiver] if the[ir] [non-generic classes or] raw types
           // are identical and all type parameters [type arguments] of the required type [parameterizedReceiver] are
           // either unbounded type variables [undefined] or java.lang.Object."
           this.identical(this.nonGenericClassOrRawType(parameterizedReceiver), nonGenericOrRawPayload) &&
           allTypeArgumentsAre(parameterizedReceiver.getTypeArguments(),
-                              ((Predicate<TypeMirror>)this::unboundedTypeVariable).or(this.types()::isJavaLangObject));
+                              ((Predicate<TypeMirror>)this::unboundedTypeVariable).or(this.domain()::javaLangObject));
 
         // [Otherwise the payload is not assignable to the receiver; identity checking should have already happened in
         // test(), not here.]

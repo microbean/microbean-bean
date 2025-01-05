@@ -1,6 +1,6 @@
 /* -*- mode: Java; c-basic-offset: 2; indent-tabs-mode: nil; coding: utf-8-unix -*-
  *
- * Copyright © 2023–2024 microBean™.
+ * Copyright © 2023–2025 microBean™.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
@@ -92,8 +92,6 @@ public interface Factory<I> extends Aggregate, Constable {
 
   // MUST be idempotent
   // If i is an AutoCloseable, MUST be idempotent
-  //
-  // TODO: rename back to destroy()
   public default void destroy(final I i, final Request<I> creationRequest) {
     if (i instanceof AutoCloseable ac) {
       try {
@@ -120,9 +118,9 @@ public interface Factory<I> extends Aggregate, Constable {
    * @return an {@link Optional} containing the nominal descriptor for this instance, if one can be constructed, or an
    * {@linkplain Optional#isEmpty() empty <code>Optional</code>} if one cannot be constructed
    *
-   * @threadsafety This method is safe for concurrent use by multiple threads.
+   * @microbean.threadsafety This method is safe for concurrent use by multiple threads.
    *
-   * @idempotency This method is neither idempotent nor deterministic.
+   * @microbean.idempotency This method is neither idempotent nor deterministic.
    */
   @Override // Constable
   public default Optional<? extends ConstantDesc> describeConstable() {

@@ -15,8 +15,6 @@ package org.microbean.bean;
 
 import java.util.Set;
 
-import jakarta.enterprise.context.Dependent;
-
 import jakarta.enterprise.context.spi.CreationalContext;
 
 import jakarta.enterprise.event.Event;
@@ -33,7 +31,6 @@ import jakarta.enterprise.inject.spi.ProcessBeanAttributes;
 import jakarta.enterprise.inject.spi.ProcessInjectionTarget;
 
 import jakarta.inject.Inject;
-import jakarta.inject.Provider;
 import jakarta.inject.Singleton;
 
 import org.junit.jupiter.api.AfterEach;
@@ -44,7 +41,6 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-@Dependent // will be overridden
 final class TestWeldEventDelivery {
 
   private SeContainer container;

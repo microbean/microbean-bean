@@ -1,6 +1,6 @@
 /* -*- mode: Java; c-basic-offset: 2; indent-tabs-mode: nil; coding: utf-8-unix -*-
  *
- * Copyright © 2024 microBean™.
+ * Copyright © 2024–2025 microBean™.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
  * the License. You may obtain a copy of the License at
@@ -26,18 +26,13 @@ import javax.lang.model.type.TypeMirror;
 import javax.lang.model.type.TypeVariable;
 import javax.lang.model.type.WildcardType;
 
-import org.microbean.lang.TypeAndElementSource;
-
-import static org.microbean.bean.Types.elementType;
-import static org.microbean.bean.Types.generic;
-import static org.microbean.bean.Types.parameterized;
-import static org.microbean.bean.Types.raw;
+import org.microbean.construct.Domain;
 
 // Experimental and basically located in the wrong package and module.
 public final class EventTypeMatcher extends AbstractTypeMatcher implements Matcher<TypeMirror, TypeMirror> {
 
-  public EventTypeMatcher(final TypeAndElementSource tes) {
-    super(tes);
+  public EventTypeMatcher(final Domain domain) {
+    super(domain);
   }
 
   @Override // Matcher<TypeMirror, TypeMirror>
@@ -122,15 +117,17 @@ public final class EventTypeMatcher extends AbstractTypeMatcher implements Match
       case DeclaredType parameterizedPayload when parameterized(payload) -> switch (receiver) {
         // "A parameterized event type [parameterizedPayload] is considered assignable to..."
 
-        case DeclaredType rawReceiver when !generic(receiver) || raw(receiver) ->
-          // "...a [non-generic class or] raw observed event type [rawReceiver] if the [non-generic class or] raw types
-          // are identical [undefined]."
-          this.identical(this.nonGenericClassOrRawType(rawReceiver), this.nonGenericClassOrRawType(parameterizedPayload));
+        case DeclaredType nonGenericOrRawReceiver when !generic(receiver) || raw(receiver) ->
+          // "...a [non-generic class or] raw observed event type [nonGenericOrRawReceiver] if the [non-generic class
+          // or] raw types are identical [undefined]."
+          this.identical(this.nonGenericClassOrRawType(nonGenericOrRawReceiver),
+                         this.nonGenericClassOrRawType(parameterizedPayload));
 
         case DeclaredType parameterizedReceiver -> {
           // "...a parameterized observed event type [parameterizedReceiver]..."
           assert parameterized(receiver);
-          if (this.identical(this.types().rawType(parameterizedReceiver), this.types().rawType(parameterizedPayload))) {
+          if (this.identical(this.rawType(parameterizedReceiver),
+                             this.rawType(parameterizedPayload))) {
             // "...if they have identical raw type[s] [really if their declarations/elements are 'identical']..."
 
             final List<? extends TypeMirror> rtas = parameterizedReceiver.getTypeArguments();
@@ -148,7 +145,8 @@ public final class EventTypeMatcher extends AbstractTypeMatcher implements Match
                 // "...the observed event type parameter [receiver type argument, rta] is an actual type [a non-type
                 // variable, non-wildcard reference type] with identical raw type to the event type parameter [and is a
                 // non-generic class (or has a raw type) identical to the payload type argument (pta)]..."
-                if (this.identical(this.nonGenericClassOrRawType(rta), pta)) {
+                if (this.identical(this.nonGenericClassOrRawType(rta),
+                                   pta)) {
                   // "...and, if the type [?] is parameterized [?]..."
                   if (cdiParameterized(rta)) { // really just yieldsRawType(rta)
                     assert cdiParameterized(pta); // ...because otherwise their raw types would not have been "identical"
@@ -215,9 +213,10 @@ public final class EventTypeMatcher extends AbstractTypeMatcher implements Match
           // types are identical and all type parameters [type arguments] of the required type [observed event type,
           // receiver] are either unbounded type variables or java.lang.Object."
           yield
-            this.identical(this.nonGenericClassOrRawType(parameterizedReceiver), nonGenericOrRawPayload) &&
+            this.identical(this.nonGenericClassOrRawType(parameterizedReceiver),
+                           nonGenericOrRawPayload) &&
             allTypeArgumentsAre(parameterizedReceiver.getTypeArguments(),
-                                ((Predicate<TypeMirror>)this::unboundedTypeVariable).or(this.types()::isJavaLangObject));
+                                ((Predicate<TypeMirror>)this::unboundedTypeVariable).or(this.domain()::javaLangObject));
         }
 
         // [Otherwise the payload is not assignable to the receiver; identity checking should have already happened in

@@ -1,6 +1,6 @@
 /* -*- mode: Java; c-basic-offset: 2; indent-tabs-mode: nil; coding: utf-8-unix -*-
  *
- * Copyright © 2024 microBean™.
+ * Copyright © 2024–2025 microBean™.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
  * the License. You may obtain a copy of the License at
@@ -34,10 +34,7 @@ public final class EventQualifiersMatcher implements Matcher<Collection<? extend
     // "An event is delivered to an observer method if...the observer method has no event qualifiers or has a subset of
     // the event qualifiers."
     final Collection<? extends NamedAttributeMap<?>> receiverQualifiers = qualifiers(receiverAttributes);
-    final Collection<? extends NamedAttributeMap<?>> payloadQualifiers = qualifiers(payloadAttributes);
-    return
-      receiverQualifiers.isEmpty() ? true :
-      payloadQualifiers.containsAll(receiverQualifiers);
+    return receiverQualifiers.isEmpty() || qualifiers(payloadAttributes).containsAll(receiverQualifiers);
   }
 
 }

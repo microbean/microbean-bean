@@ -1,6 +1,6 @@
 /* -*- mode: Java; c-basic-offset: 2; indent-tabs-mode: nil; coding: utf-8-unix -*-
  *
- * Copyright © 2024 microBean™.
+ * Copyright © 2024–2025 microBean™.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
@@ -157,11 +157,11 @@ public final class RankedReducer<C, T extends Ranked> implements Reducer<C, T> {
    *
    * @return a {@link RankedReducer} implementation; never {@code null}
    *
-   * @nullability This method never returns {@code null}.
+   * @microbean.nullability This method never returns {@code null}.
    *
-   * @idempotency This method is idempotent and deterministic.
+   * @microbean.idempotency This method is idempotent and deterministic.
    *
-   * @threadsafety This method is safe for concurrent use by multiple threads.
+   * @microbean.threadsafety This method is safe for concurrent use by multiple threads.
    */
   @SuppressWarnings("unchecked")
   public static final <C, T extends Ranked> Reducer<C, T> of() {

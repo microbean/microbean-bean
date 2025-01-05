@@ -1,6 +1,6 @@
 /* -*- mode: Java; c-basic-offset: 2; indent-tabs-mode: nil; coding: utf-8-unix -*-
  *
- * Copyright © 2023–2024 microBean™.
+ * Copyright © 2023–2025 microBean™.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
@@ -39,9 +39,9 @@ public interface Creation<I> {
    *
    * @exception IllegalArgumentException if {@code instance} was found to be unsuitable for any reason
    *
-   * @idempotency Implementations of this method must be idempotent.
+   * @microbean.idempotency Implementations of this method must be idempotent.
    *
-   * @threadsafety Implementations of this method must be safe for concurrent use by multiple threads.
+   * @microbean.threadsafety Implementations of this method must be safe for concurrent use by multiple threads.
    */
   // MUST be idempotent
   // For incomplete instances; see also https://stackoverflow.com/questions/50202523/creationalcontext-should-a-custom-bean-always-call-push-from-its-create-met

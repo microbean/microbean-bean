@@ -1,6 +1,6 @@
 /* -*- mode: Java; c-basic-offset: 2; indent-tabs-mode: nil; coding: utf-8-unix -*-
  *
- * Copyright © 2024 microBean™.
+ * Copyright © 2024–2025 microBean™.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
  * the License. You may obtain a copy of the License at
@@ -17,6 +17,7 @@ import java.lang.System.Logger;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 
 import java.util.concurrent.ConcurrentHashMap;
@@ -28,7 +29,9 @@ import javax.lang.model.type.DeclaredType;
 import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
 
-import org.microbean.lang.TypeAndElementSource;
+import org.microbean.construct.Domain;
+
+import org.microbean.construct.type.UniversalType;
 
 import static java.lang.System.Logger.Level.WARNING;
 
@@ -57,7 +60,7 @@ public final class BeanTypes extends Types {
    */
 
 
-  private final Map<TypeMirror, List<TypeMirror>> beanTypesCache;
+  private final Map<TypeMirror, List<? extends TypeMirror>> beanTypesCache;
 
 
   /*
@@ -68,10 +71,10 @@ public final class BeanTypes extends Types {
   /**
    * Creates a new {@link BeanTypes}.
    *
-   * @param tes a {@link TypeAndElementSource}; must not be {@code null}
+   * @param domain a {@link Domain}; must not be {@code null}
    */
-  public BeanTypes(final TypeAndElementSource tes) {
-    super(tes);
+  public BeanTypes(final Domain domain) {
+    super(domain);
     this.beanTypesCache = new ConcurrentHashMap<>();
   }
 
@@ -80,17 +83,6 @@ public final class BeanTypes extends Types {
    * Instance methods.
    */
 
-  
-  /**
-   * Clears caches that may be used internally by this {@link BeanTypes}.
-   *
-   * @idempotency This method may clear internal state but otherwise has no side effects.
-   *
-   * @threadsafety This method is safe for concurrent use by multiple threads.
-   */
-  public final void clearCaches() {
-    this.beanTypesCache.clear();
-  }
 
   /**
    * Returns an immutable {@link List} of {@linkplain #legalBeanType(TypeMirror) legal bean types} that the supplied
@@ -105,34 +97,40 @@ public final class BeanTypes extends Types {
    *
    * @exception NullPointerException if {@code t} is {@code null}
    *
-   * @nullability This method never returns {@code null}.
+   * @microbean.nullability This method never returns {@code null}.
    *
-   * @idempotency This method is idempotent and returns determinate values.
+   * @microbean.idempotency This method is idempotent and returns determinate values.
    *
-   * @threadsafety This method is safe for concurrent use by multiple threads.
+   * @microbean.threadsafety This method is safe for concurrent use by multiple threads.
    */
-  public final List<TypeMirror> beanTypes(final TypeMirror t) {
+  public final List<? extends TypeMirror> beanTypes(final TypeMirror t) {
+    final UniversalType ut = UniversalType.of(t, this.domain());
     // https://jakarta.ee/specifications/cdi/4.0/jakarta-cdi-spec-4.0#assignable_parameters
     // https://jakarta.ee/specifications/cdi/4.0/jakarta-cdi-spec-4.0#legal_bean_types
     // https://jakarta.ee/specifications/cdi/4.0/jakarta-cdi-spec-4.0#managed_bean_types
     // https://jakarta.ee/specifications/cdi/4.0/jakarta-cdi-spec-4.0#producer_field_types
     // https://jakarta.ee/specifications/cdi/4.0/jakarta-cdi-spec-4.0#producer_method_types
-    return switch (t.getKind()) {
-    case ARRAY                                                -> this.beanTypesCache.computeIfAbsent(t, t0 -> legalBeanType(t0) ? List.of(t0, this.javaLangObjectType()) : List.of());
-    case BOOLEAN, BYTE, CHAR, DOUBLE, FLOAT, INT, LONG, SHORT -> this.beanTypesCache.computeIfAbsent(t, t0 -> List.of(t0, this.javaLangObjectType()));
-    case DECLARED, TYPEVAR                                    -> this.beanTypesCache.computeIfAbsent(t, t0 -> this.supertypes(t0, BeanTypes::legalBeanType));
+    return switch (ut.getKind()) {
+    case ARRAY -> this.beanTypesCache.computeIfAbsent(ut, t0 -> legalBeanType(t0) ? List.of(t0, this.domain().javaLangObject().asType()) : List.of());
+    case BOOLEAN, BYTE, CHAR, DOUBLE, FLOAT, INT, LONG, SHORT -> this.beanTypesCache.computeIfAbsent(ut, t0 -> List.of(t0, this.domain().javaLangObject().asType()));
+    case DECLARED, TYPEVAR -> this.beanTypesCache.computeIfAbsent(ut, t0 -> this.supertypes(t0, this::legalBeanType));
     default -> {
-      assert !legalBeanType(t);
+      assert !legalBeanType(ut);
       yield List.of();
     }
     };
   }
 
-
-  /*
-   * Static methods.
+  /**
+   * Clears caches that may be used internally by this {@link BeanTypes}.
+   *
+   * @microbean.idempotency This method may clear internal state but otherwise has no side effects.
+   *
+   * @microbean.threadsafety This method is safe for concurrent use by multiple threads.
    */
-
+  public final void clearCaches() {
+    this.beanTypesCache.clear();
+  }
 
   /**
    * Returns {@code true} if and only if the supplied {@link TypeMirror} is a <dfn>legal bean type</dfn>.
@@ -157,24 +155,97 @@ public final class BeanTypes extends Types {
    *
    * @exception NullPointerException if {@code t} is {@code null}
    *
-   * @idempotency This method is idempotent and deterministic.
+   * @microbean.idempotency This method is idempotent and deterministic.
    *
-   * @threadsafety This method itself is safe for concurrent use by multiple threads, but {@link TypeMirror}
-   * implementations and {@link TypeAndElementSource} implementations may not be safe for such use.
+   * @microbean.threadsafety This method itself is safe for concurrent use by multiple threads, but {@link TypeMirror}
+   * implementations and {@link Domain} implementations may not be safe for such use.
    */
-  public static final boolean legalBeanType(final TypeMirror t) {
+  public final boolean legalBeanType(final TypeMirror t) {
+    return legalBeanType(this.domain(), t);
+  }
+
+
+  /*
+   * Static methods.
+   */
+
+  
+  /**
+   * Returns {@code true} if and only if the supplied {@link TypeMirror} is a <dfn>legal bean type</dfn>.
+   *
+   * <p>Legal bean types are, exactly:</p>
+   *
+   * <ol>
+   *
+   * <li>{@linkplain TypeKind#ARRAY Array} types whose {@linkplain ArrayType#getComponentType() component type}s are
+   * legal bean types</li>
+   *
+   * <li>{@linkplain TypeKind#isPrimitive() Primitive} types</li>
+   *
+   * <li>{@linkplain TypeKind#DECLARED Declared} types that contain no {@linkplain TypeKind#WILDCARD wildcard type}s for
+   * every level of containment</li>
+   *
+   * </ol>
+   *
+   * @param domain a {@link Domain} from which the supplied {@link TypeMirror} is presumed to have originated; must not
+   * be {@code null}
+   *
+   * @param t a {@link TypeMirror}; must not be {@code null}
+   *
+   * @return {@code true} if and only if {@code t} is a legal bean type; {@code false} otherwise
+   *
+   * @exception NullPointerException if either {@code domain} or {@code t} is {@code null}
+   *
+   * @microbean.idempotency This method is idempotent and deterministic.
+   *
+   * @microbean.threadsafety This method itself is safe for concurrent use by multiple threads, but {@link TypeMirror}
+   * implementations and {@link Domain} implementations may not be safe for such use.
+   */
+  public static final boolean legalBeanType(final Domain domain, final TypeMirror t) {
+    return legalBeanType(UniversalType.of(t, domain));
+  }
+
+  /**
+   * Returns {@code true} if and only if the supplied {@link UniversalType} is a <dfn>legal bean type</dfn>.
+   *
+   * <p>Legal bean types are, exactly:</p>
+   *
+   * <ol>
+   *
+   * <li>{@linkplain TypeKind#ARRAY Array} types whose {@linkplain ArrayType#getComponentType() component type}s are
+   * legal bean types</li>
+   *
+   * <li>{@linkplain TypeKind#isPrimitive() Primitive} types</li>
+   *
+   * <li>{@linkplain TypeKind#DECLARED Declared} types that contain no {@linkplain TypeKind#WILDCARD wildcard type}s for
+   * every level of containment</li>
+   *
+   * </ol>
+   *
+   * @param ut a {@link UniversalType}; must not be {@code null}
+   *
+   * @return {@code true} if and only if {@code ut} is a legal bean type; {@code false} otherwise
+   *
+   * @exception NullPointerException if {@code ut} is {@code null}
+   *
+   * @microbean.idempotency This method is idempotent and deterministic.
+   *
+   * @microbean.threadsafety This method itself is safe for concurrent use by multiple threads, but {@link TypeMirror}
+   * implementations and {@link Domain} implementations may not be safe for such use.
+   */
+  static final boolean legalBeanType(final UniversalType ut) {
     // https://jakarta.ee/specifications/cdi/4.0/jakarta-cdi-spec-4.0#assignable_parameters
     // https://jakarta.ee/specifications/cdi/4.0/jakarta-cdi-spec-4.0#legal_bean_types
-    return switch (t.getKind()) {
+    return switch (ut.getKind()) {
 
     // "A bean type may be an array type."
     //
     // "However, some Java types are not legal bean types: [...] An array type whose component type is not a legal bean
     // type"
     case ARRAY -> {
-      if (!legalBeanType(((ArrayType)t).getComponentType())) { // note recursion
+      if (!legalBeanType(ut.getComponentType())) { // note recursion
         if (LOGGER.isLoggable(WARNING)) {
-          LOGGER.log(WARNING, t + " has a component type that is an illegal bean type (" + ((ArrayType)t).getComponentType() + ")");
+          LOGGER.log(WARNING, ut + " has a component type that is an illegal bean type (" + ut.getComponentType() + ")");
         }
         yield false;
       }
@@ -199,10 +270,10 @@ public final class BeanTypes extends Types {
     //
     // This still seems way overstrict to me but there you have it.
     case DECLARED -> {
-      for (final TypeMirror typeArgument : ((DeclaredType)t).getTypeArguments()) {
-        if (typeArgument.getKind() != TypeKind.TYPEVAR && !legalBeanType(typeArgument)) { // note recursion
+      for (final UniversalType uta : ut.getTypeArguments()) {
+        if (uta.getKind() != TypeKind.TYPEVAR && !legalBeanType(uta)) { // note recursion
           if (LOGGER.isLoggable(WARNING)) {
-            LOGGER.log(WARNING, t + " has a type argument that is an illegal bean type (" + typeArgument + ")");
+            LOGGER.log(WARNING, ut + " has a type argument that is an illegal bean type (" + uta + ")");
           }
           yield false;
         }
@@ -213,7 +284,7 @@ public final class BeanTypes extends Types {
     // "A type variable is not a legal bean type." (Nothing else is either.)
     default -> {
       if (LOGGER.isLoggable(WARNING)) {
-        LOGGER.log(WARNING, t + " is an illegal bean type");
+        LOGGER.log(WARNING, ut + " is an illegal bean type");
       }
       yield false;
     }

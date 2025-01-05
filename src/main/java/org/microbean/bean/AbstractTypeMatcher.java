@@ -1,6 +1,6 @@
 /* -*- mode: Java; c-basic-offset: 2; indent-tabs-mode: nil; coding: utf-8-unix -*-
  *
- * Copyright © 2024 microBean™.
+ * Copyright © 2024–2025 microBean™.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
  * the License. You may obtain a copy of the License at
@@ -41,23 +41,24 @@ import javax.lang.model.type.TypeMirror;
 import javax.lang.model.type.TypeVariable;
 import javax.lang.model.type.WildcardType;
 
-import org.microbean.lang.TypeAndElementSource;
+import org.microbean.construct.Domain;
+
+import org.microbean.construct.type.UniversalType;
 
 import static java.lang.constant.ConstantDescs.BSM_INVOKE;
 
-import static org.microbean.lang.ConstantDescs.CD_TypeAndElementSource;
-
 public abstract class AbstractTypeMatcher implements Constable {
 
+
+  private static final ClassDesc CD_Domain = ClassDesc.of("org.microbean.construct.Domain");
+  
 
   /*
    * Instance fields.
    */
 
 
-  private final TypeAndElementSource tes;
-
-  private final Types types;
+  private final Domain domain;
 
 
   /*
@@ -65,10 +66,9 @@ public abstract class AbstractTypeMatcher implements Constable {
    */
 
 
-  protected AbstractTypeMatcher(final TypeAndElementSource tes) {
+  protected AbstractTypeMatcher(final Domain domain) {
     super();
-    this.types = new Types(tes);
-    this.tes = tes;
+    this.domain = domain;
   }
 
 
@@ -129,7 +129,7 @@ public abstract class AbstractTypeMatcher implements Constable {
   */
 
   protected boolean contains(final TypeMirror t, final TypeMirror s) {
-    return this.tes.contains(t, s);
+    return this.domain.contains(t, s);
   }
 
   // It's not immediately clear what CDI means by a type variable's upper bound. In javax.lang.model.type parlance, the
@@ -243,7 +243,7 @@ public abstract class AbstractTypeMatcher implements Constable {
   // Is classOrArrayTypePayload assignable to receiver following the rules of Java assignability
   // (i.e. covariance)?
   protected boolean covariantlyAssignable(final TypeMirror receiver, final TypeMirror payload) {
-    return Objects.requireNonNull(receiver, "receiver") == payload || this.typeAndElementSource().assignable(payload, receiver); // yes, "backwards"
+    return Objects.requireNonNull(receiver, "receiver") == payload || this.domain().assignable(payload, receiver); // yes, "backwards"
   }
 
   /**
@@ -253,7 +253,7 @@ public abstract class AbstractTypeMatcher implements Constable {
    * <p>This method never returns {@code null}.</p>
    *
    * <p>The default implementation of this method relies on the presence of a {@code public} constructor that accepts a
-   * single {@link TypeAndElementSource}-typed argument.</p>
+   * single {@link Domain}-typed argument.</p>
    *
    * <p>The {@link Optional} returned by an invocation of this method may be, and often will be, {@linkplain
    * Optional#isEmpty() empty}.</p>
@@ -265,49 +265,68 @@ public abstract class AbstractTypeMatcher implements Constable {
    */
   @Override // Constable
   public Optional<? extends ConstantDesc> describeConstable() {
-    return (this.typeAndElementSource() instanceof Constable c ? c.describeConstable() : Optional.<ConstantDesc>empty())
-      .map(tesDesc -> DynamicConstantDesc.of(BSM_INVOKE,
-                                             MethodHandleDesc.ofConstructor(ClassDesc.of(this.getClass().getName()),
-                                                                            CD_TypeAndElementSource),
-                                             tesDesc));
+    return (this.domain() instanceof Constable c ? c.describeConstable() : Optional.<ConstantDesc>empty())
+      .map(domainDesc -> DynamicConstantDesc.of(BSM_INVOKE,
+                                                MethodHandleDesc.ofConstructor(ClassDesc.of(this.getClass().getName()),
+                                                                               CD_Domain),
+                                                domainDesc));
   }
 
   // Is payload "identical to" receiver, following the intent of CDI? The relation "identical to" is not defined in the
   // specification. Does it mean ==? Does it mean equals()? Does it mean
   // javax.lang.model.util.Types#isSameType(TypeMirror, TypeMirror)? Something else?
   //
-  // This implementation chooses TypeAndElementSource#sameType(TypeMirror, TypeMirror), but with one
-  // change. TypeAndElementSource#sameType(TypeMirror, TypeMirror) is usually backed by the
+  // This implementation chooses Domain#sameType(TypeMirror, TypeMirror), but with one
+  // change. Domain#sameType(TypeMirror, TypeMirror) is usually backed by the
   // javax.lang.model.util.Types#isSameType(TypeMirror, TypeMirror) method. That method will return false if either
   // argument is a wildcard type. This method first checks to see if the arguments are the same Java references (==),
   // regardless of type.
   protected boolean identical(final TypeMirror receiver, final TypeMirror payload) {
     // CDI has an undefined notion of "identical to". This method attempts to divine and implement the intent. Recall
     // that javax.lang.model.* compares types with "sameType" semantics.
-    return receiver == payload || this.typeAndElementSource().sameType(receiver, payload);
+    return
+      Objects.requireNonNull(receiver, "receiver") == Objects.requireNonNull(payload, "payload") ||
+      this.domain().sameType(receiver, payload);
   }
 
   // Return t if its element declares a non-generic class, or if it is the raw type usage of a generic class.
   protected TypeMirror nonGenericClassOrRawType(final TypeMirror t) {
-    return Types.yieldsRawType(t) ? this.types().rawType(t) : t;
+    return this.yieldsRawType(t) ? this.rawType(t) : t;
   }
 
   /**
-   * Returns the {@link TypeAndElementSource} used by this {@link AbstractTypeMatcher} implementation.
+   * Returns the {@link Domain} used by this {@link AbstractTypeMatcher} implementation.
    *
-   * @return the {@link TypeAndElementSource} used by this {@link AbstractTypeMatcher} implementation; never {@code
+   * @return the {@link Domain} used by this {@link AbstractTypeMatcher} implementation; never {@code
    * null}
    *
-   * @see #AbstractTypeMatcher(TypeAndElementSource)
+   * @see #AbstractTypeMatcher(Domain)
    *
-   * @see TypeAndElementSource
+   * @see Domain
    */
-  protected final TypeAndElementSource typeAndElementSource() {
-    return this.tes;
+  protected final Domain domain() {
+    return this.domain;
   }
 
-  protected final Types types() {
-    return this.types;
+  protected final TypeMirror elementType(final TypeMirror t) {
+    return this.domain().elementType(t);
+  }
+
+  protected final boolean generic(final TypeMirror t) {
+    final Domain domain = this.domain();
+    return domain.generic(domain.asElement(t));
+  }
+
+  protected final boolean parameterized(final TypeMirror t) {
+    return this.domain().parameterized(t);
+  }
+
+  protected final boolean raw(final TypeMirror t) {
+    return this.domain().raw(t);
+  }
+
+  protected final TypeMirror rawType(final TypeMirror t) {
+    return this.domain().rawType(t);
   }
 
   // Is t an unbounded type variable?
@@ -326,10 +345,11 @@ public abstract class AbstractTypeMatcher implements Constable {
   // https://github.com/weld/core/blob/5.1.2.Final/impl/src/main/java/org/jboss/weld/util/Types.java#L258. Under this
   // interpretation T extends S would not be considered an unbounded type variable. Type variable bounds are erased in
   // every other situation in CDI.
-  protected boolean unboundedTypeVariable(TypeMirror t) {
-    if (t.getKind() == TypeKind.TYPEVAR) {
-      t = ((TypeVariable)t).getUpperBound();
-      return this.types().isJavaLangObject(t) || this.unboundedTypeVariable(t);
+  protected final boolean unboundedTypeVariable(TypeMirror t) {
+    UniversalType ut = UniversalType.of(t, this.domain());
+    if (ut.getKind() == TypeKind.TYPEVAR) {
+      ut = ut.getUpperBound();
+      return this.domain().javaLangObject(ut) || this.unboundedTypeVariable(ut);
     }
     return false;
     /*
@@ -341,6 +361,18 @@ public abstract class AbstractTypeMatcher implements Constable {
     default -> false;
     };
     */
+  }
+
+  // Can t *yield* a raw type?
+  //
+  // We say that to yield a raw type, t must be either:
+  //
+  // * a declared type with at least one type argument ("parameterized")
+  // * an array type with a parameterized element type
+  protected final boolean yieldsRawType(final TypeMirror t) {
+    final TypeMirror rawT = this.domain().rawType(t);
+    return rawT != null && rawT != t;
+    // return parameterized(t) || t.getKind() == TypeKind.ARRAY && parameterized(elementType(t));
   }
 
 
@@ -368,9 +400,9 @@ public abstract class AbstractTypeMatcher implements Constable {
   // https://stackoverflow.com/questions/76493672/when-cdi-speaks-of-a-parameterized-type-does-it-also-incorrectly-mean-array-typ.
   //
   // The semantics CDI wants to express are really: can t *yield* a raw type, for a certain definition of "yield"? See
-  // #yieldsRawType(TypeMirror) below.
-  protected static final boolean cdiParameterized(final TypeMirror t) {
-    return Types.yieldsRawType(t);
+  // Types#yieldsRawType(TypeMirror).
+  protected final boolean cdiParameterized(final TypeMirror t) {
+    return this.yieldsRawType(t);
   }
 
   // Returns a new IllegalArgumentException describing an illegal payload type.

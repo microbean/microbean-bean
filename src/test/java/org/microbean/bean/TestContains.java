@@ -15,7 +15,9 @@ package org.microbean.bean;
 
 import java.io.Serializable;
 
+import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.TypeElement;
+import javax.lang.model.element.TypeParameterElement;
 
 import javax.lang.model.type.DeclaredType;
 import javax.lang.model.type.IntersectionType;
@@ -26,7 +28,8 @@ import javax.lang.model.type.WildcardType;
 
 import org.junit.jupiter.api.Test;
 
-import org.microbean.lang.TypeAndElementSource;
+import org.microbean.construct.DefaultDomain;
+import org.microbean.construct.Domain;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -35,78 +38,81 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import static org.microbean.lang.Lang.typeAndElementSource;
-
 final class TestContains {
 
-  private static final TypeAndElementSource tes = typeAndElementSource();
+  private static final Domain domain = new DefaultDomain();
 
   private TestContains() {
     super();
   }
 
   @Test
-  final <T extends String, S extends T> void testWildcardContains() throws NoSuchMethodException {
-    final java.lang.reflect.TypeVariable<java.lang.reflect.Method>[] tvs = this.getClass().getDeclaredMethod("testWildcardContains").getTypeParameters();
-    final TypeVariable t = tes.typeVariable(tvs[0]);
-    final TypeVariable s = tes.typeVariable(tvs[1]);
-    final DeclaredType string = tes.declaredType("java.lang.String");
-    final DeclaredType charSequence = tes.declaredType("java.lang.CharSequence");
-    final DeclaredType object = tes.declaredType("java.lang.Object");
-    final WildcardType qExtendsCharSequence = tes.wildcardType(charSequence, null);
-    final WildcardType qExtendsString = tes.wildcardType(string, null);
-    final WildcardType qSuperCharSequence = tes.wildcardType(null, charSequence);
-    final WildcardType qSuperString = tes.wildcardType(null, string);
+  final <T extends String, S extends T> void testWildcardContains() {
 
-    assertTrue(tes.contains(string, string)); // reflexive
-    assertTrue(tes.contains(qExtendsString, qExtendsString)); // reflexive
-    assertTrue(tes.contains(qExtendsString, string));
-    assertTrue(tes.contains(qExtendsCharSequence, charSequence));
-    assertTrue(tes.contains(qExtendsCharSequence, string));
-    assertTrue(tes.contains(qExtendsCharSequence, qExtendsString));
+    final ExecutableElement ee = domain.executableElement(domain.typeElement(this.getClass().getName()),
+                                                          domain.noType(TypeKind.VOID),
+                                                          "testWildcardContains");
+    final TypeMirror t = domain.typeParameterElement(ee, "T").asType();
+    final TypeMirror s = domain.typeParameterElement(ee, "S").asType();
+    final DeclaredType string = domain.declaredType("java.lang.String");
+    final DeclaredType charSequence = domain.declaredType("java.lang.CharSequence");
+    final DeclaredType object = domain.declaredType("java.lang.Object");
+    final WildcardType qExtendsCharSequence = domain.wildcardType(charSequence, null);
+    final WildcardType qExtendsString = domain.wildcardType(string, null);
+    final WildcardType qSuperCharSequence = domain.wildcardType(null, charSequence);
+    final WildcardType qSuperString = domain.wildcardType(null, string);
 
-    assertTrue(tes.contains(qExtendsCharSequence, t));
-    assertTrue(tes.contains(qExtendsCharSequence, s));
-    assertTrue(tes.contains(qExtendsString, t));
-    assertTrue(tes.contains(qExtendsString, s));
+    assertTrue(domain.contains(string, string)); // reflexive
+    assertTrue(domain.contains(qExtendsString, qExtendsString)); // reflexive
+    assertTrue(domain.contains(qExtendsString, string));
+    assertTrue(domain.contains(qExtendsCharSequence, charSequence));
+    assertTrue(domain.contains(qExtendsCharSequence, string));
+    assertTrue(domain.contains(qExtendsCharSequence, qExtendsString));
+
+    assertTrue(domain.contains(qExtendsCharSequence, t));
+    assertTrue(domain.contains(qExtendsCharSequence, s));
+    assertTrue(domain.contains(qExtendsString, t));
+    assertTrue(domain.contains(qExtendsString, s));
     
-    assertTrue(tes.contains(qSuperString, qSuperString)); // reflexive
-    assertTrue(tes.contains(qSuperString, string));
-    assertTrue(tes.contains(qSuperString, charSequence));
-    assertTrue(tes.contains(qSuperString, qSuperCharSequence));
-    assertTrue(tes.contains(qSuperCharSequence, charSequence));
-    assertTrue(tes.contains(qSuperCharSequence, object));
+    assertTrue(domain.contains(qSuperString, qSuperString)); // reflexive
+    assertTrue(domain.contains(qSuperString, string));
+    assertTrue(domain.contains(qSuperString, charSequence));
+    assertTrue(domain.contains(qSuperString, qSuperCharSequence));
+    assertTrue(domain.contains(qSuperCharSequence, charSequence));
+    assertTrue(domain.contains(qSuperCharSequence, object));
 
-    assertFalse(tes.contains(qSuperCharSequence, string));
-    assertFalse(tes.contains(string, charSequence));
-    assertFalse(tes.contains(charSequence, string));
-    assertFalse(tes.contains(charSequence, qExtendsCharSequence));
-    assertFalse(tes.contains(string, qExtendsString));
-    assertFalse(tes.contains(string, qSuperString));
-    assertFalse(tes.contains(qExtendsString, qSuperString));
-    assertFalse(tes.contains(qSuperString, qExtendsString));
+    assertFalse(domain.contains(qSuperCharSequence, string));
+    assertFalse(domain.contains(string, charSequence));
+    assertFalse(domain.contains(charSequence, string));
+    assertFalse(domain.contains(charSequence, qExtendsCharSequence));
+    assertFalse(domain.contains(string, qExtendsString));
+    assertFalse(domain.contains(string, qSuperString));
+    assertFalse(domain.contains(qExtendsString, qSuperString));
+    assertFalse(domain.contains(qSuperString, qExtendsString));
   }
 
   @Test
-  final <T extends Integer, S extends Integer & Serializable, R extends S> void testTypeVariableContainsNothingExceptItself() throws NoSuchMethodException {
-    final java.lang.reflect.TypeVariable<java.lang.reflect.Method>[] tvs = this.getClass().getDeclaredMethod("testTypeVariableContainsNothingExceptItself").getTypeParameters();
-    final TypeVariable t = tes.typeVariable(tvs[0]);
-    final TypeVariable s = tes.typeVariable(tvs[1]);
-    final TypeVariable r = tes.typeVariable(tvs[2]);
-    final DeclaredType integer = tes.declaredType("java.lang.Integer");
+  final <T extends Integer, S extends Integer & Serializable, R extends S> void testTypeVariableContainsNothingExceptItself() {
+    final ExecutableElement ee = domain.executableElement(domain.typeElement(this.getClass().getName()),
+                                                          domain.noType(TypeKind.VOID),
+                                                          "testTypeVariableContainsNothingExceptItself");
+    final TypeMirror t = domain.typeParameterElement(ee, "T").asType();
+    final TypeVariable s = (TypeVariable)domain.typeParameterElement(ee, "S").asType();
+    final TypeMirror r = domain.typeParameterElement(ee, "R").asType();
+    final DeclaredType integer = domain.declaredType("java.lang.Integer");
 
-    assertTrue(tes.contains(t, t));
+    assertTrue(domain.contains(t, t));
     
-    assertFalse(tes.contains(t, integer));
-    assertFalse(tes.contains(integer, t));
-    assertFalse(tes.contains(s, s.getUpperBound()));
-    assertFalse(tes.contains(s.getUpperBound(), s));
-    assertFalse(tes.contains(t, s));
-    assertFalse(tes.contains(s, t));
-    assertFalse(tes.contains(s, r));
-    assertFalse(tes.contains(r, s));
-    assertFalse(tes.contains(t, r));
-    assertFalse(tes.contains(r, t));
+    assertFalse(domain.contains(t, integer));
+    assertFalse(domain.contains(integer, t));
+    assertFalse(domain.contains(s, s.getUpperBound()));
+    assertFalse(domain.contains(s.getUpperBound(), s));
+    assertFalse(domain.contains(t, s));
+    assertFalse(domain.contains(s, t));
+    assertFalse(domain.contains(s, r));
+    assertFalse(domain.contains(r, s));
+    assertFalse(domain.contains(t, r));
+    assertFalse(domain.contains(r, t));
   }
 
 }

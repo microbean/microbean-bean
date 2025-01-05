@@ -15,6 +15,7 @@ package org.microbean.bean;
 
 import java.io.Serializable;
 
+import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.TypeElement;
 
 import javax.lang.model.type.DeclaredType;
@@ -26,7 +27,8 @@ import javax.lang.model.type.WildcardType;
 
 import org.junit.jupiter.api.Test;
 
-import org.microbean.lang.TypeAndElementSource;
+import org.microbean.construct.DefaultDomain;
+import org.microbean.construct.Domain;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -35,11 +37,9 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import static org.microbean.lang.Lang.typeAndElementSource;
-
 final class TestAssignability {
 
-  private static final TypeAndElementSource tes = typeAndElementSource();
+  private static final Domain domain = new DefaultDomain();
 
   private TestAssignability() {
     super();
@@ -47,13 +47,15 @@ final class TestAssignability {
 
   @Test
   final <T extends Integer & Serializable, S extends Number & Serializable, R extends S> void testAssignabilityOfTypeVariable() throws NoSuchMethodException {
-    final java.lang.reflect.TypeVariable<java.lang.reflect.Method>[] tvs = this.getClass().getDeclaredMethod("testAssignabilityOfTypeVariable").getTypeParameters();
-    final TypeVariable t = tes.typeVariable(tvs[0]);
-    final TypeVariable s = tes.typeVariable(tvs[1]);
-    final TypeVariable r = tes.typeVariable(tvs[2]);
-    final DeclaredType integer = tes.declaredType("java.lang.Integer");
-    final DeclaredType serializable = tes.declaredType("java.io.Serializable");
-    final DeclaredType number = tes.declaredType("java.lang.Number");
+    final ExecutableElement ee = domain.executableElement(domain.typeElement(this.getClass().getName()),
+                                                          domain.noType(TypeKind.VOID),
+                                                          "testAssignabilityOfTypeVariable");
+    final TypeVariable t = (TypeVariable)domain.typeParameterElement(ee, "T").asType();
+    final TypeMirror s = domain.typeParameterElement(ee, "S").asType();
+    final TypeMirror r = domain.typeParameterElement(ee, "S").asType();
+    final DeclaredType integer = domain.declaredType("java.lang.Integer");
+    final DeclaredType serializable = domain.declaredType("java.io.Serializable");
+    final DeclaredType number = domain.declaredType("java.lang.Number");
 
     //
     // IMPORTANT:
@@ -63,47 +65,47 @@ final class TestAssignability {
     //
 
     // integer is the *payload*; number is the *receiver*; integer is assignable to number
-    assertTrue(tes.assignable(integer, number));
-    assertTrue(tes.assignable(integer, serializable));
-    assertTrue(tes.assignable(number, serializable));
+    assertTrue(domain.assignable(integer, number));
+    assertTrue(domain.assignable(integer, serializable));
+    assertTrue(domain.assignable(number, serializable));
 
     // t is the *payload*; integer is the *receiver*; T is assignable to Integer
-    assertTrue(tes.assignable(t, integer));
-    assertTrue(tes.assignable(t, serializable));
+    assertTrue(domain.assignable(t, integer));
+    assertTrue(domain.assignable(t, serializable));
 
     // t has multiple bounds so its upper bound is an intersection type
     final IntersectionType tUpper = (IntersectionType)t.getUpperBound();
     assertSame(TypeKind.INTERSECTION, tUpper.getKind());
 
     // t's upper bound is an intersection type, one of whose components is Integer; it is therefore assignable to integer
-    assertTrue(tes.assignable(tUpper, integer));
-    assertTrue(tes.assignable(tUpper, serializable));
+    assertTrue(domain.assignable(tUpper, integer));
+    assertTrue(domain.assignable(tUpper, serializable));
 
     // t is the *payload*; number is the *receiver*; T is assignable to Number (by transitivity)
-    assertTrue(tes.assignable(t, number));
+    assertTrue(domain.assignable(t, number));
 
     // t and s are not assignable in either direction
-    assertFalse(tes.assignable(t, s));
-    assertFalse(tes.assignable(s, t));
+    assertFalse(domain.assignable(t, s));
+    assertFalse(domain.assignable(s, t));
 
     // r is the *payload*; s is the *receiver*; R is assignable to S (it extends it)
-    assertTrue(tes.assignable(r, s));
+    assertTrue(domain.assignable(r, s));
   }
 
   @Test
   final void testAssignabilityOfWildcard() {
-    final DeclaredType string = tes.declaredType("java.lang.String");
-    final WildcardType qExtendsString = tes.wildcardType(string, null);
+    final DeclaredType string = domain.declaredType("java.lang.String");
+    final WildcardType qExtendsString = domain.wildcardType(string, null);
     final DeclaredType extendsBound = (DeclaredType)qExtendsString.getExtendsBound();
     assertSame(TypeKind.DECLARED, extendsBound.getKind());
     assertNotSame(string, extendsBound); // or could be; can't rely on it
     assertEquals("java.lang.String", ((TypeElement)extendsBound.asElement()).getQualifiedName().toString());
-    assertTrue(tes.sameType(string, extendsBound));
+    assertTrue(domain.sameType(string, extendsBound));
     assertEquals(string, extendsBound);
     
     // Perhaps these assertions are surprising but they are correct.
-    assertFalse(tes.assignable(string, qExtendsString));
-    assertFalse(tes.assignable(qExtendsString, string));
+    assertFalse(domain.assignable(string, qExtendsString));
+    assertFalse(domain.assignable(qExtendsString, string));
   }
 
 }

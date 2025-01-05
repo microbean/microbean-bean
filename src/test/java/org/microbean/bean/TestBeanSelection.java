@@ -1,6 +1,6 @@
 /* -*- mode: Java; c-basic-offset: 2; indent-tabs-mode: nil; coding: utf-8-unix -*-
  *
- * Copyright © 2023–2024 microBean™.
+ * Copyright © 2023–2025 microBean™.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
  * the License. You may obtain a copy of the License at
@@ -22,21 +22,20 @@ import javax.lang.model.type.TypeKind;
 
 import org.junit.jupiter.api.Test;
 
-import org.microbean.lang.TypeAndElementSource;
+import org.microbean.construct.Domain;
+import org.microbean.construct.DefaultDomain;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-
-import static org.microbean.lang.Lang.typeAndElementSource;
 
 import static org.microbean.scope.Scope.NONE_ID;
 
 final class TestBeanSelection {
 
-  private static final TypeAndElementSource tes = typeAndElementSource();
+  private static final Domain domain = new DefaultDomain();
 
   private static final Matcher<AttributedType, Id> matcher =
-    new IdMatcher(new BeanQualifiersMatcher(), new InterceptorBindingsMatcher(), new BeanTypeMatcher(tes));
+    new IdMatcher(new BeanQualifiersMatcher(), new InterceptorBindingsMatcher(), new BeanTypeMatcher(domain));
 
   private TestBeanSelection() {
     super();
@@ -53,56 +52,62 @@ final class TestBeanSelection {
     //
     // ...even though it does not compile. (Go ahead; uncomment the snippet above and see for yourself.)
     final AttributedType t =
-      new AttributedType(tes.declaredType(tes.typeElement(List.class),
-                                          tes.declaredType(tes.typeElement(Optional.class),
-                                                           tes.wildcardType(tes.declaredType(Object.class),
-                                                                            null))));
-    assertTrue(matcher.test(t, new Id(List.of(tes.declaredType(tes.typeElement(List.class),
-                                                               tes.declaredType(tes.typeElement(Optional.class),
-                                                                                tes.declaredType(Object.class)))),
+      new AttributedType(domain.declaredType(domain.typeElement("java.util.List"),
+                                             domain.declaredType(domain.typeElement("java.util.Optional"),
+                                                                 domain.wildcardType(domain.javaLangObject().asType(),
+                                                                                     null))));
+    assertTrue(matcher.test(t, new Id(domain,
+                                      List.of(domain.declaredType(domain.typeElement("java.util.List"),
+                                                                  domain.declaredType(domain.typeElement("java.util.Optional"),
+                                                                                      domain.javaLangObject().asType()))),
                                       List.of(),
                                       NONE_ID)));
   }
 
   @Test
   final void testStringSelectsString() {
-    final AttributedType t = new AttributedType(tes.declaredType(String.class));
-    assertTrue(matcher.test(t, new Id(List.of(tes.declaredType(String.class)),
+    final AttributedType t = new AttributedType(domain.typeElement("java.lang.String").asType());
+    assertTrue(matcher.test(t, new Id(domain,
+                                      List.of(domain.typeElement("java.lang.String").asType()),
                                       List.of(),
                                       NONE_ID)));
   }
 
   @Test
   final void testStringDoesNotSelectObject() {
-    final AttributedType t = new AttributedType(tes.declaredType(String.class));
-    assertFalse(matcher.test(t, new Id(List.of(tes.declaredType(Object.class)),
+    final AttributedType t = new AttributedType(domain.typeElement("java.lang.String").asType());
+    assertFalse(matcher.test(t, new Id(domain,
+                                       List.of(domain.javaLangObject().asType()),
                                        List.of(),
                                        NONE_ID)));
   }
 
   @Test
   final void testIntSelectsInteger() {
-    final AttributedType t = new AttributedType(tes.primitiveType(TypeKind.INT));
-    assertTrue(matcher.test(t, new Id(List.of(tes.declaredType(Integer.class)),
+    final AttributedType t = new AttributedType(domain.primitiveType(TypeKind.INT));
+    assertTrue(matcher.test(t, new Id(domain,
+                                      List.of(domain.typeElement("java.lang.Integer").asType()),
                                       List.of(),
                                       NONE_ID)));
   }
 
   @Test
   final void testObjectDoesNotSelectString() {
-    final AttributedType t = new AttributedType(tes.declaredType(Object.class));
-    assertFalse(matcher.test(t, new Id(List.of(tes.declaredType(String.class)),
+    final AttributedType t = new AttributedType(domain.javaLangObject().asType());
+    assertFalse(matcher.test(t, new Id(domain,
+                                       List.of(domain.declaredType("java.lang.String")),
                                        List.of(),
                                        NONE_ID)));
   }
 
   @Test
   final void testListUnknownExtendsStringSelectsListString() {
-    final AttributedType t = new AttributedType(tes.declaredType(tes.typeElement(List.class),
-                                                                 tes.wildcardType(tes.declaredType(String.class),
-                                                                                  null)));
-    assertTrue(matcher.test(t, new Id(List.of(tes.declaredType(tes.typeElement(List.class),
-                                                               tes.declaredType(String.class))),
+    final AttributedType t = new AttributedType(domain.declaredType(domain.typeElement("java.util.List"),
+                                                                    domain.wildcardType(domain.declaredType("java.lang.String"),
+                                                                                        null)));
+    assertTrue(matcher.test(t, new Id(domain,
+                                      List.of(domain.declaredType(domain.typeElement("java.util.List"),
+                                                                  domain.typeElement("java.lang.String").asType())),
                                       List.of(),
                                       NONE_ID)));
   }
