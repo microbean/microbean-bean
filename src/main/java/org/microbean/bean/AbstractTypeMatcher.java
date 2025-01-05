@@ -43,15 +43,13 @@ import javax.lang.model.type.WildcardType;
 
 import org.microbean.construct.Domain;
 
-import org.microbean.construct.type.UniversalType;
-
 import static java.lang.constant.ConstantDescs.BSM_INVOKE;
 
 public abstract class AbstractTypeMatcher implements Constable {
 
 
   private static final ClassDesc CD_Domain = ClassDesc.of("org.microbean.construct.Domain");
-  
+
 
   /*
    * Instance fields.
@@ -346,10 +344,9 @@ public abstract class AbstractTypeMatcher implements Constable {
   // interpretation T extends S would not be considered an unbounded type variable. Type variable bounds are erased in
   // every other situation in CDI.
   protected final boolean unboundedTypeVariable(TypeMirror t) {
-    UniversalType ut = UniversalType.of(t, this.domain());
-    if (ut.getKind() == TypeKind.TYPEVAR) {
-      ut = ut.getUpperBound();
-      return this.domain().javaLangObject(ut) || this.unboundedTypeVariable(ut);
+    if (t.getKind() == TypeKind.TYPEVAR) {
+      t = ((TypeVariable)t).getUpperBound();
+      return this.domain().javaLangObject(t) || this.unboundedTypeVariable(t);
     }
     return false;
     /*

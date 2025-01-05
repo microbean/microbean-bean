@@ -18,6 +18,7 @@ import java.lang.System.Logger;
 import java.util.List;
 import java.util.Set;
 
+import javax.lang.model.element.Element;
 import javax.lang.model.element.Modifier;
 import javax.lang.model.element.TypeElement;
 
@@ -28,10 +29,6 @@ import javax.lang.model.type.TypeMirror;
 import javax.lang.model.type.TypeVariable;
 
 import org.microbean.construct.Domain;
-
-import org.microbean.construct.element.UniversalElement;
-
-import org.microbean.construct.type.UniversalType;
 
 import static java.lang.System.Logger.Level.WARNING;
 
@@ -63,29 +60,20 @@ public final class EventTypes extends Types {
 
 
   public final List<? extends TypeMirror> eventTypes(final TypeMirror t) {
-    final UniversalType ut = UniversalType.of(t, this.domain());
     // https://jakarta.ee/specifications/cdi/4.0/jakarta-cdi-spec-4.0#event_types_and_qualifier_types
-    if (ut.getKind() == TypeKind.DECLARED) {
-      final UniversalElement e = ut.asElement();
+    if (t.getKind() == TypeKind.DECLARED) {
+      final Element e = ((DeclaredType)t).asElement();
       if (e.getKind().isInterface() || !e.getKind().isClass() || e.getModifiers().contains(Modifier.ABSTRACT)) {
         // "An event object is an instance of a concrete Java class...."
         if (LOGGER.isLoggable(WARNING)) {
-          LOGGER.log(WARNING, ut + " is an illegal event type");
+          LOGGER.log(WARNING, t + " is an illegal event type");
         }
         return List.of();
       }
     }
     // "The event types of the event include all superclasses and interfaces of the [concrete] runtime class of the
     // event object."
-    return this.supertypes(ut, this::legalEventType);
-  }
-
-  public final boolean legalEventType(final TypeMirror t) {
-    return legalEventType(UniversalType.of(t, this.domain()));
-  }
-
-  public final boolean legalObservedEventType(final TypeMirror t) {
-    return legalObservedEventType(this.domain(), t);
+    return this.supertypes(t, EventTypes::legalEventType);
   }
 
 
@@ -94,18 +82,14 @@ public final class EventTypes extends Types {
    */
 
 
-  public static final boolean legalEventType(final Domain domain, final TypeMirror t) {
-    return legalEventType(UniversalType.of(t, domain));
-  }
-
-  static final boolean legalEventType(final UniversalType ut) {
+  public static final boolean legalEventType(final TypeMirror t) {
     // https://jakarta.ee/specifications/cdi/4.0/jakarta-cdi-spec-4.0#event_types_and_qualifier_types
-    return switch (ut.getKind()) {
+    return switch (t.getKind()) {
     case ARRAY -> {
       // Recurse into the component type.
-      if (!legalEventType(ut.getComponentType())) { // note recursion
+      if (!legalEventType(((ArrayType)t).getComponentType())) { // note recursion
         if (LOGGER.isLoggable(WARNING)) {
-          LOGGER.log(WARNING, ut + " has a component type that is an illegal event type (" + ut.getComponentType());
+          LOGGER.log(WARNING, t + " has a component type that is an illegal event type (" + ((ArrayType)t).getComponentType());
         }
         yield false;
       }
@@ -121,10 +105,10 @@ public final class EventTypes extends Types {
       // type variable."
       //
       // We interpret "contain" to mean "have as a type argument, recursively, anywhere".
-      for (final UniversalType uta : ut.getTypeArguments()) {
-        if (uta.getKind() != TypeKind.WILDCARD && !legalEventType(uta)) { // note recursion
+      for (final TypeMirror ta : ((DeclaredType)t).getTypeArguments()) {
+        if (ta.getKind() != TypeKind.WILDCARD && !legalEventType(ta)) { // note recursion
           if (LOGGER.isLoggable(WARNING)) {
-            LOGGER.log(WARNING, ut + " has a type argument that is an illegal event type (" + uta + ")");
+            LOGGER.log(WARNING, t + " has a type argument that is an illegal event type (" + ta + ")");
           }
           yield false;
         }
@@ -134,7 +118,7 @@ public final class EventTypes extends Types {
 
     default -> {
       if (LOGGER.isLoggable(WARNING)) {
-        LOGGER.log(WARNING, ut + " is an illegal event type");
+        LOGGER.log(WARNING, t + " is an illegal event type");
       }
       yield false;
     }
@@ -142,14 +126,10 @@ public final class EventTypes extends Types {
 
   }
 
-  public static final boolean legalObservedEventType(final Domain domain, final TypeMirror t) {
-    return legalObservedEventType(UniversalType.of(t, domain));
-  }
-
-  static final boolean legalObservedEventType(final UniversalType ut) {
+  public static final boolean legalObservedEventType(final TypeMirror t) {
     // https://jakarta.ee/specifications/cdi/4.0/jakarta-cdi-spec-4.0#event_types_and_qualifier_types
     // "Any Java type [that a method parameter element may bear] may be an observed event type."
-    return switch (ut.getKind()) {
+    return switch (t.getKind()) {
     case ARRAY, BOOLEAN, BYTE, CHAR, DECLARED, DOUBLE, FLOAT, INT, LONG, SHORT, TYPEVAR -> true;
     default -> false;
     };

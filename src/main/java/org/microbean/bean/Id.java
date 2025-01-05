@@ -29,8 +29,6 @@ import javax.lang.model.type.TypeMirror;
 
 import org.microbean.constant.Constables;
 
-import org.microbean.construct.Domain;
-
 import org.microbean.qualifier.NamedAttributeMap;
 
 import org.microbean.scope.ScopeMember;
@@ -47,29 +45,24 @@ import static org.microbean.bean.ConstantDescs.CD_Id;
 
 import static org.microbean.qualifier.ConstantDescs.CD_NamedAttributeMap;
 
-public final record Id(Domain domain,
-                       List<TypeMirror> types,
+public final record Id(List<TypeMirror> types,
                        List<NamedAttributeMap<?>> attributes,
                        NamedAttributeMap<?> governingScopeId,
                        boolean alternate,
                        int rank)
   implements Constable, Ranked, ScopeMember {
 
-  private static final ClassDesc CD_Domain = ClassDesc.of(Domain.class.getName());
-
-  public Id(final Domain domain,
-            final List<TypeMirror> types,
+  public Id(final List<TypeMirror> types,
             final List<NamedAttributeMap<?>> attributes,
             final NamedAttributeMap<?> governingScopeId) {
-    this(domain, types, attributes, governingScopeId, false, Ranked.DEFAULT_RANK);
+    this(types, attributes, governingScopeId, false, Ranked.DEFAULT_RANK);
   }
 
-  public Id(final Domain domain,
-            final List<TypeMirror> types,
+  public Id(final List<TypeMirror> types,
             final List<NamedAttributeMap<?>> attributes,
             final NamedAttributeMap<?> governingScopeId,
             final int rank) {
-    this(domain, types, attributes, governingScopeId, false, rank);
+    this(types, attributes, governingScopeId, false, rank);
   }
 
   public Id {
@@ -80,7 +73,7 @@ public final record Id(Domain domain,
     }
     int i = 0;
     for (; i < size; i++) {
-      if (!legalBeanType(domain, types.get(i))) {
+      if (!legalBeanType(types.get(i))) {
         break;
       }
     }
@@ -94,7 +87,7 @@ public final record Id(Domain domain,
       ++i; // skip past the illegal type i was pointing to
       for (; i < size; i++) {
         final TypeMirror t = types.get(i);
-        if (legalBeanType(domain, t)) {
+        if (legalBeanType(t)) {
           newTypes.add(t);
         }
       }
@@ -110,23 +103,21 @@ public final record Id(Domain domain,
 
   @Override // Constable
   public final Optional<DynamicConstantDesc<Id>> describeConstable() {
-    return (this.domain() instanceof Constable c ? c.describeConstable() : Optional.<ConstantDesc>empty())
-      .flatMap(domainDesc ->  Constables.describeConstable(this.attributes())
-               .flatMap(attributesDesc -> this.governingScopeId().describeConstable()
-                        .flatMap(governingScopeIdDesc -> Constables.describeConstable(this.types())
-                                 .map(typesDesc -> DynamicConstantDesc.of(BSM_INVOKE,
-                                                                          MethodHandleDesc.ofConstructor(CD_Id,
-                                                                                                         CD_Domain,
-                                                                                                         CD_List,
-                                                                                                         CD_List,
-                                                                                                         CD_NamedAttributeMap,
-                                                                                                         CD_boolean,
-                                                                                                         CD_int),
-                                                                          typesDesc,
-                                                                          attributesDesc,
-                                                                          governingScopeIdDesc,
-                                                                          this.alternate() ? TRUE : FALSE,
-                                                                          this.rank())))));
+    return Constables.describeConstable(this.attributes())
+      .flatMap(attributesDesc -> this.governingScopeId().describeConstable()
+               .flatMap(governingScopeIdDesc -> Constables.describeConstable(this.types())
+                        .map(typesDesc -> DynamicConstantDesc.of(BSM_INVOKE,
+                                                                 MethodHandleDesc.ofConstructor(CD_Id,
+                                                                                                CD_List,
+                                                                                                CD_List,
+                                                                                                CD_NamedAttributeMap,
+                                                                                                CD_boolean,
+                                                                                                CD_int),
+                                                                 typesDesc,
+                                                                 attributesDesc,
+                                                                 governingScopeIdDesc,
+                                                                 this.alternate() ? TRUE : FALSE,
+                                                                 this.rank()))));
   }
 
 }
