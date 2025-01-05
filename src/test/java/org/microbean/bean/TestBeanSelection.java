@@ -56,8 +56,7 @@ final class TestBeanSelection {
                                              domain.declaredType(domain.typeElement("java.util.Optional"),
                                                                  domain.wildcardType(domain.javaLangObject().asType(),
                                                                                      null))));
-    assertTrue(matcher.test(t, new Id(domain,
-                                      List.of(domain.declaredType(domain.typeElement("java.util.List"),
+    assertTrue(matcher.test(t, new Id(List.of(domain.declaredType(domain.typeElement("java.util.List"),
                                                                   domain.declaredType(domain.typeElement("java.util.Optional"),
                                                                                       domain.javaLangObject().asType()))),
                                       List.of(),
@@ -67,8 +66,7 @@ final class TestBeanSelection {
   @Test
   final void testStringSelectsString() {
     final AttributedType t = new AttributedType(domain.typeElement("java.lang.String").asType());
-    assertTrue(matcher.test(t, new Id(domain,
-                                      List.of(domain.typeElement("java.lang.String").asType()),
+    assertTrue(matcher.test(t, new Id(List.of(domain.typeElement("java.lang.String").asType()),
                                       List.of(),
                                       NONE_ID)));
   }
@@ -76,8 +74,7 @@ final class TestBeanSelection {
   @Test
   final void testStringDoesNotSelectObject() {
     final AttributedType t = new AttributedType(domain.typeElement("java.lang.String").asType());
-    assertFalse(matcher.test(t, new Id(domain,
-                                       List.of(domain.javaLangObject().asType()),
+    assertFalse(matcher.test(t, new Id(List.of(domain.javaLangObject().asType()),
                                        List.of(),
                                        NONE_ID)));
   }
@@ -85,8 +82,7 @@ final class TestBeanSelection {
   @Test
   final void testIntSelectsInteger() {
     final AttributedType t = new AttributedType(domain.primitiveType(TypeKind.INT));
-    assertTrue(matcher.test(t, new Id(domain,
-                                      List.of(domain.typeElement("java.lang.Integer").asType()),
+    assertTrue(matcher.test(t, new Id(List.of(domain.typeElement("java.lang.Integer").asType()),
                                       List.of(),
                                       NONE_ID)));
   }
@@ -94,8 +90,7 @@ final class TestBeanSelection {
   @Test
   final void testObjectDoesNotSelectString() {
     final AttributedType t = new AttributedType(domain.javaLangObject().asType());
-    assertFalse(matcher.test(t, new Id(domain,
-                                       List.of(domain.declaredType("java.lang.String")),
+    assertFalse(matcher.test(t, new Id(List.of(domain.declaredType("java.lang.String")),
                                        List.of(),
                                        NONE_ID)));
   }
@@ -105,8 +100,7 @@ final class TestBeanSelection {
     final AttributedType t = new AttributedType(domain.declaredType(domain.typeElement("java.util.List"),
                                                                     domain.wildcardType(domain.declaredType("java.lang.String"),
                                                                                         null)));
-    assertTrue(matcher.test(t, new Id(domain,
-                                      List.of(domain.declaredType(domain.typeElement("java.util.List"),
+    assertTrue(matcher.test(t, new Id(List.of(domain.declaredType(domain.typeElement("java.util.List"),
                                                                   domain.typeElement("java.lang.String").asType())),
                                       List.of(),
                                       NONE_ID)));

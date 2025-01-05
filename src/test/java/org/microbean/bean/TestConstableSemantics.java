@@ -74,8 +74,7 @@ final class TestConstableSemantics {
   @Test
   final void testId() throws ReflectiveOperationException {
     final Id id =
-      new Id(domain,
-             List.of(domain.typeElement("java.lang.String").asType(), domain.javaLangObject().asType()),
+      new Id(List.of(domain.typeElement("java.lang.String").asType(), domain.javaLangObject().asType()),
              anyAndDefaultQualifiers(),
              SINGLETON_ID);
     assertEquals(id, Constables.describeConstable(id).orElseThrow().resolveConstantDesc(lookup()));

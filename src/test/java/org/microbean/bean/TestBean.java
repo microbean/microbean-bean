@@ -45,8 +45,7 @@ final class TestBean {
   final void testConstableStuff() {
     final Factory<String> f = new Constant<>("Hello");
     final Id id =
-      new Id(domain,
-             List.of(domain.declaredType("java.lang.String"),
+      new Id(List.of(domain.declaredType("java.lang.String"),
                      domain.javaLangObject().asType()),
              anyAndDefaultQualifiers(),
              SINGLETON_ID);

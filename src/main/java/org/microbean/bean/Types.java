@@ -45,10 +45,6 @@ import javax.lang.model.type.WildcardType;
 
 import org.microbean.construct.Domain;
 
-import org.microbean.construct.element.UniversalElement;
-
-import org.microbean.construct.type.UniversalType;
-
 import static java.lang.constant.ConstantDescs.BSM_INVOKE;
 
 import static java.util.HashSet.newHashSet;
@@ -71,7 +67,7 @@ public class Types implements Constable {
    */
 
 
-  private final Comparator<UniversalType> c;
+  private final Comparator<TypeMirror> c;
 
   private final Domain domain;
 
@@ -137,35 +133,35 @@ public class Types implements Constable {
     return this.domain().hashCode();
   }
 
-  private final boolean isInterface(final UniversalElement e) {
+  private final boolean isInterface(final Element e) {
     return e.getKind().isInterface();
   }
-  
-  private final boolean isInterface(final UniversalType t) {
-    return t.getKind() == TypeKind.DECLARED && isInterface(t.asElement());
+
+  private final boolean isInterface(final TypeMirror t) {
+    return t.getKind() == TypeKind.DECLARED && isInterface(((DeclaredType)t).asElement());
   }
 
   final String name(final TypeMirror t) {
-    final UniversalType ut = UniversalType.of(t, this.domain());
-    return switch (ut.getKind()) {
-    case ARRAY -> name(ut.getComponentType()) + "[]";
+    return switch (t.getKind()) {
+    case ARRAY -> name(((ArrayType)t).getComponentType()) + "[]";
     case BOOLEAN -> "boolean";
     case BYTE -> "byte";
     case CHAR -> "char";
-    case DECLARED, TYPEVAR -> name(ut.asElement());
+    case DECLARED -> name(((DeclaredType)t).asElement());
     case DOUBLE -> "double";
     case FLOAT -> "float";
     case INT -> "int";
     case INTERSECTION -> {
       final StringJoiner sj = new java.util.StringJoiner("&");
-      for (final UniversalType bound : ut.getBounds()) {
+      for (final TypeMirror bound : ((IntersectionType)t).getBounds()) {
         sj.add(name(bound));
       }
       yield sj.toString();
     }
     case LONG -> "long";
     case SHORT -> "short";
-    default -> ut.toString();
+    case TYPEVAR -> name(((TypeVariable)t).asElement());
+    default -> t.toString();
     };
   }
 
@@ -174,9 +170,9 @@ public class Types implements Constable {
   }
 
   public final List<? extends TypeMirror> supertypes(final TypeMirror t, final Predicate<? super TypeMirror> p) {
-    final ArrayList<UniversalType> nonInterfaceTypes = new ArrayList<>(7); // arbitrary size
-    final ArrayList<UniversalType> interfaceTypes = new ArrayList<>(17); // arbitrary size
-    supertypes(UniversalType.of(t, this.domain()), p, nonInterfaceTypes, interfaceTypes, newHashSet(13)); // arbitrary size
+    final ArrayList<TypeMirror> nonInterfaceTypes = new ArrayList<>(7); // arbitrary size
+    final ArrayList<TypeMirror> interfaceTypes = new ArrayList<>(17); // arbitrary size
+    supertypes(t, p, nonInterfaceTypes, interfaceTypes, newHashSet(13)); // arbitrary size
     nonInterfaceTypes.trimToSize();
     interfaceTypes.trimToSize();
     return
@@ -185,10 +181,10 @@ public class Types implements Constable {
       .toList();
   }
 
-  private final void supertypes(final UniversalType t,
+  private final void supertypes(final TypeMirror t,
                                 final Predicate<? super TypeMirror> p,
-                                final ArrayList<? super UniversalType> nonInterfaceTypes,
-                                final ArrayList<? super UniversalType> interfaceTypes,
+                                final ArrayList<? super TypeMirror> nonInterfaceTypes,
+                                final ArrayList<? super TypeMirror> interfaceTypes,
                                 final Set<? super String> seen) {
     if (seen.add(name(t))) {
       if (p.test(t)) {
@@ -199,7 +195,7 @@ public class Types implements Constable {
         }
       }
       for (final TypeMirror directSupertype : domain.directSupertypes(t)) {
-        this.supertypes(UniversalType.of(directSupertype, this.domain()), p, nonInterfaceTypes, interfaceTypes, seen);
+        this.supertypes(directSupertype, p, nonInterfaceTypes, interfaceTypes, seen);
       }
     }
   }
@@ -232,14 +228,14 @@ public class Types implements Constable {
    */
 
 
-  private final class SpecializationComparator implements Comparator<UniversalType> {
+  private final class SpecializationComparator implements Comparator<TypeMirror> {
 
     private SpecializationComparator() {
       super();
     }
 
     @Override
-    public final int compare(final UniversalType t, final UniversalType s) {
+    public final int compare(final TypeMirror t, final TypeMirror s) {
       if (t == s) {
         return 0;
       } else if (t == null) {
