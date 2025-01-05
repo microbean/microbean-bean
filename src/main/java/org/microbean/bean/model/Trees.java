@@ -1,6 +1,6 @@
 /* -*- mode: Java; c-basic-offset: 2; indent-tabs-mode: nil; coding: utf-8-unix -*-
  *
- * Copyright © 2024 microBean™.
+ * Copyright © 2024–2025 microBean™.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
  * the License. You may obtain a copy of the License at
@@ -29,8 +29,8 @@ final class Trees {
   }
 
   /**
-   * Returns a {@link Stream} of nodes in breadth-first order from a root node of a notional (and definitionally acyclic) tree and a means for
-   * acquiring its immediate notional children.
+   * Returns a {@link Stream} of nodes in breadth-first order from a root node of a notional (and definitionally
+   * acyclic) tree and a means for acquiring its immediate notional children.
    *
    * <p>No checks are performed for cycles in the resulting graph which means that if the supplied {@link Function} is
    * not well-behaved undefined behavior can result, including infinite loops.</p>
@@ -59,8 +59,8 @@ final class Trees {
   }
 
   /**
-   * Returns a {@link Stream} of nodes in depth-first order from a root node of a notional (and definitionally acyclic) tree and a means for
-   * acquiring its immediate notional children.
+   * Returns a {@link Stream} of nodes in depth-first order from a root node of a notional (and definitionally acyclic)
+   * tree and a means for acquiring its immediate notional children.
    *
    * <p>No checks are performed for cycles in the resulting graph which means that if the supplied {@link Function} is
    * not well-behaved undefined behavior can result, including infinite loops.</p>

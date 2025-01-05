@@ -31,10 +31,10 @@ import org.microbean.qualifier.NamedAttributeMap;
 import static java.lang.constant.ConstantDescs.BSM_INVOKE;
 import static java.lang.constant.ConstantDescs.CD_List;
 
-import static org.microbean.lang.ConstantDescs.CD_TypeMirror;
-
 public final record AttributedType(TypeMirror type, List<NamedAttributeMap<?>> attributes) implements Constable {
 
+  private static final ClassDesc CD_TypeMirror = ClassDesc.of("javax.lang.model.type.TypeMirror");
+  
   public AttributedType {
     type = switch (type.getKind()) {
     case ARRAY, BOOLEAN, BYTE, CHAR, DECLARED, DOUBLE, FLOAT, INT, LONG, SHORT -> type;

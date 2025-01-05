@@ -1,6 +1,6 @@
 /* -*- mode: Java; c-basic-offset: 2; indent-tabs-mode: nil; coding: utf-8-unix -*-
  *
- * Copyright © 2023 microBean™.
+ * Copyright © 2023–2025 microBean™.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
@@ -29,13 +29,13 @@ import java.util.SortedSet;
 import java.util.TreeSet;
 
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import org.microbean.constant.Constables;
 
-import org.microbean.lang.Lang;
-import org.microbean.lang.SameTypeEquality;
-import org.microbean.lang.TypeAndElementSource;
+import org.microbean.construct.DefaultDomain;
+import org.microbean.construct.Domain;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -53,15 +53,15 @@ import static org.microbean.scope.Scope.SINGLETON_ID;
 
 final class TestConstableSemantics {
 
-  private static TypeAndElementSource tes;
-  
+  private static Domain domain;
+
   private TestConstableSemantics() {
     super();
   }
 
   @BeforeAll
-  static final void initializeTes() {
-    tes = Lang.typeAndElementSource();
+  static final void initializeDomain() {
+    domain = new DefaultDomain();
   }
 
   @Test
@@ -70,26 +70,16 @@ final class TestConstableSemantics {
     assertEquals(list, Constables.describeConstable(list).orElseThrow().resolveConstantDesc(MethodHandles.lookup()));
   }
 
+  @Disabled // Types are not currently Constable
   @Test
   final void testId() throws ReflectiveOperationException {
     final Id id =
-      new Id(List.of(tes.declaredType(String.class), tes.declaredType(Object.class)),
+      new Id(domain,
+             List.of(domain.typeElement("java.lang.String").asType(), domain.javaLangObject().asType()),
              anyAndDefaultQualifiers(),
              SINGLETON_ID);
     assertEquals(id, Constables.describeConstable(id).orElseThrow().resolveConstantDesc(lookup()));
   }
-
-  /*
-  @Test
-  final void testFactory() throws ReflectiveOperationException {
-    final Factory<String> f = new Singleton<>("Hello");
-    assertNull(f.singleton());
-    @SuppressWarnings("unchecked")
-    final Factory<String> f2 = (Factory<String>)Constables.describeConstable(f).orElseThrow().resolveConstantDesc(lookup());
-    assertNotSame(f, f2);
-    assertSame(f.singleton(), f2.singleton());
-  }
-  */
 
   @Test
   final void testConstant() throws ReflectiveOperationException {

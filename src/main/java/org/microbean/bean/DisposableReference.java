@@ -1,6 +1,6 @@
 /* -*- mode: Java; c-basic-offset: 2; indent-tabs-mode: nil; coding: utf-8-unix -*-
  *
- * Copyright © 2023–2024 microBean™.
+ * Copyright © 2023–2025 microBean™.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
@@ -182,9 +182,9 @@ public final class DisposableReference<R> extends WeakReference<R> implements Au
    * @exception RuntimeException if an invocation of the {@link Consumer#accept(Object) accept(Object)} method on the
    * {@link Consumer} {@linkplain #DisposableReference(Object, Consumer) supplied at construction time} fails
    *
-   * @idempotency This method is idempotent.
+   * @microbean.idempotency This method is idempotent.
    *
-   * @threadsafety This method is safe for concurrent use by multiple threads.
+   * @microbean.threadsafety This method is safe for concurrent use by multiple threads.
    *
    * @see #DisposableReference(Object, Consumer)
    */

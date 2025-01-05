@@ -1,6 +1,6 @@
 /* -*- mode: Java; c-basic-offset: 2; indent-tabs-mode: nil; coding: utf-8-unix -*-
  *
- * Copyright © 2023–2024 microBean™.
+ * Copyright © 2024 microBean™.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
  * the License. You may obtain a copy of the License at
@@ -13,11 +13,18 @@
  */
 package org.microbean.bean;
 
-// Subordinate to Factory<I> (really to PostInitializer<I>). Normally applied to Producer<I> output.
-// Calls initializer methods and injects fields
-// Note that this deliberately extends Aggregate, providing access to dependencies.
-public interface Initializer<I> extends Aggregate {
+import org.junit.jupiter.api.extension.ExtensionContext;
+import org.junit.jupiter.api.extension.TestInstancePostProcessor;
 
-  public I initialize(final I i, final Request<I> r);
+public class ExperimentalTestInstancePostProcessor implements TestInstancePostProcessor {
 
+  public ExperimentalTestInstancePostProcessor() {
+    super();
+  }
+  
+  public final void postProcessTestInstance(final Object testInstance,
+                                            final ExtensionContext extensionContext) {
+    System.out.println("*** postProcessTestInstance called");
+  }
+  
 }

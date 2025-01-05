@@ -26,18 +26,17 @@ import javax.lang.model.util.ElementFilter;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
-import org.microbean.lang.element.DelegatingElement;
+import org.microbean.construct.DefaultDomain;
+import org.microbean.construct.Domain;
 
-import org.microbean.lang.TypeAndElementSource;
-
-import static org.microbean.lang.Lang.typeAndElementSource;
+import org.microbean.construct.element.UniversalElement;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 final class TestElements {
 
-  private static final TypeAndElementSource tes = typeAndElementSource();
+  private static final Domain domain = new DefaultDomain();
   
   private TestElements() {
     super();
@@ -45,8 +44,8 @@ final class TestElements {
 
   @Test
   final void testStreamDepthFirst() {
-    final Element self = tes.typeElement(this.getClass().getName());
-    assertTrue(self instanceof DelegatingElement);
+    final Element self = domain.typeElement(this.getClass().getName());
+    assertTrue(self instanceof UniversalElement);
     Trees.streamDepthFirst(self, Elements::parametersAndEnclosedElements)
       .forEachOrdered(e -> System.out.println(e.getSimpleName() + " (" + e.getKind() + ")"));
   }
@@ -54,7 +53,7 @@ final class TestElements {
   @Disabled // This works fine, but takes a good long while so is disabled by default.
   @Test
   final void testBigHorkingStream() {
-    final Element javaBase = tes.moduleElement("java.base");
+    final Element javaBase = domain.moduleElement("java.base");
     assertNotNull(javaBase);
     Trees.streamDepthFirst(javaBase, Elements::parametersAndEnclosedElements)
       .forEachOrdered(e -> System.out.println(e.getSimpleName() + " (" + e.getKind() + ")"));

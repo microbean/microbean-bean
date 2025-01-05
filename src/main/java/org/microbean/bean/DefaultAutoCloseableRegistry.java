@@ -1,6 +1,6 @@
 /* -*- mode: Java; c-basic-offset: 2; indent-tabs-mode: nil; coding: utf-8-unix -*-
  *
- * Copyright © 2023–2024 microBean™.
+ * Copyright © 2023–2025 microBean™.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
@@ -69,11 +69,11 @@ public class DefaultAutoCloseableRegistry implements AutoCloseableRegistry {
    *
    * @exception IllegalStateException if this {@link DefaultAutoCloseableRegistry} is {@linkplain #closed() closed}
    *
-   * @nullability This method does not, and its overrides must not, return {@code null}.
+   * @microbean.nullability This method does not, and its overrides must not, return {@code null}.
    *
-   * @idempotency Overrides of this method must return new, distinct {@link DefaultAutoCloseableRegistry} instances.
+   * @microbean.idempotency Overrides of this method must return new, distinct {@link DefaultAutoCloseableRegistry} instances.
    *
-   * @threadsafety This method is, and its overrides must be, safe for concurrent use by multiple threads.
+   * @microbean.threadsafety This method is, and its overrides must be, safe for concurrent use by multiple threads.
    *
    * @see #register(AutoCloseable)
    */
@@ -102,9 +102,9 @@ public class DefaultAutoCloseableRegistry implements AutoCloseableRegistry {
    * <p>After any successful invocation of this method, an invocation of the {@link #closed()} method will forever after
    * return {@code true}.</p>
    *
-   * @idempotency This method is, and its overrides must be, idempotent.
+   * @microbean.idempotency This method is, and its overrides must be, idempotent.
    *
-   * @threadsafety This method is, and its overrides must be, safe for concurrent use by multiple threads.
+   * @microbean.threadsafety This method is, and its overrides must be, safe for concurrent use by multiple threads.
    *
    * @see #closed()
    */
@@ -167,9 +167,9 @@ public class DefaultAutoCloseableRegistry implements AutoCloseableRegistry {
    *
    * @return {@code true} if and only if this {@link DefaultAutoCloseableRegistry} is {@linkplain #close() closed}
    *
-   * @idempotency This method is idempotent.
+   * @microbean.idempotency This method is idempotent.
    *
-   * @threadsafety This method is safe for concurrent use by multiple threads.
+   * @microbean.threadsafety This method is safe for concurrent use by multiple threads.
    *
    * @see #close()
    */
@@ -198,9 +198,9 @@ public class DefaultAutoCloseableRegistry implements AutoCloseableRegistry {
    *
    * @exception NullPointerException if {@code closeable} is {@code null}
    *
-   * @idempotency This method is idempotent.
+   * @microbean.idempotency This method is idempotent.
    *
-   * @threadsafety This method is safe for concurrent use by multiple threads.
+   * @microbean.threadsafety This method is safe for concurrent use by multiple threads.
    */
   @Override // AutoCloseableRegistry
   public final boolean register(final AutoCloseable closeable) {

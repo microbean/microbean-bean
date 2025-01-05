@@ -1,6 +1,6 @@
 /* -*- mode: Java; c-basic-offset: 2; indent-tabs-mode: nil; coding: utf-8-unix -*-
  *
- * Copyright © 2024 microBean™.
+ * Copyright © 2024–2025 microBean™.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
@@ -33,11 +33,11 @@ public interface Request<I> extends Creation<I>, ReferenceSelector {
    *
    * @return the {@link BeanReduction} describing this {@link Request} in progress; never {@code null}
    *
-   * @idempotency Implementations of this method must be idempotent and deterministic.
+   * @microbean.idempotency Implementations of this method must be idempotent and deterministic.
    *
-   * @nullability Implementations of this method must not return {@code null}.
+   * @microbean.nullability Implementations of this method must not return {@code null}.
    *
-   * @threadsafety Implementations of this method must be safe for concurrent use by multiple threads.
+   * @microbean.threadsafety Implementations of this method must be safe for concurrent use by multiple threads.
    *
    * @see BeanReduction
    */

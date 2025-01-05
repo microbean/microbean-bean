@@ -1,6 +1,6 @@
 /* -*- mode: Java; c-basic-offset: 2; indent-tabs-mode: nil; coding: utf-8-unix -*-
  *
- * Copyright © 2024 microBean™.
+ * Copyright © 2024–2025 microBean™.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
  * the License. You may obtain a copy of the License at
@@ -15,8 +15,6 @@ package org.microbean.bean;
 
 import java.util.Collection;
 
-import java.util.function.Predicate;
-
 import org.microbean.qualifier.NamedAttributeMap;
 
 import static org.microbean.bean.Qualifiers.anyQualifier;
@@ -24,39 +22,19 @@ import static org.microbean.bean.Qualifiers.defaultQualifier;
 import static org.microbean.bean.Qualifiers.defaultQualifiers;
 import static org.microbean.bean.Qualifiers.qualifiers;
 
-public final class QualifiersMatcher implements Matcher<Collection<? extends NamedAttributeMap<?>>, Collection<? extends NamedAttributeMap<?>>> {
+public final class EventQualifiersMatcher implements Matcher<Collection<? extends NamedAttributeMap<?>>, Collection<? extends NamedAttributeMap<?>>> {
 
-  public QualifiersMatcher() {
+  public EventQualifiersMatcher() {
     super();
   }
 
   @Override // Matcher<Collection<? extends NamedAttributeMap<?>>, Collection<? extends NamedAttributeMap<?>>>
   public final boolean test(final Collection<? extends NamedAttributeMap<?>> receiverAttributes,
                             final Collection<? extends NamedAttributeMap<?>> payloadAttributes) {
+    // "An event is delivered to an observer method if...the observer method has no event qualifiers or has a subset of
+    // the event qualifiers."
     final Collection<? extends NamedAttributeMap<?>> receiverQualifiers = qualifiers(receiverAttributes);
-    final Collection<? extends NamedAttributeMap<?>> payloadQualifiers = qualifiers(payloadAttributes);
-    if (receiverQualifiers.isEmpty()) {
-      // Pretend receiver had [@Default] and payload had at least [@Default] (e.g. [@Default, @Any])
-      return payloadQualifiers.isEmpty() || containsAllMatching(payloadQualifiers::contains, defaultQualifiers());
-    } else if (payloadQualifiers.isEmpty()) {
-      for (final NamedAttributeMap<?> receiverQualifier : receiverQualifiers) {
-        if (anyQualifier(receiverQualifier) || defaultQualifier(receiverQualifier)) {
-          // receiver had [@Default] or [@Any] or [@Default, @Any]; pretend payload had [@Default, @Any].
-          return true;
-        }
-      }
-      return false;
-    }
-    return containsAllMatching(payloadQualifiers::contains, receiverQualifiers);
-  }
-
-  private static final boolean containsAllMatching(final Predicate<? super Object> p, final Iterable<?> i) {
-    for (final Object o : i) {
-      if (!p.test(o)) {
-        return false;
-      }
-    }
-    return true;
+    return receiverQualifiers.isEmpty() || qualifiers(payloadAttributes).containsAll(receiverQualifiers);
   }
 
 }
