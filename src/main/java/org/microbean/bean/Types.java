@@ -141,30 +141,6 @@ public class Types implements Constable {
     return t.getKind() == TypeKind.DECLARED && isInterface(((DeclaredType)t).asElement());
   }
 
-  final String name(final TypeMirror t) {
-    return switch (t.getKind()) {
-    case ARRAY -> name(((ArrayType)t).getComponentType()) + "[]";
-    case BOOLEAN -> "boolean";
-    case BYTE -> "byte";
-    case CHAR -> "char";
-    case DECLARED -> name(((DeclaredType)t).asElement());
-    case DOUBLE -> "double";
-    case FLOAT -> "float";
-    case INT -> "int";
-    case INTERSECTION -> {
-      final StringJoiner sj = new java.util.StringJoiner("&");
-      for (final TypeMirror bound : ((IntersectionType)t).getBounds()) {
-        sj.add(name(bound));
-      }
-      yield sj.toString();
-    }
-    case LONG -> "long";
-    case SHORT -> "short";
-    case TYPEVAR -> name(((TypeVariable)t).asElement());
-    default -> t.toString();
-    };
-  }
-
   public final List<? extends TypeMirror> supertypes(final TypeMirror t) {
     return this.supertypes(t, Types::returnTrue);
   }
@@ -200,10 +176,15 @@ public class Types implements Constable {
     }
   }
 
+
   /*
    * Static methods.
    */
 
+
+  private static final String name(final CharSequence cs) {
+    return cs instanceof String s ? s : cs.toString();
+  }
 
   private static final String name(final Element e) {
     return e instanceof QualifiedNameable qn ? name(qn) : name(e.getSimpleName());
@@ -214,8 +195,28 @@ public class Types implements Constable {
     return n == null || n.isEmpty() ? name(qn.getSimpleName()) : name(n);
   }
 
-  private static final String name(final CharSequence cs) {
-    return cs instanceof String s ? s : cs.toString();
+  static final String name(final TypeMirror t) {
+    return switch (t.getKind()) {
+    case ARRAY -> name(((ArrayType)t).getComponentType()) + "[]";
+    case BOOLEAN -> "boolean";
+    case BYTE -> "byte";
+    case CHAR -> "char";
+    case DECLARED -> name(((DeclaredType)t).asElement());
+    case DOUBLE -> "double";
+    case FLOAT -> "float";
+    case INT -> "int";
+    case INTERSECTION -> {
+      final StringJoiner sj = new java.util.StringJoiner("&");
+      for (final TypeMirror bound : ((IntersectionType)t).getBounds()) {
+        sj.add(name(bound));
+      }
+      yield sj.toString();
+    }
+    case LONG -> "long";
+    case SHORT -> "short";
+    case TYPEVAR -> name(((TypeVariable)t).asElement());
+    default -> t.toString();
+    };
   }
 
   private static final <T> boolean returnTrue(final T ignored) {
