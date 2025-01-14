@@ -1,6 +1,6 @@
 /* -*- mode: Java; c-basic-offset: 2; indent-tabs-mode: nil; coding: utf-8-unix -*-
  *
- * Copyright © 2023 microBean™.
+ * Copyright © 2023–2025 microBean™.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
@@ -13,24 +13,48 @@
  */
 package org.microbean.bean;
 
+/**
+ * A {@link BeanException} indicating a problem with destruction.
+ *
+ * @author <a href="https://about.me/lairdnelson" target="_top">Laird Nelson</a>
+ */
 public class DestructionException extends BeanException {
 
   private static final long serialVersionUID = 1L;
 
+  /**
+   * Creates a new {@link DestructionException}.
+   */
   public DestructionException() {
     super();
   }
 
+  /**
+   * Creates a new {@link DestructionException}.
+   *
+   * @param message a detail message; may be {@code null}
+   */
   public DestructionException(final String message) {
     super(message);
   }
 
+  /**
+   * Creates a new {@link DestructionException}.
+   *
+   * @param cause a {@link Throwable} that caused this {@link DestructionException} to be created; may be {@code null}
+   */
   public DestructionException(final Throwable cause) {
     super(cause);
   }
 
-  public DestructionException(final String message,
-                              final Throwable cause) {
+  /**
+   * Creates a new {@link DestructionException}.
+   *
+   * @param message a detail message; may be {@code null}
+   *
+   * @param cause a {@link Throwable} that caused this {@link DestructionException} to be created; may be {@code null}
+   */
+  public DestructionException(final String message, final Throwable cause) {
     super(message, cause);
   }
 

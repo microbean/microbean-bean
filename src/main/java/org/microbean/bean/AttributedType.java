@@ -1,6 +1,6 @@
 /* -*- mode: Java; c-basic-offset: 2; indent-tabs-mode: nil; coding: utf-8-unix -*-
  *
- * Copyright © 2024 microBean™.
+ * Copyright © 2024–2025 microBean™.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
  * the License. You may obtain a copy of the License at
@@ -31,10 +31,32 @@ import org.microbean.qualifier.NamedAttributeMap;
 import static java.lang.constant.ConstantDescs.BSM_INVOKE;
 import static java.lang.constant.ConstantDescs.CD_List;
 
+/**
+ * A pairing of a {@link TypeMirror} with a {@link List} of {@link NamedAttributeMap}s.
+ *
+ * @param type a {@link TypeMirror}
+ *
+ * @param attributes a {@link List} of {@link NamedAttributeMap}s
+ *
+ * @author <a href="https://about.me/lairdnelson" target="_top">Laird Nelson</a>
+ */
 public final record AttributedType(TypeMirror type, List<NamedAttributeMap<?>> attributes) implements Constable {
 
   private static final ClassDesc CD_TypeMirror = ClassDesc.of("javax.lang.model.type.TypeMirror");
-  
+
+  /**
+   * Creates a new {@link AttributedType}.
+   *
+   * @param type a {@link TypeMirror}; must not be {@code null}; must be a {@linkplain
+   * javax.lang.model.type.TypeKind#isPrimitive() primitive}, {@linkplain javax.lang.model.type.TypeKind#ARRAY array} or
+   * {@linkplain javax.lang.model.type.TypeKind#DECLARED declared} type
+   *
+   * @param attributes a {@link List} of {@link NamedAttributeMap}s; must not be {@code null}
+   *
+   * @exception NullPointerException if either argument is {@code null}
+   *
+   * @exception IllegalArgumentException if {@code type} is the wrong kind of type
+   */
   public AttributedType {
     type = switch (type.getKind()) {
     case ARRAY, BOOLEAN, BYTE, CHAR, DECLARED, DOUBLE, FLOAT, INT, LONG, SHORT -> type;
@@ -44,6 +66,17 @@ public final record AttributedType(TypeMirror type, List<NamedAttributeMap<?>> a
     attributes = List.copyOf(attributes);
   }
 
+  /**
+   * Creates a new {@link AttributedType}.
+   *
+   * @param type a {@link TypeMirror}; must not be {@code null}; must be a {@linkplain
+   * javax.lang.model.type.TypeKind#isPrimitive() primitive}, {@linkplain javax.lang.model.type.TypeKind#ARRAY array} or
+   * {@linkplain javax.lang.model.type.TypeKind#DECLARED declared} type
+   *
+   * @exception NullPointerException if {@code type} is {@code null}
+   *
+   * @exception IllegalArgumentException if {@code type} is the wrong kind of type
+   */
   public AttributedType(final TypeMirror type) {
     this(type, List.of());
   }

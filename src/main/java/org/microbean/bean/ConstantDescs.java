@@ -15,19 +15,19 @@ package org.microbean.bean;
 
 import java.lang.constant.ClassDesc;
 
-public final class ConstantDescs {
+final class ConstantDescs {
 
-  public static final ClassDesc CD_AttributedElement = ClassDesc.of("org.microbean.bean.AttributedElement");
+  static final ClassDesc CD_AttributedElement = ClassDesc.of("org.microbean.bean.AttributedElement");
 
-  public static final ClassDesc CD_AttributedType = ClassDesc.of("org.microbean.bean.AttributedType");
+  static final ClassDesc CD_AttributedType = ClassDesc.of("org.microbean.bean.AttributedType");
 
-  public static final ClassDesc CD_Bean = ClassDesc.of("org.microbean.bean.Bean");
+  static final ClassDesc CD_Bean = ClassDesc.of("org.microbean.bean.Bean");
 
-  public static final ClassDesc CD_BeanTypeMatcher = ClassDesc.of("org.microbean.bean.BeanTypeMatcher");
+  static final ClassDesc CD_BeanTypeMatcher = ClassDesc.of("org.microbean.bean.BeanTypeMatcher");
 
-  public static final ClassDesc CD_Factory = ClassDesc.of("org.microbean.bean.Factory");
+  static final ClassDesc CD_Factory = ClassDesc.of("org.microbean.bean.Factory");
 
-  public static final ClassDesc CD_Id = ClassDesc.of("org.microbean.bean.Id");
+  static final ClassDesc CD_Id = ClassDesc.of("org.microbean.bean.Id");
 
   private ConstantDescs() {
     super();

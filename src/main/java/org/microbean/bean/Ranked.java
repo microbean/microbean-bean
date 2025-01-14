@@ -14,13 +14,15 @@
 package org.microbean.bean;
 
 /**
- * An interface whose implementations can be ranked numerically in descending order (highest rank wins, or comes first).
+ * An interface whose implementations can be ranked numerically in descending order (the highest or greatest rank
+ * <dfn>outranks</dfn>, or wins, or trumps, or comes first).
  *
  * <p>In addition, an implementation may be designated as an {@linkplain #alternate() alternate}, which may affect the
- * interpretation of the implementation's {@linkplain #rank() rank}.</p>
+ * interpretation of the implementation's {@linkplain #rank() rank}, usually by conferring a rank that cannot be
+ * outranked by any other.</p>
  *
  * <p>Given a series of {@link Ranked} implementations sorted by {@linkplain #rank() rank}, the first element of the
- * series will bear the greatest {@linkplain #rank() rank}.</p>
+ * series will bear the highest, or greatest, {@linkplain #rank() rank}.</p>
  *
  * @author <a href="https://about.me/lairdnelson" target="_top">Laird Nelson</a>
  *

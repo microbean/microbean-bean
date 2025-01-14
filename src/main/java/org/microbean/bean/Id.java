@@ -41,10 +41,31 @@ import static java.lang.constant.ConstantDescs.FALSE;
 import static java.lang.constant.ConstantDescs.TRUE;
 
 import static org.microbean.bean.BeanTypes.legalBeanType;
+
 import static org.microbean.bean.ConstantDescs.CD_Id;
 
 import static org.microbean.qualifier.ConstantDescs.CD_NamedAttributeMap;
 
+/**
+ * An identifier for a {@link Bean}.
+ *
+ * @param types a {@link List} of {@link TypeMirror}s
+ *
+ * @param attributes a {@link List} of {@link NamedAttributeMap}s
+ *
+ * @param governingScopeId a {@link NamedAttributeMap} identifying the <dfn>scope</dfn> to which this {@link Id}
+ * logically belongs
+ *
+ * @param alternate whether this {@link Id} is to be considered an <dfn>alternate</dfn>
+ *
+ * @param rank the {@linkplain Ranked rank} of this {@link Id}
+ *
+ * @author <a href="https://about.me/lairdnelson" target="_top">Laird Nelson</a>
+ *
+ * @see Ranked
+ *
+ * @see ScopeMember
+ */
 public final record Id(List<TypeMirror> types,
                        List<NamedAttributeMap<?>> attributes,
                        NamedAttributeMap<?> governingScopeId,
@@ -52,12 +73,46 @@ public final record Id(List<TypeMirror> types,
                        int rank)
   implements Constable, Ranked, ScopeMember {
 
+
+  /*
+   * Constructors.
+   */
+
+
+  /**
+   * Creates a new {@link Id} that is not an alternate and that has a {@linkplain Ranked#DEFAULT_RANK default rank}.
+   *
+   * @param types a {@link List} of {@link TypeMirror}s; must not be {@code null}; must not be {@linkplain
+   * List#isEmpty() empty}
+   *
+   * @param attributes a {@link List} of {@link NamedAttributeMap}s; must not be {@code null}
+   *
+   * @param governingScopeId a {@link NamedAttributeMap} identifying the <dfn>scope</dfn> to which this {@link Id}
+   * logically belongs; must not be {@code null}
+   *
+   * @exception NullPointerException if {@code types}, {@code attributes}, or {@code governingScopeId} is {@code null}
+   */
   public Id(final List<TypeMirror> types,
             final List<NamedAttributeMap<?>> attributes,
             final NamedAttributeMap<?> governingScopeId) {
     this(types, attributes, governingScopeId, false, Ranked.DEFAULT_RANK);
   }
 
+  /**
+   * Creates a new {@link Id} that is not an alternate.
+   *
+   * @param types a {@link List} of {@link TypeMirror}s; must not be {@code null}; must not be {@linkplain
+   * List#isEmpty() empty}
+   *
+   * @param attributes a {@link List} of {@link NamedAttributeMap}s; must not be {@code null}
+   *
+   * @param governingScopeId a {@link NamedAttributeMap} identifying the <dfn>scope</dfn> to which this {@link Id}
+   * logically belongs; must not be {@code null}
+   *
+   * @param rank the {@linkplain Ranked rank} of this {@link Id}
+   *
+   * @exception NullPointerException if {@code types}, {@code attributes}, or {@code governingScopeId} is {@code null}
+   */
   public Id(final List<TypeMirror> types,
             final List<NamedAttributeMap<?>> attributes,
             final NamedAttributeMap<?> governingScopeId,
@@ -65,6 +120,23 @@ public final record Id(List<TypeMirror> types,
     this(types, attributes, governingScopeId, false, rank);
   }
 
+  /**
+   * Creates a new {@link Id}.
+   *
+   * @param types a {@link List} of {@link TypeMirror}s; must not be {@code null}; must not be {@linkplain
+   * List#isEmpty() empty}
+   *
+   * @param attributes a {@link List} of {@link NamedAttributeMap}s; must not be {@code null}
+   *
+   * @param governingScopeId a {@link NamedAttributeMap} identifying the <dfn>scope</dfn> to which this {@link Id}
+   * logically belongs; must not be {@code null}
+   *
+   * @param alternate whether this {@link Id} is to be considered an <dfn>alternate</dfn>
+   *
+   * @param rank the {@linkplain Ranked rank} of this {@link Id}
+   *
+   * @exception NullPointerException if {@code types}, {@code attributes}, or {@code governingScopeId} is {@code null}
+   */
   public Id {
     // The code below jumps through some hoops to avoid copying the types list if possible.
     final int size = types.size();
@@ -101,6 +173,12 @@ public final record Id(List<TypeMirror> types,
     Objects.requireNonNull(governingScopeId, "governingScopeId");
   }
 
+
+  /*
+   * Instance methods.
+   */
+
+  
   @Override // Constable
   public final Optional<DynamicConstantDesc<Id>> describeConstable() {
     return Constables.describeConstable(this.attributes())

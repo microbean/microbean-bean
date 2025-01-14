@@ -25,7 +25,7 @@ import static org.microbean.bean.Ranked.DEFAULT_RANK;
 /**
  * A {@link Reducer} implementation that works with {@link Ranked} objects.
  *
- * @param <C> the type of criteria
+ * @param <C> the type of criteria used in the {@link #reduce(List, Object, BiFunction)} method
  *
  * @param <T> a {@link Ranked} type
  *
