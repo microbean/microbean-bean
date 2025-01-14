@@ -47,7 +47,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static java.lang.invoke.MethodHandles.lookup;
 import static java.lang.invoke.MethodHandles.privateLookupIn;
 
-import static org.microbean.bean.Qualifiers.anyAndDefaultQualifiers;
+import static org.microbean.assign.Qualifiers.anyAndDefaultQualifiers;
 
 import static org.microbean.scope.Scope.SINGLETON_ID;
 

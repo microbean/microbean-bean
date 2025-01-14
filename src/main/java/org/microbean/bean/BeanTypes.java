@@ -29,6 +29,8 @@ import javax.lang.model.type.DeclaredType;
 import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
 
+import org.microbean.assign.Types;
+
 import org.microbean.construct.Domain;
 
 import static java.lang.System.Logger.Level.WARNING;
@@ -70,6 +72,8 @@ public final class BeanTypes extends Types {
    * Creates a new {@link BeanTypes}.
    *
    * @param domain a {@link Domain}; must not be {@code null}
+   *
+   * @exception NullPointerException if {@code domain} is {@code null}
    */
   public BeanTypes(final Domain domain) {
     super(domain);
@@ -163,7 +167,7 @@ public final class BeanTypes extends Types {
    * @microbean.threadsafety This method itself is safe for concurrent use by multiple threads, but {@link TypeMirror}
    * implementations and {@link Domain} implementations may not be safe for such use.
    */
-  static final boolean legalBeanType(final TypeMirror t) {
+  public static final boolean legalBeanType(final TypeMirror t) {
     // https://jakarta.ee/specifications/cdi/4.0/jakarta-cdi-spec-4.0#assignable_parameters
     // https://jakarta.ee/specifications/cdi/4.0/jakarta-cdi-spec-4.0#legal_bean_types
     return switch (t.getKind()) {

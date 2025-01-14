@@ -28,7 +28,7 @@ import org.microbean.construct.Domain;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import static org.microbean.bean.Qualifiers.anyAndDefaultQualifiers;
+import static org.microbean.assign.Qualifiers.anyAndDefaultQualifiers;
 
 import static org.microbean.scope.Scope.SINGLETON_ID;
 

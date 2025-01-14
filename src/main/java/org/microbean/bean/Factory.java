@@ -3,12 +3,12 @@
  * Copyright © 2023–2025 microBean™.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
- * the License.  You may obtain a copy of the License at
+ * the License. You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
- * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  See the License for the
+ * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
  */
 package org.microbean.bean;
@@ -90,6 +90,15 @@ public interface Factory<I> extends Aggregate, Constable {
     return true;
   }
 
+  /**
+   * Destroys the supplied contextual instance.
+   *
+   * @param i the contextual instance; may be {@code null} if this {@link Factory} suports returning {@code null} from
+   * its {@link #create(Request)} method
+   *
+   * @param creationRequest the {@link Request} that was {@linkplain #create(Request) present at creation time}; may be
+   * {@code null} if it was {@code null} at creation time
+   */
   // MUST be idempotent
   // If i is an AutoCloseable, MUST be idempotent
   public default void destroy(final I i, final Request<I> creationRequest) {

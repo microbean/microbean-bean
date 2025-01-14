@@ -22,6 +22,8 @@ import javax.lang.model.type.TypeKind;
 
 import org.junit.jupiter.api.Test;
 
+import org.microbean.assign.Matcher;
+
 import org.microbean.construct.Domain;
 import org.microbean.construct.DefaultDomain;
 

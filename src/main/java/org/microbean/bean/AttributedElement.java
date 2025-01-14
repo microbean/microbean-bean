@@ -1,6 +1,6 @@
 /* -*- mode: Java; c-basic-offset: 2; indent-tabs-mode: nil; coding: utf-8-unix -*-
  *
- * Copyright © 2024 microBean™.
+ * Copyright © 2024–2025 microBean™.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
  * the License. You may obtain a copy of the License at
@@ -35,29 +35,48 @@ import static java.lang.constant.ConstantDescs.BSM_INVOKE;
 import static java.lang.constant.ConstantDescs.CD_List;
 
 /**
- * An {@link Element} that has been decorated with {@linkplain NamedAttributeMap attributes}.
+ * A pairing of an {@link Element} with a {@link List} of {@link NamedAttributeMap}s.
  *
- * <p>Dependency injection frameworks often refer to this sort of thing as an <dfn>injection point</dfn>.</p>
+ * @param element an {@link Element}
  *
- * @param element a non-{@code null} {@link Element}
- *
- * @param attributes a non-{@code null} {@link List} of {@link NamedAttributeMap} instances representing attributes
+ * @param attributes a {@link List} of {@link NamedAttributeMap}s
  *
  * @author <a href="https://about.me/lairdnelson/" target="_top">Laird Nelson</a>
  */
 public final record AttributedElement(Element element, List<NamedAttributeMap<?>> attributes) implements Constable {
 
   private static final ClassDesc CD_Element = ClassDesc.of("javax.lang.model.element.Element");
-  
+
+  /**
+   * Creates a new {@link AttributedElement}.
+   *
+   * @param element a {@link Element}; must not be {@code null}
+   *
+   * @param attributes a {@link List} of {@link NamedAttributeMap}s; must not be {@code null}
+   *
+   * @exception NullPointerException if either argument is {@code null}
+   */
   public AttributedElement {
     Objects.requireNonNull(element, "element");
     attributes = List.copyOf(attributes);
   }
 
+  /**
+   * Returns this {@link AttributedElement}'s {@linkplain Element#asType() type}.
+   *
+   * @return this {@link AttributedElement}'s {@linkplain Element#asType() type}; never {@code null}
+   */
   public final TypeMirror type() {
     return this.element().asType();
   }
 
+  /**
+   * Returns this {@link AttributedElement}'s {@link AttributedType}.
+   *
+   * @return this {@link AttributedElement}'s {@link AttributedType}; never {@code null}
+   *
+   * @see AttributedType
+   */
   public final AttributedType attributedType() {
     return new AttributedType(this.type(), this.attributes());
   }

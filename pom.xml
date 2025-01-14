@@ -4,7 +4,7 @@
 
   <groupId>org.microbean</groupId>
   <artifactId>microbean-bean</artifactId>
-  <version>0.0.4-SNAPSHOT</version>
+  <version>0.0.12-SNAPSHOT</version>
 
   <name>microBean™ Bean</name>
   <description>microBean™ Bean: Utility classes for implementing beans.</description>
@@ -80,7 +80,7 @@
     <!-- maven-javadoc-plugin properties -->
     <bottom><![CDATA[Copyright &copy; ${project.inceptionYear}&ndash;{currentYear}, <a href="${project.organization.url}" target="_top">${project.organization.name}</a>. All rights reserved.]]></bottom>
     <doctitle>&lt;a href="${project.url}" target="_top"&gt;&lt;span style="font-family:Lobster, cursive;"&gt;µb&lt;/span&gt; ${project.artifactId}&lt;/a&gt; ${project.version}</doctitle>
-    <links>https://microbean.github.io/microbean-construct/apidocs/,https://microbean.github.io/microbean-qualifier/apidocs/,https://microbean.github.io/microbean-scope/apidocs/</links>
+    <links>https://microbean.github.io/microbean-assign/apidocs/,https://microbean.github.io/microbean-construct/apidocs/,https://microbean.github.io/microbean-qualifier/apidocs/,https://microbean.github.io/microbean-scope/apidocs/</links>
     <sourcetab>2</sourcetab>
 
     <!-- maven-release-plugin properties -->
@@ -143,6 +143,12 @@
 
       <dependency>
         <groupId>org.microbean</groupId>
+        <artifactId>microbean-assign</artifactId>
+        <version>0.0.1</version>
+      </dependency>
+
+      <dependency>
+        <groupId>org.microbean</groupId>
         <artifactId>microbean-constant</artifactId>
         <version>0.0.7</version>
       </dependency>
@@ -150,25 +156,13 @@
       <dependency>
         <groupId>org.microbean</groupId>
         <artifactId>microbean-construct</artifactId>
-        <version>0.0.6</version>
+        <version>0.0.9</version>
       </dependency>
 
       <dependency>
         <groupId>org.microbean</groupId>
         <artifactId>microbean-interceptor</artifactId>
         <version>0.4.0</version>
-      </dependency>
-
-      <dependency>
-        <groupId>org.microbean</groupId>
-        <artifactId>microbean-invoke</artifactId>
-        <version>0.0.17</version>
-      </dependency>
-
-      <dependency>
-        <groupId>org.microbean</groupId>
-        <artifactId>microbean-lang</artifactId>
-        <version>0.0.21</version>
       </dependency>
 
       <dependency>
@@ -190,6 +184,12 @@
 
     <dependency>
       <groupId>org.microbean</groupId>
+      <artifactId>microbean-assign</artifactId>
+      <scope>compile</scope>
+    </dependency>
+
+    <dependency>
+      <groupId>org.microbean</groupId>
       <artifactId>microbean-constant</artifactId>
       <scope>compile</scope>
     </dependency>
@@ -197,12 +197,6 @@
     <dependency>
       <groupId>org.microbean</groupId>
       <artifactId>microbean-construct</artifactId>
-      <scope>compile</scope>
-    </dependency>
-
-    <dependency>
-      <groupId>org.microbean</groupId>
-      <artifactId>microbean-invoke</artifactId>
       <scope>compile</scope>
     </dependency>
 

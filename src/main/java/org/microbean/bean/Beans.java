@@ -1,14 +1,14 @@
 /* -*- mode: Java; c-basic-offset: 2; indent-tabs-mode: nil; coding: utf-8-unix -*-
  *
- * Copyright © 2024 microBean™.
+ * Copyright © 2024–2025 microBean™.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
- * the License.  You may obtain a copy of the License at
+ * the License. You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
- * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  See the License for the
+ * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
  */
 package org.microbean.bean;
@@ -26,6 +26,8 @@ import java.util.Objects;
 import java.util.Set;
 
 import java.util.concurrent.ConcurrentHashMap;
+
+import org.microbean.assign.Matcher;
 
 import static java.util.HashSet.newHashSet;
 
@@ -83,7 +85,34 @@ public final class Beans implements Selectable<AttributedType, Bean<?>>, Reducib
    * Constructors.
    */
 
+  /**
+   * Creates a new {@link Beans}.
+   *
+   * <p>{@link Bean} instances selected by the supplied {@link Selectable} will be reduced using a {@link
+   * RankedReducer}.</p>
+   *
+   * @param s a {@link Selectable}; must not be {@code null}
+   *
+   * @see RankedReducer
+   */
+  public Beans(final Selectable<AttributedType, Bean<?>> s) {
+    this(s, Reducible.of(s, RankedReducer.of()));
+  }
 
+  /**
+   * Creates a new {@link Beans}.
+   *
+   * @param s a {@link Selectable}; must not be {@code null}
+   *
+   * @param r a {@link Reducible} to apply to elements selected by the supplied {@link Selectable}; must not be {@code
+   * null}
+   *
+   * @see #cachingSelectableOf(Matcher, Map, Collection)
+   *
+   * @see Reducible#of(Selectable, Reducer)
+   *
+   * @see RankedReducer
+   */
   public Beans(final Selectable<AttributedType, Bean<?>> s,
                final Reducible<AttributedType, Bean<?>> r) {
     this.s = Objects.requireNonNull(s, "s");
@@ -112,6 +141,21 @@ public final class Beans implements Selectable<AttributedType, Bean<?>>, Reducib
    */
 
 
+  /**
+   * Returns a new {@link Selectable} that caches its results.
+   *
+   * <p>The cache is unbounded.</p>
+   *
+   * @param idMatcher an {@link IdMatcher}; must not be {@code null}
+   *
+   * @param selections a (normally empty) {@link Map} of precomputed selections; must not be {@code null}
+   *
+   * @param beans a {@link Collection} of {@link Bean}s; must not be {@code null}
+   *
+   * @return a new {@link Selectable}; never {@code null}
+   *
+   * @exception NullPointerException if any argument is {@code null}
+   */
   public static final Selectable<AttributedType, Bean<?>> cachingSelectableOf(final Matcher<? super AttributedType, ? super Id> idMatcher,
                                                                               final Map<? extends AttributedType, ? extends List<Bean<?>>> selections,
                                                                               final Collection<? extends Bean<?>> beans) {

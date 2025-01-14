@@ -1,14 +1,14 @@
 /* -*- mode: Java; c-basic-offset: 2; indent-tabs-mode: nil; coding: utf-8-unix -*-
  *
- * Copyright © 2023 microBean™.
+ * Copyright © 2023–2025 microBean™.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
- * the License.  You may obtain a copy of the License at
+ * the License. You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
- * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  See the License for the
+ * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
  */
 package org.microbean.bean;
@@ -40,18 +40,53 @@ public final class InterceptorBindings {
     super();
   }
 
+  /**
+   * Returns a {@link NamedAttributeMap} representing the <dfn>any</dfn> interceptor binding.
+   *
+   * @return a {@link NamedAttributeMap} representing the <dfn>any</dfn> interceptor binding; never {@code null}
+   */
   public static final NamedAttributeMap<String> anyInterceptorBinding() {
     return ANY_INTERCEPTOR_BINDING;
   }
 
+  /**
+   * Returns {@code true} if and only if the supplied {@link NamedAttributeMap} represents the <dfn>any</dfn>
+   * interceptor binding.
+   *
+   * @param nam a {@link NamedAttributeMap}; may be {@code null} in which case {@code false} will be returned
+   *
+   * @return {@code true} if and only if the supplied {@link NamedAttributeMap} represents the <dfn>any</dfn>
+   * interceptor binding
+   *
+   * @see #anyInterceptorBinding()
+   */
   public static final boolean anyInterceptorBinding(final NamedAttributeMap<?> nam) {
     return ANY_INTERCEPTOR_BINDING.equals(nam) && interceptorBinding(nam);
   }
 
+  /**
+   * Returns a {@link NamedAttributeMap} representing the <dfn>interceptor binding</dfn> (meta-) interceptor binding.
+   *
+   * @return a {@link NamedAttributeMap} representing the <dfn>interceptor binding</dfn> (meta-) interceptor binding;
+   * never {@code null}
+   */
   public static final NamedAttributeMap<String> interceptorBinding() {
     return INTERCEPTOR_BINDING;
   }
 
+  /**
+   * Returns {@code true} if and only if the supplied {@link NamedAttributeMap} is itself a {@link NamedAttributeMap}
+   * that can be used to designate other {@link NamedAttributeMap}s as interceptor bindings, or a {@link
+   * NamedAttributeMap} so designated.
+   *
+   * @param a a {@link NamedAttributeMap}; may be {@code null} in which case {@code false} will be returned
+   *
+   * @return {@code true} if and only if the supplied {@link NamedAttributeMap} is itself a {@link NamedAttributeMap}
+   * that can be used to designate other {@link NamedAttributeMap}s as interceptor bindings, or a {@link
+   * NamedAttributeMap} so designated
+   *
+   * @see #interceptorBinding()
+   */
   public static final boolean interceptorBinding(final NamedAttributeMap<?> a) {
     return a != null && interceptorBinding(a.metadata());
   }
@@ -66,12 +101,14 @@ public final class InterceptorBindings {
   }
 
   /**
-   * Given a {@link Collection} of {@link NamedAttributeMap}s, returns a {@link List} consisting of those {@link
-   * NamedAttributeMap} instances that are {@linkplain #interceptorBinding() deemed to be interceptor bindings}.
+   * Given a {@link Collection} of {@link NamedAttributeMap}s, returns an immutable {@link List} consisting of those
+   * {@link NamedAttributeMap} instances that are {@linkplain #interceptorBinding() deemed to be interceptor bindings}.
    *
    * @param c a {@link Collection}; must not be {@code null}
    *
    * @return a {@link List} of interceptor bindings
+   *
+   * @exception NullPointerException if {@code c} is {@code null}
    */
   public static final List<NamedAttributeMap<?>> interceptorBindings(final Collection<? extends NamedAttributeMap<?>> c) {
     if (c.isEmpty()) {
@@ -87,10 +124,30 @@ public final class InterceptorBindings {
     return Collections.unmodifiableList(list);
   }
 
+  /**
+   * Returns a {@link NamedAttributeMap} representing a <dfn>target class</dfn> interceptor binding.
+   *
+   * @param type the target class name; must not be {@code null}
+   *
+   * @return a {@link NamedAttributeMap} representing a <dfn>target class</dfn> interceptor binding; never {@code null}
+   *
+   * @exception NullPointerException if {@code type} is {@code null}
+   */
   public static final NamedAttributeMap<?> targetClassInterceptorBinding(final String type) {
     return new NamedAttributeMap<String>("TargetClass", Map.of("class", Objects.requireNonNull(type, "type")), Map.of(), INTERCEPTOR_BINDING_LIST);
   }
 
+  /**
+   * Returns {@code true} if and only if the supplied {@link NamedAttributeMap} is a <dfn>target class</dfn> interceptor
+   * binding.
+   *
+   * @param nam a {@link NamedAttributeMap}; must not be {@code null}
+   *
+   * @return {@code true} if and only if the supplied {@link NamedAttributeMap} is a <dfn>target class</dfn> interceptor
+   * binding
+   *
+   * @exception NullPointerException if {@code nam} is {@code null}
+   */
   // Is nam a TargetClass interceptor binding?
   public static final boolean targetClassInterceptorBinding(final NamedAttributeMap<?> nam) {
     return nam.name().equals("TargetClass") && interceptorBinding(nam);

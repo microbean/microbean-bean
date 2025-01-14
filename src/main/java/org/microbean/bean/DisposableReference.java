@@ -3,12 +3,12 @@
  * Copyright © 2023–2025 microBean™.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
- * the License.  You may obtain a copy of the License at
+ * the License. You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
- * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  See the License for the
+ * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
  */
 package org.microbean.bean;
@@ -160,7 +160,7 @@ public final class DisposableReference<R> extends WeakReference<R> implements Au
   /**
    * If there has been no prior successful invocation of this method, calls the {@link Consumer#accept(Object)
    * accept(Object)} method on the {@link Consumer} representing the disposer {@linkplain #DisposableReference(Object,
-   * Consumer) supplied at construction time}, thus notionally disposeing the {@linkplain #DisposableReference(Object,
+   * Consumer) supplied at construction time}, thus notionally disposing the {@linkplain #DisposableReference(Object,
    * Consumer) referent supplied at construction time}, and returns {@code true}.
    *
    * <p>Destruction does not imply {@linkplain #close() closing}, and closing does not imply destruction (though it
@@ -172,7 +172,7 @@ public final class DisposableReference<R> extends WeakReference<R> implements Au
    * <p>If the first invocation of this method from any thread succeeds, then it will return {@code true}, and all other
    * invocations of this method from any thread will return {@code false}, and will have no effect.</p>
    *
-   * <p>This method is often called from a thread dedicated to disposeing {@linkplain #enqueue() enqueued} {@link
+   * <p>This method is often called from a thread dedicated to disposing {@linkplain #enqueue() enqueued} {@link
    * DisposableReference}s, so the {@link Consumer} {@linkplain #DisposableReference(Object, Consumer) supplied at
    * construction time} must be thread-safe.</p>
    *
