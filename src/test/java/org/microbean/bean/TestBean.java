@@ -45,12 +45,13 @@ final class TestBean {
   final void testConstableStuff() {
     final Factory<String> f = new Constant<>("Hello");
     final Id id =
-      new Id(List.of(domain.declaredType("java.lang.String"),
-                     domain.javaLangObject().asType()),
+      new Id(BeanTypeList.of(domain,
+                             List.of(domain.declaredType("java.lang.String"),
+                                     domain.javaLangObject().asType())),
              anyAndDefaultQualifiers(),
              SINGLETON_ID);
     assertTrue(id instanceof Constable);
-    assertFalse(Constables.describeConstable(id.types()).isEmpty());
+    assertFalse(id.types().describeConstable().isEmpty()); // Constables.describeConstable(id.types()).isEmpty());
     assertFalse(id.describeConstable().isEmpty());
   }
 

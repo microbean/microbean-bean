@@ -49,7 +49,7 @@ import static org.microbean.qualifier.ConstantDescs.CD_NamedAttributeMap;
 /**
  * An identifier for a {@link Bean}.
  *
- * @param types a {@link List} of {@link TypeMirror}s
+ * @param types a {@link BeanTypeList}
  *
  * @param attributes a {@link List} of {@link NamedAttributeMap}s
  *
@@ -66,7 +66,7 @@ import static org.microbean.qualifier.ConstantDescs.CD_NamedAttributeMap;
  *
  * @see ScopeMember
  */
-public final record Id(List<TypeMirror> types,
+public final record Id(BeanTypeList types,
                        List<NamedAttributeMap<?>> attributes,
                        NamedAttributeMap<?> governingScopeId,
                        boolean alternate,
@@ -82,8 +82,7 @@ public final record Id(List<TypeMirror> types,
   /**
    * Creates a new {@link Id} that is not an alternate and that has a {@linkplain Ranked#DEFAULT_RANK default rank}.
    *
-   * @param types a {@link List} of {@link TypeMirror}s; must not be {@code null}; must not be {@linkplain
-   * List#isEmpty() empty}
+   * @param types a {@link BeanTypeList}; must not be {@code null}; must not be {@linkplain List#isEmpty() empty}
    *
    * @param attributes a {@link List} of {@link NamedAttributeMap}s; must not be {@code null}
    *
@@ -92,7 +91,7 @@ public final record Id(List<TypeMirror> types,
    *
    * @exception NullPointerException if {@code types}, {@code attributes}, or {@code governingScopeId} is {@code null}
    */
-  public Id(final List<TypeMirror> types,
+  public Id(final BeanTypeList types,
             final List<NamedAttributeMap<?>> attributes,
             final NamedAttributeMap<?> governingScopeId) {
     this(types, attributes, governingScopeId, false, Ranked.DEFAULT_RANK);
@@ -101,8 +100,7 @@ public final record Id(List<TypeMirror> types,
   /**
    * Creates a new {@link Id} that is not an alternate.
    *
-   * @param types a {@link List} of {@link TypeMirror}s; must not be {@code null}; must not be {@linkplain
-   * List#isEmpty() empty}
+   * @param types a {@link BeanTypeList}; must not be {@code null}; must not be {@linkplain List#isEmpty() empty}
    *
    * @param attributes a {@link List} of {@link NamedAttributeMap}s; must not be {@code null}
    *
@@ -113,7 +111,7 @@ public final record Id(List<TypeMirror> types,
    *
    * @exception NullPointerException if {@code types}, {@code attributes}, or {@code governingScopeId} is {@code null}
    */
-  public Id(final List<TypeMirror> types,
+  public Id(final BeanTypeList types,
             final List<NamedAttributeMap<?>> attributes,
             final NamedAttributeMap<?> governingScopeId,
             final int rank) {
@@ -123,8 +121,7 @@ public final record Id(List<TypeMirror> types,
   /**
    * Creates a new {@link Id}.
    *
-   * @param types a {@link List} of {@link TypeMirror}s; must not be {@code null}; must not be {@linkplain
-   * List#isEmpty() empty}
+   * @param types a {@link BeanTypeList}; must not be {@code null}; must not be {@linkplain List#isEmpty() empty}
    *
    * @param attributes a {@link List} of {@link NamedAttributeMap}s; must not be {@code null}
    *
@@ -138,37 +135,7 @@ public final record Id(List<TypeMirror> types,
    * @exception NullPointerException if {@code types}, {@code attributes}, or {@code governingScopeId} is {@code null}
    */
   public Id {
-    // The code below jumps through some hoops to avoid copying the types list if possible.
-    final int size = types.size();
-    if (size == 0) {
-      throw new IllegalArgumentException("types.isEmpty()");
-    }
-    int i = 0;
-    for (; i < size; i++) {
-      if (!legalBeanType(types.get(i))) {
-        break;
-      }
-    }
-    if (i == size) {
-      types = List.copyOf(types);
-    } else {
-      final ArrayList<TypeMirror> newTypes = new ArrayList<>(size);
-      for (int j = 0; j < i; j++) {
-        newTypes.add(types.get(j)); // the type is known to be legal
-      }
-      ++i; // skip past the illegal type i was pointing to
-      for (; i < size; i++) {
-        final TypeMirror t = types.get(i);
-        if (legalBeanType(t)) {
-          newTypes.add(t);
-        }
-      }
-      if (newTypes.isEmpty()) {
-        throw new IllegalArgumentException("types contains no legal bean types: " + types);
-      }
-      newTypes.trimToSize();
-      types = Collections.unmodifiableList(newTypes);
-    }
+    Objects.requireNonNull(types, "types");
     attributes = List.copyOf(attributes);
     Objects.requireNonNull(governingScopeId, "governingScopeId");
   }
@@ -183,7 +150,7 @@ public final record Id(List<TypeMirror> types,
   public final Optional<DynamicConstantDesc<Id>> describeConstable() {
     return Constables.describeConstable(this.attributes())
       .flatMap(attributesDesc -> this.governingScopeId().describeConstable()
-               .flatMap(governingScopeIdDesc -> Constables.describeConstable(this.types())
+               .flatMap(governingScopeIdDesc -> this.types().describeConstable()
                         .map(typesDesc -> DynamicConstantDesc.of(BSM_INVOKE,
                                                                  MethodHandleDesc.ofConstructor(CD_Id,
                                                                                                 CD_List,

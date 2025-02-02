@@ -125,7 +125,7 @@
       <dependency>
         <groupId>org.junit</groupId>
         <artifactId>junit-bom</artifactId>
-        <version>5.11.3</version>
+        <version>5.11.4</version>
         <type>pom</type>
         <scope>import</scope>
       </dependency>
@@ -134,7 +134,7 @@
       <dependency>
         <groupId>org.jboss.weld</groupId>
         <artifactId>weld-core-bom</artifactId>
-        <version>5.1.3.Final</version>
+        <version>6.0.0.Final</version>
         <type>pom</type>
         <scope>import</scope>
       </dependency>
@@ -144,7 +144,7 @@
       <dependency>
         <groupId>org.microbean</groupId>
         <artifactId>microbean-assign</artifactId>
-        <version>0.0.1</version>
+        <version>0.0.3</version>
       </dependency>
 
       <dependency>
@@ -261,7 +261,7 @@
           <artifactId>maven-checkstyle-plugin</artifactId>
           <version>3.6.0</version>
           <configuration>
-                        <checkstyleRules>
+            <checkstyleRules>
               <module name="Checker">
                 <module name="BeforeExecutionExclusionFileFilter">
                   <property name="fileNamePattern" value="module\-info\.java$" />
