@@ -60,7 +60,8 @@ public final class BeanTypes extends Types {
    */
 
 
-  private final Map<TypeMirror, List<? extends TypeMirror>> beanTypesCache;
+  // TODO: is this cache actually worth it?
+  private final Map<TypeMirror, BeanTypeList> beanTypesCache;
 
 
   /*
@@ -87,15 +88,15 @@ public final class BeanTypes extends Types {
 
 
   /**
-   * Returns an immutable {@link List} of {@linkplain #legalBeanType(TypeMirror) legal bean types} that the supplied
-   * {@link TypeMirror} bears.
+   * Returns a {@link BeanTypeList} of {@linkplain #legalBeanType(TypeMirror) legal bean types} that the supplied {@link
+   * TypeMirror} bears.
    *
-   * <p>The returned {@link List} may be empty.</p>
+   * <p>The returned {@link BeanTypeList} may be empty.</p>
    *
    * @param t a {@link TypeMirror}; must not be {@code null}
    *
-   * @return an immutable {@link List} of {@linkplain #legalBeanType(TypeMirror) legal bean types} that the supplied
-   * {@link TypeMirror} bears; never {@code null}
+   * @return a {@link BeanTypeList} of {@linkplain #legalBeanType(TypeMirror) legal bean types} that the supplied {@link
+   * TypeMirror} bears; never {@code null}
    *
    * @exception NullPointerException if {@code t} is {@code null}
    *
@@ -104,21 +105,30 @@ public final class BeanTypes extends Types {
    * @microbean.idempotency This method is idempotent and returns determinate values.
    *
    * @microbean.threadsafety This method is safe for concurrent use by multiple threads.
+   *
+   * @see #supertypes(TypeMirror, java.util.function.Predicate)
    */
-  public final List<? extends TypeMirror> beanTypes(final TypeMirror t) {
+  public final BeanTypeList beanTypes(final TypeMirror t) {
     // https://jakarta.ee/specifications/cdi/4.0/jakarta-cdi-spec-4.0#assignable_parameters
     // https://jakarta.ee/specifications/cdi/4.0/jakarta-cdi-spec-4.0#legal_bean_types
     // https://jakarta.ee/specifications/cdi/4.0/jakarta-cdi-spec-4.0#managed_bean_types
     // https://jakarta.ee/specifications/cdi/4.0/jakarta-cdi-spec-4.0#producer_field_types
     // https://jakarta.ee/specifications/cdi/4.0/jakarta-cdi-spec-4.0#producer_method_types
+    final Domain d = this.domain();
     return switch (t.getKind()) {
-    case ARRAY -> this.beanTypesCache.computeIfAbsent(t, t0 -> legalBeanType(t0) ? List.of(t0, this.domain().javaLangObject().asType()) : List.of());
-    case BOOLEAN, BYTE, CHAR, DOUBLE, FLOAT, INT, LONG, SHORT -> this.beanTypesCache.computeIfAbsent(t, t0 -> List.of(t0, this.domain().javaLangObject().asType()));
-    case DECLARED, TYPEVAR -> this.beanTypesCache.computeIfAbsent(t, t0 -> this.supertypes(t0, BeanTypes::legalBeanType));
-    default -> {
-      assert !legalBeanType(t);
-      yield List.of();
-    }
+    case ARRAY -> 
+      this.beanTypesCache.computeIfAbsent(t, t0 -> BeanTypeList.of(d,
+                                                                   (legalBeanType(t0) ?
+                                                                    List.of(t0, d.javaLangObject().asType()) :
+                                                                    List.of())));
+    case BOOLEAN, BYTE, CHAR, DOUBLE, FLOAT, INT, LONG, SHORT ->
+      this.beanTypesCache.computeIfAbsent(t, t0 -> BeanTypeList.of(d,
+                                                                   List.of(t0, d.javaLangObject().asType())));
+    case DECLARED, TYPEVAR ->
+      this.beanTypesCache.computeIfAbsent(t, t0 -> BeanTypeList.of(d,
+                                                                   this.supertypes(t0, BeanTypes::legalBeanType)));
+    default ->
+      BeanTypeList.of(d, List.of());
     };
   }
 
