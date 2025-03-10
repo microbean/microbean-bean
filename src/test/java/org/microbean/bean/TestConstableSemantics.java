@@ -49,8 +49,6 @@ import static java.lang.invoke.MethodHandles.privateLookupIn;
 
 import static org.microbean.assign.Qualifiers.anyAndDefaultQualifiers;
 
-import static org.microbean.scope.Scope.SINGLETON_ID;
-
 final class TestConstableSemantics {
 
   private static Domain domain;
@@ -76,8 +74,7 @@ final class TestConstableSemantics {
     final Id id =
       new Id(BeanTypeList.of(domain,
                              List.of(domain.typeElement("java.lang.String").asType(), domain.javaLangObject().asType())),
-             anyAndDefaultQualifiers(),
-             SINGLETON_ID);
+             anyAndDefaultQualifiers());
     assertEquals(id, Constables.describeConstable(id).orElseThrow().resolveConstantDesc(lookup()));
   }
 

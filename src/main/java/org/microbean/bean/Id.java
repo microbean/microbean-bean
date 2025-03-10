@@ -20,6 +20,7 @@ import java.lang.constant.DynamicConstantDesc;
 import java.lang.constant.MethodHandleDesc;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
@@ -27,11 +28,10 @@ import java.util.Optional;
 
 import javax.lang.model.type.TypeMirror;
 
+import org.microbean.attributes.Attributed;
+import org.microbean.attributes.Attributes;
+
 import org.microbean.constant.Constables;
-
-import org.microbean.qualifier.NamedAttributeMap;
-
-import org.microbean.scope.ScopeMember;
 
 import static java.lang.constant.ConstantDescs.BSM_INVOKE;
 import static java.lang.constant.ConstantDescs.CD_boolean;
@@ -44,17 +44,12 @@ import static org.microbean.bean.BeanTypes.legalBeanType;
 
 import static org.microbean.bean.ConstantDescs.CD_Id;
 
-import static org.microbean.qualifier.ConstantDescs.CD_NamedAttributeMap;
-
 /**
  * An identifier for a {@link Bean}.
  *
  * @param types a {@link BeanTypeList}
  *
- * @param attributes a {@link List} of {@link NamedAttributeMap}s
- *
- * @param governingScopeId a {@link NamedAttributeMap} identifying the <dfn>scope</dfn> to which this {@link Id}
- * logically belongs
+ * @param attributes a {@link List} of {@link Attributes}s
  *
  * @param alternate whether this {@link Id} is to be considered an <dfn>alternate</dfn>
  *
@@ -63,15 +58,12 @@ import static org.microbean.qualifier.ConstantDescs.CD_NamedAttributeMap;
  * @author <a href="https://about.me/lairdnelson" target="_top">Laird Nelson</a>
  *
  * @see Ranked
- *
- * @see ScopeMember
  */
 public final record Id(BeanTypeList types,
-                       List<NamedAttributeMap<?>> attributes,
-                       NamedAttributeMap<?> governingScopeId,
+                       List<Attributes> attributes,
                        boolean alternate,
                        int rank)
-  implements Constable, Ranked, ScopeMember {
+  implements Attributed, Constable, Ranked {
 
 
   /*
@@ -84,38 +76,46 @@ public final record Id(BeanTypeList types,
    *
    * @param types a {@link BeanTypeList}; must not be {@code null}; must not be {@linkplain List#isEmpty() empty}
    *
-   * @param attributes a {@link List} of {@link NamedAttributeMap}s; must not be {@code null}
+   * @param attributes a {@link List} of {@link Attributes}s; must not be {@code null}
    *
-   * @param governingScopeId a {@link NamedAttributeMap} identifying the <dfn>scope</dfn> to which this {@link Id}
-   * logically belongs; must not be {@code null}
-   *
-   * @exception NullPointerException if {@code types}, {@code attributes}, or {@code governingScopeId} is {@code null}
+   * @exception NullPointerException if {@code types} or {@code attributes} is {@code null}
    */
   public Id(final BeanTypeList types,
-            final List<NamedAttributeMap<?>> attributes,
-            final NamedAttributeMap<?> governingScopeId) {
-    this(types, attributes, governingScopeId, false, Ranked.DEFAULT_RANK);
+            final List<Attributes> attributes) {
+    this(types, attributes, false, Ranked.DEFAULT_RANK);
   }
 
+  /*
+   * Creates a new {@link Id} that is not an alternate and that has a {@linkplain Ranked#DEFAULT_RANK default rank}.
+   *
+   * @param types a {@link BeanTypeList}; must not be {@code null}; must not be {@linkplain List#isEmpty() empty}
+   *
+   * @param attributes an array of {@link Attributes}s; must not be {@code null}
+   *
+   * @exception NullPointerException if {@code types} or {@code attributes} is {@code null}
+   */
+  /*
+  public Id(final BeanTypeList types,
+            final Attributes... attributes) {
+    this(types, Arrays.asList(attributes), false, Ranked.DEFAULT_RANK);
+  }
+  */
+  
   /**
    * Creates a new {@link Id} that is not an alternate.
    *
    * @param types a {@link BeanTypeList}; must not be {@code null}; must not be {@linkplain List#isEmpty() empty}
    *
-   * @param attributes a {@link List} of {@link NamedAttributeMap}s; must not be {@code null}
-   *
-   * @param governingScopeId a {@link NamedAttributeMap} identifying the <dfn>scope</dfn> to which this {@link Id}
-   * logically belongs; must not be {@code null}
+   * @param attributes a {@link List} of {@link Attributes}s; must not be {@code null}
    *
    * @param rank the {@linkplain Ranked rank} of this {@link Id}
    *
-   * @exception NullPointerException if {@code types}, {@code attributes}, or {@code governingScopeId} is {@code null}
+   * @exception NullPointerException if {@code types} or {@code attributes} is {@code null}
    */
   public Id(final BeanTypeList types,
-            final List<NamedAttributeMap<?>> attributes,
-            final NamedAttributeMap<?> governingScopeId,
+            final List<Attributes> attributes,
             final int rank) {
-    this(types, attributes, governingScopeId, false, rank);
+    this(types, attributes, false, rank);
   }
 
   /**
@@ -123,21 +123,17 @@ public final record Id(BeanTypeList types,
    *
    * @param types a {@link BeanTypeList}; must not be {@code null}; must not be {@linkplain List#isEmpty() empty}
    *
-   * @param attributes a {@link List} of {@link NamedAttributeMap}s; must not be {@code null}
-   *
-   * @param governingScopeId a {@link NamedAttributeMap} identifying the <dfn>scope</dfn> to which this {@link Id}
-   * logically belongs; must not be {@code null}
+   * @param attributes a {@link List} of {@link Attributes}s; must not be {@code null}
    *
    * @param alternate whether this {@link Id} is to be considered an <dfn>alternate</dfn>
    *
    * @param rank the {@linkplain Ranked rank} of this {@link Id}
    *
-   * @exception NullPointerException if {@code types}, {@code attributes}, or {@code governingScopeId} is {@code null}
+   * @exception NullPointerException if {@code types} or {@code attributes} is {@code null}
    */
   public Id {
     Objects.requireNonNull(types, "types");
     attributes = List.copyOf(attributes);
-    Objects.requireNonNull(governingScopeId, "governingScopeId");
   }
 
 
@@ -145,24 +141,22 @@ public final record Id(BeanTypeList types,
    * Instance methods.
    */
 
-  
+
   @Override // Constable
   public final Optional<DynamicConstantDesc<Id>> describeConstable() {
+    final ClassDesc CD_Attributes = ClassDesc.of(Attributes.class.getName());
     return Constables.describeConstable(this.attributes())
-      .flatMap(attributesDesc -> this.governingScopeId().describeConstable()
-               .flatMap(governingScopeIdDesc -> this.types().describeConstable()
-                        .map(typesDesc -> DynamicConstantDesc.of(BSM_INVOKE,
-                                                                 MethodHandleDesc.ofConstructor(CD_Id,
-                                                                                                CD_List,
-                                                                                                CD_List,
-                                                                                                CD_NamedAttributeMap,
-                                                                                                CD_boolean,
-                                                                                                CD_int),
-                                                                 typesDesc,
-                                                                 attributesDesc,
-                                                                 governingScopeIdDesc,
-                                                                 this.alternate() ? TRUE : FALSE,
-                                                                 this.rank()))));
+      .flatMap(attributesDesc -> this.types().describeConstable()
+               .map(typesDesc -> DynamicConstantDesc.of(BSM_INVOKE,
+                                                        MethodHandleDesc.ofConstructor(CD_Id,
+                                                                                       CD_List,
+                                                                                       CD_List,
+                                                                                       CD_boolean,
+                                                                                       CD_int),
+                                                        typesDesc,
+                                                        attributesDesc,
+                                                        this.alternate() ? TRUE : FALSE,
+                                                        this.rank())));
   }
 
 }

@@ -31,16 +31,18 @@ import java.util.Optional;
 
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementKind;
+import javax.lang.model.element.ExecutableElement;
+import javax.lang.model.element.Modifier;
+import javax.lang.model.element.TypeElement;
 
 import javax.lang.model.type.DeclaredType;
 import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
 
 import org.microbean.assign.ClassesThenInterfacesElementKindComparator;
-import org.microbean.assign.PrimitiveTypesThenDeclaredTypesTypeKindComparator;
+import org.microbean.assign.PrimitiveAndReferenceTypeKindComparator;
 import org.microbean.assign.SpecializationComparator;
 import org.microbean.assign.SupertypeList;
-import org.microbean.assign.TypeVariablesFirstTypeKindComparator;
 import org.microbean.assign.Types;
 
 import org.microbean.constant.Constables;
@@ -55,6 +57,7 @@ import static java.lang.constant.DirectMethodHandleDesc.Kind.STATIC;
 import static java.util.Collections.unmodifiableList;
 
 import static org.microbean.bean.BeanTypes.legalBeanType;
+import static org.microbean.bean.BeanTypes.proxiableElement;
 
 /**
  * An immutable {@link AbstractList} of {@link TypeMirror}s that contains only {@linkplain
@@ -72,6 +75,8 @@ public final class BeanTypeList extends AbstractList<TypeMirror> implements Cons
 
   private final int interfaceIndex;
 
+  private final boolean proxiable;
+
   private BeanTypeList(final Domain domain, final Collection<? extends TypeMirror> types) {
     super();
     Objects.requireNonNull(types, "types");
@@ -79,12 +84,14 @@ public final class BeanTypeList extends AbstractList<TypeMirror> implements Cons
       this.domain = btl.domain;
       this.types = btl.types;
       this.interfaceIndex = btl.interfaceIndex;
+      this.proxiable = btl.proxiable;
     } else {
       this.domain = domain;
-      final int size = types.size();
+      int size = types.size();
       if (size == 0) {
         this.types = List.of();
         this.interfaceIndex = -1;
+        this.proxiable = false;
       } else {
         final ArrayList<TypeMirror> newTypes;
         if (types instanceof SupertypeList stl) {
@@ -101,6 +108,7 @@ public final class BeanTypeList extends AbstractList<TypeMirror> implements Cons
             newTypes = null;
             this.types = List.copyOf(types);
             this.interfaceIndex = stl.interfaceIndex();
+            this.proxiable = proxiable(this.types.get(0), size);
           } else {
             newTypes = new ArrayList<>(size);
             for (int j = 0; j < i; j++) {
@@ -114,8 +122,16 @@ public final class BeanTypeList extends AbstractList<TypeMirror> implements Cons
               }
             }
             newTypes.trimToSize();
-            this.types = newTypes.isEmpty() ? List.of() : unmodifiableList(newTypes);
-            this.interfaceIndex = this.types.isEmpty() || stl.interfaceIndex() >= this.types.size() ? -1 : stl.interfaceIndex();
+            size = newTypes.size();
+            if (newTypes.isEmpty()) {
+              this.types = List.of();
+              this.interfaceIndex = -1;
+              this.proxiable = false;
+            } else {
+              this.types = unmodifiableList(newTypes);
+              this.interfaceIndex = stl.interfaceIndex() >= size ? -1 : stl.interfaceIndex();
+              this.proxiable = proxiable(newTypes.get(0), size);
+            }
           }
         } else {
           newTypes = new ArrayList<>(size);
@@ -127,14 +143,14 @@ public final class BeanTypeList extends AbstractList<TypeMirror> implements Cons
           if (newTypes.isEmpty()) {
             this.types = List.of();
             this.interfaceIndex = -1;
-          } else {
+            this.proxiable = false;
+          } else {            
             newTypes.trimToSize();
-            if (newTypes.size() > 1) {
-              // You might be tempted to include a Comparator that verifies that type variables come first. Normally that
-              // would be good, but a type variable is not a legal bean type.
+            size = newTypes.size();
+            if (size > 1) {
               Collections.sort(newTypes,
                                Comparator.comparing(TypeMirror::getKind,
-                                                    PrimitiveTypesThenDeclaredTypesTypeKindComparator.INSTANCE)
+                                                    PrimitiveAndReferenceTypeKindComparator.INSTANCE)
                                .thenComparing(new SpecializationComparator(domain))
                                .thenComparing(this::elementKind,
                                               ClassesThenInterfacesElementKindComparator.INSTANCE)
@@ -142,7 +158,7 @@ public final class BeanTypeList extends AbstractList<TypeMirror> implements Cons
             }
             this.types = unmodifiableList(newTypes);
             int interfaceIndex = -1;
-            for (int i = 0; i < newTypes.size(); i++) {
+            for (int i = 0; i < size; i++) {
               final ElementKind k = this.elementKind(newTypes.get(i));
               if (k != null && k.isInterface()) {
                 interfaceIndex = i;
@@ -150,6 +166,7 @@ public final class BeanTypeList extends AbstractList<TypeMirror> implements Cons
               }
             }
             this.interfaceIndex = interfaceIndex;
+            this.proxiable = proxiable(newTypes.get(0), size);
           }
         }
       }
@@ -197,6 +214,20 @@ public final class BeanTypeList extends AbstractList<TypeMirror> implements Cons
                                                         typesDesc)));
   }
 
+  /**
+   * Returns {@code true} if and only if this {@link BeanTypeList} is <dfn>proxiable</dfn>.
+   *
+   * @return {@code true} if and only if this {@link BeanTypeList} is <dfn>proxiable</dfn>
+   *
+   * @see BeanTypes#proxiableElement(Element)
+   *
+   * @spec https://jakarta.ee/specifications/cdi/4.0/jakarta-cdi-spec-4.0#unproxyable CDI Specification, version 4.0,
+   * section 2.2.10
+   */
+  public final boolean proxiable() {
+    return this.proxiable;
+  }
+
   @Override // AbstractList<TypeMirror>
   public final int size() {
     return this.types.size();
@@ -224,6 +255,17 @@ public final class BeanTypeList extends AbstractList<TypeMirror> implements Cons
   // Called by describeConstable()
   public static final BeanTypeList of(final Domain domain, final Collection<? extends TypeMirror> types) {
     return types instanceof BeanTypeList btl ? btl : new BeanTypeList(domain, types);
+  }
+
+  private static final boolean proxiable(final TypeMirror firstLegalBeanType, final int size) {
+    return
+      // Non-declared otherwise legal bean types cannot be proxied.
+      firstLegalBeanType.getKind() == TypeKind.DECLARED &&
+      ((DeclaredType)firstLegalBeanType).asElement() instanceof TypeElement e &&
+      // This BeanTypeList is still potentially proxiable if the reason the first legal bean type's element failed the
+      // BeanTypes#proxiableElement(Element) test was because the first non-interface bean type was java.lang.Object but we
+      // know that there are interfaces in this list.
+      (proxiableElement(e) || e.getQualifiedName().contentEquals("java.lang.Object") && size > 1);
   }
 
 }

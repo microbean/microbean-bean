@@ -18,10 +18,9 @@ import java.util.List;
 
 import org.microbean.assign.Matcher;
 
-import org.microbean.qualifier.NamedAttributeMap;
+import org.microbean.attributes.Attributes;
 
 import static org.microbean.bean.InterceptorBindings.anyInterceptorBinding;
-import static org.microbean.bean.InterceptorBindings.interceptorBindings;
 
 /**
  * A {@link Matcher} encapsulating <a
@@ -32,7 +31,7 @@ import static org.microbean.bean.InterceptorBindings.interceptorBindings;
  *
  * @see #test(Collection, Collection)
  */
-public final class InterceptorBindingsMatcher implements Matcher<Collection<? extends NamedAttributeMap<?>>, Collection<? extends NamedAttributeMap<?>>> {
+public class InterceptorBindingsMatcher implements Matcher<Collection<? extends Attributes>, Collection<? extends Attributes>> {
 
   /**
    * Creates a new {@link InterceptorBindingsMatcher}.
@@ -47,7 +46,7 @@ public final class InterceptorBindingsMatcher implements Matcher<Collection<? ex
    * the collection of {@linkplain InterceptorBindings#interceptorBindings(Collection) interceptor bindings present} in
    * {@code payloadAttributes} are {@linkplain Collection#isEmpty() empty}, or (b) if the collection of {@linkplain
    * InterceptorBindings#interceptorBindings(Collection) interceptor bindings present} in {@code payloadAttributes} has
-   * only one element and that element {@linkplain InterceptorBindings#anyInterceptorBinding(NamedAttributeMap) is the
+   * only one element and that element {@linkplain InterceptorBindings#anyInterceptorBinding(Attributes) is the
    * <dfn>any</dfn> interceptor binding}, or (c) the sizes of the collection of {@linkplain
    * InterceptorBindings#interceptorBindings(Collection) interceptor bindings present} in {@code receiverAttributes} and
    * the collection of {@linkplain InterceptorBindings#interceptorBindings(Collection) interceptor bindings present} in
@@ -60,16 +59,16 @@ public final class InterceptorBindingsMatcher implements Matcher<Collection<? ex
    * {@linkplain InterceptorBindings#interceptorBindings(Collection) interceptor bindings present} in {@code
    * receiverAttributes}.
    *
-   * @param receiverAttributes a {@link Collection} of {@link NamedAttributeMap}s; must not be {@code null}
+   * @param receiverAttributes a {@link Collection} of {@link Attributes}s; must not be {@code null}
    *
-   * @param payloadAttributes a {@link Collection} of {@link NamedAttributeMap}s; must not be {@code null}
+   * @param payloadAttributes a {@link Collection} of {@link Attributes}s; must not be {@code null}
    *
    * @return {@code true} if and only if either (a) both the collection of {@linkplain
    * InterceptorBindings#interceptorBindings(Collection) interceptor bindings present} in {@code receiverAttributes} and
    * the collection of {@linkplain InterceptorBindings#interceptorBindings(Collection) interceptor bindings present} in
    * {@code payloadAttributes} are {@linkplain Collection#isEmpty() empty}, or (b) if the collection of {@linkplain
    * InterceptorBindings#interceptorBindings(Collection) interceptor bindings present} in {@code payloadAttributes} has
-   * only one element and that element {@linkplain InterceptorBindings#anyInterceptorBinding(NamedAttributeMap) is the
+   * only one element and that element {@linkplain InterceptorBindings#anyInterceptorBinding(Attributes) is the
    * <dfn>any</dfn> interceptor binding}, or (c) the sizes of the collection of {@linkplain
    * InterceptorBindings#interceptorBindings(Collection) interceptor bindings present} in {@code receiverAttributes} and
    * the collection of {@linkplain InterceptorBindings#interceptorBindings(Collection) interceptor bindings present} in
@@ -84,20 +83,37 @@ public final class InterceptorBindingsMatcher implements Matcher<Collection<? ex
    *
    * @exception NullPointerException if either {@code receiverAttributes} or {@code payloadAttributes} is {@code null}
    */
-  @Override // Matcher<Collection<? extends NamedAttributeMap<?>>, Collection<? extends NamedAttributeMap<?>>>
-  public final boolean test(final Collection<? extends NamedAttributeMap<?>> receiverAttributes,
-                            final Collection<? extends NamedAttributeMap<?>> payloadAttributes) {
-    final List<? extends NamedAttributeMap<?>> payloadBindings = interceptorBindings(payloadAttributes);
+  @Override // Matcher<Collection<? extends Attributes>, Collection<? extends Attributes>>
+  public final boolean test(final Collection<? extends Attributes> receiverAttributes,
+                            final Collection<? extends Attributes> payloadAttributes) {
+    final Collection<? extends Attributes> payloadBindings = interceptorBindings(payloadAttributes);
     if (payloadBindings.isEmpty()) {
       return interceptorBindings(receiverAttributes).isEmpty();
-    } else if (payloadBindings.size() == 1 && anyInterceptorBinding(payloadBindings.get(0))) {
+    } else if (payloadBindings.size() == 1 && anyInterceptorBinding(payloadBindings.iterator().next())) {
       return true;
     }
-    final List<? extends NamedAttributeMap<?>> receiverBindings = interceptorBindings(receiverAttributes);
+    final Collection<? extends Attributes> receiverBindings = interceptorBindings(receiverAttributes);
     return
       receiverBindings.size() == payloadBindings.size() &&
       receiverBindings.containsAll(payloadBindings) &&
       payloadBindings.containsAll(receiverBindings);
+  }
+
+  /**
+   * Given a {@link Collection} of {@link Attributes}s, returns an immutable {@link Collection} consisting of those
+   * {@link Attributes} instances that are deemed to be interceptor bindings.
+   *
+   * <p>The default implementation of this method returns the value of an invocation of the {@link
+   * InterceptorBindings#interceptorBindings(Collection)} method.</p>
+   *
+   * @param as a {@link Collection}; must not be {@code null}
+   *
+   * @return a {@link List} of interceptor bindings; never {@code null}
+   *
+   * @exception NullPointerException if {@code as} is {@code null}
+   */
+  protected Collection<? extends Attributes> interceptorBindings(final Collection<? extends Attributes> as) {
+    return InterceptorBindings.interceptorBindings(as);
   }
 
 }

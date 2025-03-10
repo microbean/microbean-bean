@@ -16,12 +16,12 @@ package org.microbean.bean;
 import java.util.Collection;
 
 import org.microbean.assign.Matcher;
+import org.microbean.assign.Qualifiers;
 
-import org.microbean.qualifier.NamedAttributeMap;
+import org.microbean.attributes.Attributes;
 
 import static org.microbean.assign.Qualifiers.anyAndDefaultQualifiers;
 import static org.microbean.assign.Qualifiers.defaultQualifier;
-import static org.microbean.assign.Qualifiers.qualifiers;
 
 /**
  * A {@link Matcher} encapsulating <a
@@ -32,7 +32,7 @@ import static org.microbean.assign.Qualifiers.qualifiers;
  *
  * @see #test(Collection, Collection)
  */
-public final class BeanQualifiersMatcher implements Matcher<Collection<? extends NamedAttributeMap<?>>, Collection<? extends NamedAttributeMap<?>>> {
+public class BeanQualifiersMatcher implements Matcher<Collection<? extends Attributes>, Collection<? extends Attributes>> {
 
 
   /*
@@ -68,9 +68,9 @@ public final class BeanQualifiersMatcher implements Matcher<Collection<? extends
    * the {@linkplain org.microbean.assign.Qualifiers#qualifiers(Collection) qualifiers present} in {@code
    * receiverAttributes}.
    *
-   * @param receiverAttributes a {@link Collection} of {@link NamedAttributeMap}s; must not be {@code null}
+   * @param receiverAttributes a {@link Collection} of {@link Attributes}s; must not be {@code null}
    *
-   * @param payloadAttributes a {@link Collection} of {@link NamedAttributeMap}s; must not be {@code null}
+   * @param payloadAttributes a {@link Collection} of {@link Attributes}s; must not be {@code null}
    *
    * @return {@code true} if and only if either (a) the collection of {@linkplain
    * org.microbean.assign.Qualifiers#qualifiers(Collection) qualifiers present} in {@code receiverAttributes} is
@@ -88,11 +88,11 @@ public final class BeanQualifiersMatcher implements Matcher<Collection<? extends
    *
    * @exception NullPointerException if either {@code receiverAttributes} or {@code payloadAttributes} is {@code null}
    */
-  @Override // Matcher<Collection<? extends NamedAttributeMap<?>>, Collection<? extends NamedAttributeMap<?>>>
-  public final boolean test(final Collection<? extends NamedAttributeMap<?>> receiverAttributes,
-                            final Collection<? extends NamedAttributeMap<?>> payloadAttributes) {
-    final Collection<? extends NamedAttributeMap<?>> receiverQualifiers = qualifiers(receiverAttributes);
-    Collection<? extends NamedAttributeMap<?>> payloadQualifiers = qualifiers(payloadAttributes);
+  @Override // Matcher<Collection<? extends Attributes>, Collection<? extends Attributes>>
+  public final boolean test(final Collection<? extends Attributes> receiverAttributes,
+                            final Collection<? extends Attributes> payloadAttributes) {
+    final Collection<? extends Attributes> receiverQualifiers = this.qualifiers(receiverAttributes);
+    Collection<? extends Attributes> payloadQualifiers = this.qualifiers(payloadAttributes);
     // https://jakarta.ee/specifications/cdi/4.0/jakarta-cdi-spec-4.0#performing_typesafe_resolution
     // "A bean is assignable to a given injection point if...the bean has all the required qualifiers. If no required
     // qualifiers were explicitly specified, the container assumes the required qualifier @Default."
@@ -108,6 +108,26 @@ public final class BeanQualifiersMatcher implements Matcher<Collection<? extends
     return
       receiverQualifiers.isEmpty() ? payloadQualifiers.isEmpty() || payloadQualifiers.contains(defaultQualifier()) :
       (payloadQualifiers.isEmpty() ? anyAndDefaultQualifiers() : payloadQualifiers).containsAll(receiverQualifiers);
+  }
+
+  /**
+   * Returns an unmodifiable {@link Collection} consisting only of those {@link Attributes}s in the supplied {@link
+   * Collection} that are deemed to be qualifiers.
+   *
+   * <p>The default implementation of this method returns the value of an invocation of the {@link
+   * Qualifiers#qualifiers(Collection)} method.</p>
+   *
+   * <p>This method may be removed in favor of a compositional approach in future revisions of this class.</p>
+   *
+   * @param as a {@link Collection} of {@link Attributes}s; must not be {@code null}
+   *
+   * @return an unmodifiable {@link Collection} consisting only of those {@link Attributes}s in the supplied {@link
+   * Collection} that are deemed to be qualifiers; never {@code null}
+   *
+   * @exception NullPointerException if {@code as} is {@code null}
+   */
+  protected Collection<? extends Attributes> qualifiers(final Collection<? extends Attributes> as) {
+    return Qualifiers.qualifiers(as);
   }
 
 }

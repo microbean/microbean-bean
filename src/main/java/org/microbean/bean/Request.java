@@ -32,11 +32,13 @@ public interface Request<I> extends Creation<I>, ReferenceSelector {
   /**
    * Returns the {@link BeanReduction} describing this {@link Request} in progress.
    *
-   * @return the {@link BeanReduction} describing this {@link Request} in progress; never {@code null}
+   * @return the {@link BeanReduction} describing this {@link Request} in progress, or {@code null} if this is the
+   * <dfn>primordial request</dfn>
    *
    * @microbean.idempotency Implementations of this method must be idempotent and deterministic.
    *
-   * @microbean.nullability Implementations of this method must not return {@code null}.
+   * @microbean.nullability Implementations of this method may return {@code null}, but only to represent the
+   * <dfn>primordial request</dfn>.
    *
    * @microbean.threadsafety Implementations of this method must be safe for concurrent use by multiple threads.
    *
@@ -78,6 +80,18 @@ public interface Request<I> extends Creation<I>, ReferenceSelector {
   // AutoCloseableRegistry#newChild(). That is, there's no requirement that a child Request retain a reference to its
   // parent Request.
   public <J> Request<J> child(final BeanReduction<J> beanReduction);
+
+  /**
+   * Returns {@code true} if and only if this {@link Request} implementation is the <dfn>primordial request</dfn>.
+   *
+   * <p>The default implementation of this method returns {@code true} if and only if the return value of an invocation
+   * of the {@link #beanReduction()} method is {@code null}.</p>
+   *
+   * @return {@code true} if and only if this {@link Request} is the <dfn>primordial request</dfn>
+   */
+  public default boolean primordial() {
+    return this.beanReduction() == null;
+  }
 
   /**
    * Acquires a contextual reference that matches the supplied {@link AttributedType} and returns it.

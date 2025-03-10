@@ -80,7 +80,7 @@
     <!-- maven-javadoc-plugin properties -->
     <bottom><![CDATA[Copyright &copy; ${project.inceptionYear}&ndash;{currentYear}, <a href="${project.organization.url}" target="_top">${project.organization.name}</a>. All rights reserved.]]></bottom>
     <doctitle>&lt;a href="${project.url}" target="_top"&gt;&lt;span style="font-family:Lobster, cursive;"&gt;µb&lt;/span&gt; ${project.artifactId}&lt;/a&gt; ${project.version}</doctitle>
-    <links>https://microbean.github.io/microbean-assign/apidocs/,https://microbean.github.io/microbean-construct/apidocs/,https://microbean.github.io/microbean-qualifier/apidocs/,https://microbean.github.io/microbean-scope/apidocs/</links>
+    <links>https://microbean.github.io/microbean-assign/apidocs/,https://microbean.github.io/microbean-attributes/apidocs/,https://microbean.github.io/microbean-construct/apidocs/,,https://microbean.github.io/microbean-scope/apidocs/</links>
     <sourcetab>2</sourcetab>
 
     <!-- maven-release-plugin properties -->
@@ -144,7 +144,13 @@
       <dependency>
         <groupId>org.microbean</groupId>
         <artifactId>microbean-assign</artifactId>
-        <version>0.0.3</version>
+        <version>0.0.5</version>
+      </dependency>
+
+      <dependency>
+        <groupId>org.microbean</groupId>
+        <artifactId>microbean-attributes</artifactId>
+        <version>0.0.2</version>
       </dependency>
 
       <dependency>
@@ -165,18 +171,6 @@
         <version>0.4.0</version>
       </dependency>
 
-      <dependency>
-        <groupId>org.microbean</groupId>
-        <artifactId>microbean-qualifier</artifactId>
-        <version>0.2.4</version>
-      </dependency>
-
-      <dependency>
-        <groupId>org.microbean</groupId>
-        <artifactId>microbean-scope</artifactId>
-        <version>0.0.3</version>
-      </dependency>
-
     </dependencies>
   </dependencyManagement>
 
@@ -185,6 +179,12 @@
     <dependency>
       <groupId>org.microbean</groupId>
       <artifactId>microbean-assign</artifactId>
+      <scope>compile</scope>
+    </dependency>
+
+    <dependency>
+      <groupId>org.microbean</groupId>
+      <artifactId>microbean-attributes</artifactId>
       <scope>compile</scope>
     </dependency>
 
@@ -203,18 +203,6 @@
     <dependency>
       <groupId>org.microbean</groupId>
       <artifactId>microbean-interceptor</artifactId>
-      <scope>compile</scope>
-    </dependency>
-
-    <dependency>
-      <groupId>org.microbean</groupId>
-      <artifactId>microbean-qualifier</artifactId>
-      <scope>compile</scope>
-    </dependency>
-
-    <dependency>
-      <groupId>org.microbean</groupId>
-      <artifactId>microbean-scope</artifactId>
       <scope>compile</scope>
     </dependency>
 
@@ -371,7 +359,7 @@
         </plugin>
         <plugin>
           <artifactId>maven-clean-plugin</artifactId>
-          <version>3.4.0</version>
+          <version>3.4.1</version>
           <configuration>
             <filesets>
               <fileset>
@@ -386,20 +374,13 @@
         </plugin>
         <plugin>
           <artifactId>maven-compiler-plugin</artifactId>
-          <version>3.13.0</version>
+          <version>3.14.0</version>
           <configuration>
             <compilerArgs>
               <arg>-Xlint:all</arg>
               <arg>-parameters</arg>
             </compilerArgs>
           </configuration>
-          <dependencies>
-            <dependency>
-              <groupId>org.codehaus.plexus</groupId>
-              <artifactId>plexus-java</artifactId>
-              <version>1.3.0</version>
-            </dependency>
-          </dependencies>
         </plugin>
         <plugin>
           <artifactId>maven-dependency-plugin</artifactId>
@@ -407,7 +388,7 @@
         </plugin>
         <plugin>
           <artifactId>maven-deploy-plugin</artifactId>
-          <version>3.1.3</version>
+          <version>3.1.4</version>
         </plugin>
         <plugin>
           <artifactId>maven-enforcer-plugin</artifactId>
@@ -420,7 +401,7 @@
         </plugin>
         <plugin>
           <artifactId>maven-install-plugin</artifactId>
-          <version>3.1.3</version>
+          <version>3.1.4</version>
         </plugin>
         <plugin>
           <artifactId>maven-jar-plugin</artifactId>
@@ -456,7 +437,7 @@
         </plugin>
         <plugin>
           <artifactId>maven-project-info-reports-plugin</artifactId>
-          <version>3.8.0</version>
+          <version>3.9.0</version>
         </plugin>
         <plugin>
           <artifactId>maven-release-plugin</artifactId>
@@ -509,7 +490,7 @@
         <plugin>
           <groupId>com.github.spotbugs</groupId>
           <artifactId>spotbugs-maven-plugin</artifactId>
-          <version>4.8.6.6</version>
+          <version>4.9.2.0</version>
         </plugin>
         <plugin>
           <groupId>org.codehaus.mojo</groupId>
@@ -519,7 +500,7 @@
         <plugin>
           <groupId>io.smallrye</groupId>
           <artifactId>jandex-maven-plugin</artifactId>
-          <version>3.2.3</version>
+          <version>3.2.7</version>
         </plugin>
         <plugin>
           <groupId>org.sonatype.plugins</groupId>

@@ -64,7 +64,8 @@ public final class RankedReducer<C, T extends Ranked> implements Reducer<C, T> {
                         final C c,
                         final BiFunction<? super List<? extends T>, ? super C, ? extends T> failureHandler) {
     if (elements == null || elements.isEmpty()) {
-      return null;
+      // https://github.com/microbean/microbean-bean/issues/21
+      return failureHandler == null ? Reducer.fail(List.of(), c) : failureHandler.apply(List.of(), c);
     } else if (elements.size() == 1) {
       return elements.get(0);
     }
@@ -75,14 +76,14 @@ public final class RankedReducer<C, T extends Ranked> implements Reducer<C, T> {
     int maxRank = DEFAULT_RANK;
 
     for (final T element : elements) {
-      if (element.alternate()) {
-        final int elementRank = element.rank();
+      if (alternate(element)) {
+        final int elementRank = rank(element);
         if (elementRank == maxRank) {
-          if (candidate == null || !candidate.alternate()) {
+          if (candidate == null || !alternate(candidate)) {
             // Prefer elements regardless of ranks.
             candidate = element;
           } else {
-            assert candidate.rank() == maxRank : "Unexpected rank: " + candidate.rank() + "; was expecting: " + maxRank;
+            assert rank(candidate) == maxRank : "Unexpected rank: " + rank(candidate) + "; was expecting: " + maxRank;
             // The existing candidate is an alternate and by definition has the highest rank we've seen so far; the
             // incoming element is also an alternate; both have equal ranks: we can't resolve this.
             if (unresolved == null) {
@@ -93,13 +94,13 @@ public final class RankedReducer<C, T extends Ranked> implements Reducer<C, T> {
             candidate = null;
           }
         } else if (elementRank > maxRank) {
-          if (candidate == null || !candidate.alternate() || elementRank > candidate.rank()) {
+          if (candidate == null || !alternate(candidate) || elementRank > rank(candidate)) {
             // The existing candidate is either null, not an alternate (and alternates are always preferred), or an
             // alternate with losing rank, so junk it in favor of the incoming element.
             candidate = element;
             // We have a new maxRank.
             maxRank = elementRank;
-          } else if (elementRank == candidate.rank()) {
+          } else if (elementRank == rank(candidate)) {
             // The existing candidate is also an alternate and has the same rank.
             if (unresolved == null) {
               unresolved = new ArrayList<>(6);
@@ -108,7 +109,7 @@ public final class RankedReducer<C, T extends Ranked> implements Reducer<C, T> {
             unresolved.add(element);
             candidate = null;
           } else {
-            assert elementRank < candidate.rank() : "elementRank >= candidate.rank(): " + elementRank + " >= " + candidate.rank();
+            assert elementRank < rank(candidate) : "elementRank >= rank(candidate): " + elementRank + " >= " + rank(candidate);
             // The existing candidate is also an alternate but has a higher rank than the alternate, so keep it (do
             // nothing).
           }
@@ -118,7 +119,7 @@ public final class RankedReducer<C, T extends Ranked> implements Reducer<C, T> {
         // The incoming element is not an alternate, but that doesn't matter; the candidate is null, so accept the
         // element no matter what.
         candidate = element;
-      } else if (!candidate.alternate()) {
+      } else if (!alternate(candidate)) {
         // The existing candidate is not an alternate. The incoming element is not an alternate. Ranks in this case are
         // irrelevant, perhaps surprisingly. We cannot resolve this.
         if (unresolved == null) {
@@ -140,6 +141,16 @@ public final class RankedReducer<C, T extends Ranked> implements Reducer<C, T> {
     }
 
     return candidate;
+  }
+
+  // Preparing for a future where alternate status is not a first-class citizen.
+  private final boolean alternate(final T t) {
+    return t.alternate();
+  }
+
+  // Preparing for a future where rank is not a first-class citizen.
+  private final int rank(final T t) {
+    return t.rank();
   }
 
 
