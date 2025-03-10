@@ -24,25 +24,25 @@ import java.util.Optional;
 
 import javax.lang.model.type.TypeMirror;
 
-import org.microbean.constant.Constables;
+import org.microbean.attributes.Attributed;
+import org.microbean.attributes.Attributes;
 
-import org.microbean.qualifier.NamedAttributeMap;
+import org.microbean.constant.Constables;
 
 import static java.lang.constant.ConstantDescs.BSM_INVOKE;
 import static java.lang.constant.ConstantDescs.CD_List;
+import static java.util.Arrays.asList;
 
 /**
- * A pairing of a {@link TypeMirror} with a {@link List} of {@link NamedAttributeMap}s.
+ * A pairing of a {@link TypeMirror} with a {@link List} of {@link Attributes}s.
  *
  * @param type a {@link TypeMirror}
  *
- * @param attributes a {@link List} of {@link NamedAttributeMap}s
+ * @param attributes a {@link List} of {@link Attributes}s
  *
  * @author <a href="https://about.me/lairdnelson" target="_top">Laird Nelson</a>
  */
-public final record AttributedType(TypeMirror type, List<NamedAttributeMap<?>> attributes) implements Constable {
-
-  private static final ClassDesc CD_TypeMirror = ClassDesc.of("javax.lang.model.type.TypeMirror");
+public final record AttributedType(TypeMirror type, List<Attributes> attributes) implements Attributed, Constable {
 
   /**
    * Creates a new {@link AttributedType}.
@@ -51,7 +51,24 @@ public final record AttributedType(TypeMirror type, List<NamedAttributeMap<?>> a
    * javax.lang.model.type.TypeKind#isPrimitive() primitive}, {@linkplain javax.lang.model.type.TypeKind#ARRAY array} or
    * {@linkplain javax.lang.model.type.TypeKind#DECLARED declared} type
    *
-   * @param attributes a {@link List} of {@link NamedAttributeMap}s; must not be {@code null}
+   * @param attributes an array of {@link Attributes}; may be {@code null}
+   *
+   * @exception NullPointerException if {@code type} is {@code null}
+   *
+   * @exception IllegalArgumentException if {@code type} is the wrong kind of type
+   */
+  public AttributedType(final TypeMirror type, final Attributes... attributes) {
+    this(type, attributes == null || attributes.length <= 0 ? List.of() : asList(attributes));
+  }
+
+  /**
+   * Creates a new {@link AttributedType}.
+   *
+   * @param type a {@link TypeMirror}; must not be {@code null}; must be a {@linkplain
+   * javax.lang.model.type.TypeKind#isPrimitive() primitive}, {@linkplain javax.lang.model.type.TypeKind#ARRAY array} or
+   * {@linkplain javax.lang.model.type.TypeKind#DECLARED declared} type
+   *
+   * @param attributes a {@link List} of {@link Attributes}; must not be {@code null}
    *
    * @exception NullPointerException if either argument is {@code null}
    *
@@ -94,10 +111,29 @@ public final record AttributedType(TypeMirror type, List<NamedAttributeMap<?>> a
       .flatMap(typeDesc -> Constables.describeConstable(this.attributes())
                .map(attributesDesc -> DynamicConstantDesc.of(BSM_INVOKE,
                                                              MethodHandleDesc.ofConstructor(ClassDesc.of(this.getClass().getName()),
-                                                                                            CD_TypeMirror,
+                                                                                            ClassDesc.of(TypeMirror.class.getName()),
                                                                                             CD_List),
                                                              typeDesc,
                                                              attributesDesc)));
+  }
+
+  /**
+   * Returns an {@link AttributedType} comprising the supplied arguments.
+   *
+   * @param type a {@link TypeMirror}; must not be {@code null}; must be a {@linkplain
+   * javax.lang.model.type.TypeKind#isPrimitive() primitive}, {@linkplain javax.lang.model.type.TypeKind#ARRAY array} or
+   * {@linkplain javax.lang.model.type.TypeKind#DECLARED declared} type
+   *
+   * @param attributes an array of {@link Attributes}; may be {@code null}
+   *
+   * @return a non-{@code null} {@link AttributedType}
+   *
+   * @exception NullPointerException if {@code type} is {@code null}
+   *
+   * @exception IllegalArgumentException if {@code type} is the wrong kind of type
+   */
+  public static final AttributedType of(final TypeMirror type, Attributes... attributes) {
+    return new AttributedType(type, attributes == null || attributes.length <= 0 ? List.of() : asList(attributes));
   }
 
 }

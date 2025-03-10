@@ -20,7 +20,7 @@ import javax.lang.model.type.TypeMirror;
 
 import org.microbean.assign.Matcher;
 
-import org.microbean.qualifier.NamedAttributeMap;
+import org.microbean.attributes.Attributes;
 
 /**
  * A {@link Matcher} that tests an {@link Id} to see if it matches an {@link AttributedType}.
@@ -102,8 +102,8 @@ public final class IdMatcher implements Matcher<AttributedType, Id> {
    */
   @Override // Matcher<AttributedType, Id> (BiPredicate<AttributedType, Id>)
   public final boolean test(final AttributedType t, final Id id) {
-    final Collection<? extends NamedAttributeMap<?>> attributes = t.attributes();
-    final Collection<? extends NamedAttributeMap<?>> idAttributes = id.attributes();
+    final Collection<? extends Attributes> attributes = t.attributes();
+    final Collection<? extends Attributes> idAttributes = id.attributes();
     return
       this.qm.test(attributes, idAttributes) &&
       this.ibm.test(attributes, idAttributes) &&

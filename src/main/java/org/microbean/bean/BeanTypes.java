@@ -15,14 +15,19 @@ package org.microbean.bean;
 
 import java.lang.System.Logger;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Set;
 
 import java.util.concurrent.ConcurrentHashMap;
 
 import java.util.function.Predicate;
+
+import javax.lang.model.element.Element;
+import javax.lang.model.element.ExecutableElement;
+import javax.lang.model.element.Modifier;
+import javax.lang.model.element.QualifiedNameable;
 
 import javax.lang.model.type.ArrayType;
 import javax.lang.model.type.DeclaredType;
@@ -34,6 +39,11 @@ import org.microbean.assign.Types;
 import org.microbean.construct.Domain;
 
 import static java.lang.System.Logger.Level.WARNING;
+
+import static javax.lang.model.element.Modifier.FINAL;
+import static javax.lang.model.element.Modifier.PRIVATE;
+import static javax.lang.model.element.Modifier.SEALED;
+import static javax.lang.model.element.Modifier.STATIC;
 
 /**
  * A utility for working with <dfn>bean types</dfn>.
@@ -109,14 +119,14 @@ public final class BeanTypes extends Types {
    * @see #supertypes(TypeMirror, java.util.function.Predicate)
    */
   public final BeanTypeList beanTypes(final TypeMirror t) {
-    // https://jakarta.ee/specifications/cdi/4.0/jakarta-cdi-spec-4.0#assignable_parameters
-    // https://jakarta.ee/specifications/cdi/4.0/jakarta-cdi-spec-4.0#legal_bean_types
-    // https://jakarta.ee/specifications/cdi/4.0/jakarta-cdi-spec-4.0#managed_bean_types
-    // https://jakarta.ee/specifications/cdi/4.0/jakarta-cdi-spec-4.0#producer_field_types
-    // https://jakarta.ee/specifications/cdi/4.0/jakarta-cdi-spec-4.0#producer_method_types
+    // https://jakarta.ee/specifications/cdi/4.1/jakarta-cdi-spec-4.1#assignable_parameters
+    // https://jakarta.ee/specifications/cdi/4.1/jakarta-cdi-spec-4.1#legal_bean_types
+    // https://jakarta.ee/specifications/cdi/4.1/jakarta-cdi-spec-4.1#managed_bean_types
+    // https://jakarta.ee/specifications/cdi/4.1/jakarta-cdi-spec-4.1#producer_field_types
+    // https://jakarta.ee/specifications/cdi/4.1/jakarta-cdi-spec-4.1#producer_method_types
     final Domain d = this.domain();
     return switch (t.getKind()) {
-    case ARRAY -> 
+    case ARRAY ->
       this.beanTypesCache.computeIfAbsent(t, t0 -> BeanTypeList.of(d,
                                                                    (legalBeanType(t0) ?
                                                                     List.of(t0, d.javaLangObject().asType()) :
@@ -150,7 +160,9 @@ public final class BeanTypes extends Types {
 
 
   /**
-   * Returns {@code true} if and only if the supplied {@link TypeMirror} is a <dfn>legal bean type</dfn>.
+   * Returns {@code true} if and only if the supplied {@link TypeMirror} is a <dfn>legal bean type</dfn> as defined by
+   * the <a href="https://jakarta.ee/specifications/cdi/4.1/jakarta-cdi-spec-4.1#legal_bean_types">CDI
+   * specification</a>.
    *
    * <p>Legal bean types are, exactly:</p>
    *
@@ -161,8 +173,8 @@ public final class BeanTypes extends Types {
    *
    * <li>{@linkplain TypeKind#isPrimitive() Primitive} types</li>
    *
-   * <li>{@linkplain TypeKind#DECLARED Declared} types that contain no {@linkplain TypeKind#WILDCARD wildcard type}s for
-   * every level of containment</li>
+   * <li>{@linkplain TypeKind#DECLARED Declared} types that <dfn>contain</dfn> no {@linkplain TypeKind#WILDCARD wildcard
+   * type}s for every interpretation and level of containment</li>
    *
    * </ol>
    *
@@ -172,14 +184,24 @@ public final class BeanTypes extends Types {
    *
    * @exception NullPointerException if {@code t} is {@code null}
    *
+   * @spec https://jakarta.ee/specifications/cdi/4.1/jakarta-cdi-spec-4.1#legal_bean_types CDI Specification, version
+   * 4.1, section 2.2.1
+   *
+   * @see <a
+   * href="https://issues.redhat.com/browse/CDI-502?focusedId=13036118&page=com.atlassian.jira.plugin.system.issuetabpanels%3Acomment-tabpanel#comment-13036118">CDI-502</a>
+   *
+   * @see <a href="https://github.com/jakartaee/cdi/issues/823">CDI issue 823</a>
+   *
+   * @see <a href="https://issues.redhat.com/browse/WELD-1492">WELD-1492</a>
+   *
    * @microbean.idempotency This method is idempotent and deterministic.
    *
    * @microbean.threadsafety This method itself is safe for concurrent use by multiple threads, but {@link TypeMirror}
    * implementations and {@link Domain} implementations may not be safe for such use.
    */
   public static final boolean legalBeanType(final TypeMirror t) {
-    // https://jakarta.ee/specifications/cdi/4.0/jakarta-cdi-spec-4.0#assignable_parameters
-    // https://jakarta.ee/specifications/cdi/4.0/jakarta-cdi-spec-4.0#legal_bean_types
+    // https://jakarta.ee/specifications/cdi/4.1/jakarta-cdi-spec-4.1#assignable_parameters
+    // https://jakarta.ee/specifications/cdi/4.1/jakarta-cdi-spec-4.1#legal_bean_types
     return switch (t.getKind()) {
 
     // "A bean type may be an array type."
@@ -200,17 +222,20 @@ public final class BeanTypes extends Types {
     // wrapper types in java.lang."
     case BOOLEAN, BYTE, CHAR, DOUBLE, FLOAT, INT, LONG, SHORT -> true;
 
-    // "A bean type may be a parameterized type with actual [see below] type parameters [arguments] and type variables."
+    // "A bean type may be a parameterized type with actual [non-wildcard, non-type-variable, see below] type parameters
+    // [arguments] and type variables." (A bean type may be a parameterized type whose type arguments are either array
+    // types, declared types, or type variables.)
     //
-    // "However, some Java types are not legal bean types: [...] A parameterized type that contains [see below] a
-    // wildcard type parameter [argument] is not a legal bean type."
+    // "However, some Java types are not legal bean types: [...] A parameterized type that contains [anywhere, see
+    // below] a wildcard type parameter [argument] is not a legal bean type."
     //
     // Some ink has been spilled on what it means for a "parameterized" (generic) type to "contain" a "wildcard type
-    // parameter [argument]" (https://issues.redhat.com/browse/CDI-502). Because it turns out that "actual type"
-    // apparently means, among other things, a non-wildcard type, it follows that *no* wildcard type argument appearing
-    // *anywhere* in a bean type is permitted. Note that the definition of "actual type" does not appear in the CDI
-    // specification, but only in a closed JIRA issue
-    // (https://issues.redhat.com/browse/CDI-502?focusedId=13036118&page=com.atlassian.jira.plugin.system.issuetabpanels%3Acomment-tabpanel#comment-13036118).
+    // parameter [argument]" (https://issues.redhat.com/browse/CDI-502). Because it turns out that an "actual type" is a
+    // non-wildcard, non-type-variable type, it follows that *no* wildcard type argument appearing *anywhere* in a bean
+    // type's declaration is permitted. Note that this definition of "actual type" does not appear in the CDI
+    // specification, but only in a (closed) JIRA issue raised against the specification
+    // (https://issues.redhat.com/browse/CDI-502?focusedId=13036118&page=com.atlassian.jira.plugin.system.issuetabpanels%3Acomment-tabpanel#comment-13036118):
+    // "An actual type is a type that is not a wildcard nor [sic] an unresolved [sic] type variable."
     //
     // This still seems way overstrict to me but there you have it.
     case DECLARED -> {
@@ -233,6 +258,91 @@ public final class BeanTypes extends Types {
       yield false;
     }
     };
+  }  
+
+  /**
+   * Returns {@code true} if and only if the supplied {@link TypeMirror} is a {@linkplain #legalBeanType(TypeMirror)
+   * legal}, {@linkplain TypeKind#DECLARED declared}, <dfn>proxiable bean type</dfn> as defined by the <a
+   * href="https://jakarta.ee/specifications/cdi/4.1/jakarta-cdi-spec-4.1#unproxyable">CDI specification</a>.
+   *
+   * @param t a {@link TypeMirror}; must not be {@code null}
+   *
+   * @return {@code true} if and only if the supplied {@link TypeMirror} is a <dfn>proxiable bean type</dfn>
+   *
+   * @exception NullPointerException if {@code t} is {@code null}
+   *
+   * @see #proxiableElement(Element)
+   *
+   * @spec https://jakarta.ee/specifications/cdi/4.1/jakarta-cdi-spec-4.1#unproxyable CDI Specification, version 4.1,
+   * section 3.10
+   *
+   * @microbean.idempotency This method is idempotent and deterministic.
+   *
+   * @microbean.threadsafety This method itself is safe for concurrent use by multiple threads, but {@link TypeMirror}
+   * implementations and {@link Domain} implementations may not be safe for such use.
+   */
+  public static final boolean proxiableBeanType(final TypeMirror t) {
+    // https://jakarta.ee/specifications/cdi/4.1/jakarta-cdi-spec-4.1#unproxyable
+    return
+      t.getKind() == TypeKind.DECLARED &&
+      legalBeanType(t) &&
+      proxiableElement(((DeclaredType)t).asElement());
+  }
+
+  /**
+   * Returns {@code true} if and only if the supplied {@link Element} is an {@linkplain ElementKind#INTERFACE
+   * interface}, or a <dfn>proxiable</dfn> {@linkplain ElementKind#CLASS class}, as defined by the <a
+   * href="https://jakarta.ee/specifications/cdi/4.1/jakarta-cdi-spec-4.1#unproxyable">CDI specification</a>.
+   *
+   * @param e an {@link Element}; must not be {@code null}
+   *
+   * @return {@code true} if and only if the supplied {@link Element} is <dfn>proxiable</fn>
+   *
+   * @excepiton NullPointerException if {@code e} is {@code null}
+   *
+   * @spec https://jakarta.ee/specifications/cdi/4.1/jakarta-cdi-spec-4.1unproxyable CDI Specification, version 4.1,
+   * section 3.10
+   *
+   * @microbean.idempotency This method is idempotent and deterministic.
+   *
+   * @microbean.threadsafety This method itself is safe for concurrent use by multiple threads, but {@link TypeMirror}
+   * implementations and {@link Domain} implementations may not be safe for such use.
+   */
+  static final boolean proxiableElement(final Element e) {
+    // https://jakarta.ee/specifications/cdi/4.1/jakarta-cdi-spec-4.1#unproxyable
+    switch (e.getKind()) {
+    case CLASS:
+      if (e.getModifiers().contains(FINAL) ||
+          e.getModifiers().contains(SEALED) ||
+          ((QualifiedNameable)e).getQualifiedName().contentEquals("java.lang.Object")) { // cheap optimization for a common case
+        return false;
+      }
+      boolean hasNonPrivateZeroArgumentConstructor = false;
+      for (final Element ee : e.getEnclosedElements()) {
+        switch (ee.getKind()) {
+        case CONSTRUCTOR:
+          if (!hasNonPrivateZeroArgumentConstructor &&
+              !ee.getModifiers().contains(PRIVATE) &&
+              ((ExecutableElement)ee).getParameters().isEmpty()) {
+            hasNonPrivateZeroArgumentConstructor = true;
+          }
+          break;
+        case METHOD:
+          final Collection<?> modifiers = ((ExecutableElement)ee).getModifiers();
+          if (modifiers.contains(FINAL) &&
+              !modifiers.contains(STATIC) &&
+              !modifiers.contains(PRIVATE)) {
+            return false;
+          }
+          break;
+        }
+      }
+      return hasNonPrivateZeroArgumentConstructor;
+    case INTERFACE:
+      return true;
+    default:
+      return false;
+    }
   }
 
 }

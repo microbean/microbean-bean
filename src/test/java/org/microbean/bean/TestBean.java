@@ -30,8 +30,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import static org.microbean.assign.Qualifiers.anyAndDefaultQualifiers;
 
-import static org.microbean.scope.Scope.SINGLETON_ID;
-
 final class TestBean {
 
   private static final Domain domain = new DefaultDomain();
@@ -48,8 +46,7 @@ final class TestBean {
       new Id(BeanTypeList.of(domain,
                              List.of(domain.declaredType("java.lang.String"),
                                      domain.javaLangObject().asType())),
-             anyAndDefaultQualifiers(),
-             SINGLETON_ID);
+             anyAndDefaultQualifiers());
     assertTrue(id instanceof Constable);
     assertFalse(id.types().describeConstable().isEmpty()); // Constables.describeConstable(id.types()).isEmpty());
     assertFalse(id.describeConstable().isEmpty());

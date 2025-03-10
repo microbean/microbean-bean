@@ -1,6 +1,6 @@
 /* -*- mode: Java; c-basic-offset: 2; indent-tabs-mode: nil; coding: utf-8-unix -*-
  *
- * Copyright © 2024 microBean™.
+ * Copyright © 2024–2025 microBean™.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
@@ -60,11 +60,11 @@ final class TestAssignability {
     //
     // IMPORTANT:
     //
-    // Remember that TypeAndElementSource#assignable(), like javax.lang.model.util.Types#isAssignable() on which it is
-    // based, is "backwards"!
+    // Remember that Domain#assignable(), like javax.lang.model.util.Types#isAssignable() on which it is based, is
+    // "backwards"!
     //
 
-    // integer is the *payload*; number is the *receiver*; integer is assignable to number
+    // integer is the *payload*; number is the *receiver*; Integer is assignable to Number
     assertTrue(domain.assignable(integer, number));
     assertTrue(domain.assignable(integer, serializable));
     assertTrue(domain.assignable(number, serializable));
@@ -77,7 +77,7 @@ final class TestAssignability {
     final IntersectionType tUpper = (IntersectionType)t.getUpperBound();
     assertSame(TypeKind.INTERSECTION, tUpper.getKind());
 
-    // t's upper bound is an intersection type, one of whose components is Integer; it is therefore assignable to integer
+    // t's upper bound is an intersection type, one of whose components is Integer; it is therefore assignable to Integer
     assertTrue(domain.assignable(tUpper, integer));
     assertTrue(domain.assignable(tUpper, serializable));
 
@@ -102,7 +102,7 @@ final class TestAssignability {
     assertEquals("java.lang.String", ((TypeElement)extendsBound.asElement()).getQualifiedName().toString());
     assertTrue(domain.sameType(string, extendsBound));
     assertEquals(string, extendsBound);
-    
+
     // Perhaps these assertions are surprising but they are correct.
     assertFalse(domain.assignable(string, qExtendsString));
     assertFalse(domain.assignable(qExtendsString, string));

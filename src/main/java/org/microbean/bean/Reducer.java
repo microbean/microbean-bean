@@ -179,9 +179,8 @@ public interface Reducer<C, T> {
 
   /**
    * Returns a {@link Reducer} whose {@link #reduce(List, Object, BiFunction)} method, for a given {@link List} of
-   * elements, returns the {@link List}'s sole element if the {@link List} has exactly one element, returns {@code null}
-   * if the {@link List} {@linkplain List#isEmpty() is empty}, and returns the result of invoking its supplied failure
-   * handler otherwise.
+   * elements, returns the {@link List}'s sole element if the {@link List} has exactly one element, and returns the
+   * result of invoking its supplied failure handler otherwise.
    *
    * @param <C> the type of the criteria
    *
@@ -191,7 +190,7 @@ public interface Reducer<C, T> {
    *
    * @see #reduce(List, Object, BiFunction)
    */
-  // A Reducer that works only when the selection is of size 0 or 1.
+  // A Reducer that works only when the selection is of size 1.
   public static <C, T> Reducer<C, T> ofSimple() {
     return Reducer::reduceObviously;
   }
@@ -244,12 +243,11 @@ public interface Reducer<C, T> {
    */
   // Default failure handler; call by method reference. Fails if the selection does not consist of one element.
   public static <C, T> T fail(final List<? extends T> elements, final C c) {
-    if (elements.isEmpty()) {
-      throw new UnsatisfiedReductionException((Object)c, null, null);
-    } else if (elements.size() > 1) {
-      throw new AmbiguousReductionException(c, elements, "Cannot reduce: " + elements);
-    }
-    return elements.get(0);
+    return switch (elements.size()) {
+    case 0 -> throw new UnsatisfiedReductionException((Object)c, null, null);
+    case 1 -> elements.get(0);
+    default -> throw new AmbiguousReductionException(c, elements, "Cannot reduce: " + elements);
+    };
   }
 
   /**
@@ -278,10 +276,11 @@ public interface Reducer<C, T> {
   private static <C, T> T reduceObviously(final List<? extends T> l,
                                           final C c,
                                           final BiFunction<? super List<? extends T>, ? super C, ? extends T> fh) {
-    return
-      l.isEmpty() ? null :
-      l.size() == 1 ? l.get(0) :
-      fh.apply(l, c);
+    return switch (l.size()) {
+    case 0 -> fh == null ? fail(List.of(), c) : fh.apply(List.of(), c);
+    case 1 -> l.get(0);
+    default -> fh == null ? fail(l, c) : fh.apply(l, c);
+    };
   }
 
   private static <C, T> T failUnconditionally(final List<? extends T> l,

@@ -30,8 +30,6 @@ import org.microbean.construct.DefaultDomain;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import static org.microbean.scope.Scope.NONE_ID;
-
 final class TestBeanSelection {
 
   private static final Domain domain = new DefaultDomain();
@@ -63,8 +61,7 @@ final class TestBeanSelection {
                                                    List.of(domain.declaredType(domain.typeElement("java.util.List"),
                                                                                domain.declaredType(domain.typeElement("java.util.Optional"),
                                                                                                    domain.javaLangObject().asType())))),
-                                   List.of(),
-                                   NONE_ID)));
+                                   List.of())));
   }
 
   @Test
@@ -73,8 +70,7 @@ final class TestBeanSelection {
     assertTrue(matcher.test(t,
                             new Id(BeanTypeList.of(domain,
                                                    List.of(domain.typeElement("java.lang.String").asType())),
-                                   List.of(),
-                                   NONE_ID)));
+                                   List.of())));
   }
 
   @Test
@@ -82,8 +78,7 @@ final class TestBeanSelection {
     final AttributedType t = new AttributedType(domain.typeElement("java.lang.String").asType());
     assertFalse(matcher.test(t,
                              new Id(BeanTypeList.of(domain, List.of(domain.javaLangObject().asType())),
-                                    List.of(),
-                                    NONE_ID)));
+                                    List.of())));
   }
 
   @Test
@@ -91,8 +86,7 @@ final class TestBeanSelection {
     final AttributedType t = new AttributedType(domain.primitiveType(TypeKind.INT));
     assertTrue(matcher.test(t,
                             new Id(BeanTypeList.of(domain, List.of(domain.typeElement("java.lang.Integer").asType())),
-                                   List.of(),
-                                   NONE_ID)));
+                                   List.of())));
   }
 
   @Test
@@ -100,8 +94,7 @@ final class TestBeanSelection {
     final AttributedType t = new AttributedType(domain.javaLangObject().asType());
     assertFalse(matcher.test(t,
                              new Id(BeanTypeList.of(domain, List.of(domain.declaredType("java.lang.String"))),
-                                    List.of(),
-                                    NONE_ID)));
+                                    List.of())));
   }
 
   @Test
@@ -113,8 +106,7 @@ final class TestBeanSelection {
                             new Id(BeanTypeList.of(domain,
                                                    List.of(domain.declaredType(domain.typeElement("java.util.List"),
                                                                                domain.typeElement("java.lang.String").asType()))),
-                                   List.of(),
-                                   NONE_ID)));
+                                   List.of())));
   }
 
 }

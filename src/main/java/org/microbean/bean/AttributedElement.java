@@ -27,23 +27,23 @@ import javax.lang.model.element.Element;
 
 import javax.lang.model.type.TypeMirror;
 
-import org.microbean.constant.Constables;
+import org.microbean.attributes.Attributes;
 
-import org.microbean.qualifier.NamedAttributeMap;
+import org.microbean.constant.Constables;
 
 import static java.lang.constant.ConstantDescs.BSM_INVOKE;
 import static java.lang.constant.ConstantDescs.CD_List;
 
 /**
- * A pairing of an {@link Element} with a {@link List} of {@link NamedAttributeMap}s.
+ * A pairing of an {@link Element} with a {@link List} of {@link Attributes}s.
  *
  * @param element an {@link Element}
  *
- * @param attributes a {@link List} of {@link NamedAttributeMap}s
+ * @param attributes a {@link List} of {@link Attributes}s
  *
  * @author <a href="https://about.me/lairdnelson/" target="_top">Laird Nelson</a>
  */
-public final record AttributedElement(Element element, List<NamedAttributeMap<?>> attributes) implements Constable {
+public final record AttributedElement(Element element, List<Attributes> attributes) implements Constable {
 
   private static final ClassDesc CD_Element = ClassDesc.of("javax.lang.model.element.Element");
 
@@ -52,7 +52,7 @@ public final record AttributedElement(Element element, List<NamedAttributeMap<?>
    *
    * @param element a {@link Element}; must not be {@code null}
    *
-   * @param attributes a {@link List} of {@link NamedAttributeMap}s; must not be {@code null}
+   * @param attributes a {@link List} of {@link Attributes}; must not be {@code null}
    *
    * @exception NullPointerException if either argument is {@code null}
    */

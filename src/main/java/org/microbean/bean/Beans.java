@@ -29,6 +29,8 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import org.microbean.assign.Matcher;
 
+import org.microbean.construct.Domain;
+
 import static java.util.HashSet.newHashSet;
 
 /**
@@ -85,6 +87,45 @@ public final class Beans implements Selectable<AttributedType, Bean<?>>, Reducib
    * Constructors.
    */
 
+
+  /**
+   * Creates a new {@link Beans}.
+   *
+   * <p>This constructor is best suited for testing.</p>
+   *
+   * @param domain a {@link Domain}; must not be {@code null}
+   *
+   * @param beans an array of zero or more {@link Bean}s; may be {@code null}
+   *
+   * @exception NullPointerException if {@code domain} is {@code null}
+   *
+   * @see #Beans(Domain, Collection)
+   */
+  public Beans(final Domain domain, final Bean<?>... beans) {
+    this(domain, beans == null || beans.length == 0 ? List.of() : List.of(beans));
+  }
+
+  /**
+   * Creates a new {@link Beans}.
+   *
+   * @param domain a {@link Domain}; must not be {@code null}
+   *
+   * @param beans a {@link Collection} of {@link Bean}s; must not be {@code null}
+   *
+   * @exception NullPointerException if any argument is {@code null}
+   *
+   * @see #cachingSelectableOf(Collection, Matcher, Map)
+   *
+   * @see #Beans(Selectable)
+   */
+  public Beans(final Domain domain, final Collection<? extends Bean<?>> beans) {
+    this(cachingSelectableOf(beans,
+                             new IdMatcher(new BeanQualifiersMatcher(),
+                                           new InterceptorBindingsMatcher(),
+                                           new BeanTypeMatcher(domain)),
+                             Map.of()));
+  }
+
   /**
    * Creates a new {@link Beans}.
    *
@@ -92,6 +133,8 @@ public final class Beans implements Selectable<AttributedType, Bean<?>>, Reducib
    * RankedReducer}.</p>
    *
    * @param s a {@link Selectable}; must not be {@code null}
+   *
+   * @exception NullPointerException if {@code s} is {@code null}
    *
    * @see RankedReducer
    */
@@ -107,7 +150,9 @@ public final class Beans implements Selectable<AttributedType, Bean<?>>, Reducib
    * @param r a {@link Reducible} to apply to elements selected by the supplied {@link Selectable}; must not be {@code
    * null}
    *
-   * @see #cachingSelectableOf(Matcher, Map, Collection)
+   * @exception NullPointerException if any argument is {@code null}
+   *
+   * @see #cachingSelectableOf(Collection, Matcher, Map)
    *
    * @see Reducible#of(Selectable, Reducer)
    *
@@ -146,19 +191,20 @@ public final class Beans implements Selectable<AttributedType, Bean<?>>, Reducib
    *
    * <p>The cache is unbounded.</p>
    *
+   * @param beans a {@link Collection} of {@link Bean}s; must not be {@code null}
+   *
    * @param idMatcher an {@link IdMatcher}; must not be {@code null}
    *
    * @param selections a (normally empty) {@link Map} of precomputed selections; must not be {@code null}
-   *
-   * @param beans a {@link Collection} of {@link Bean}s; must not be {@code null}
    *
    * @return a new {@link Selectable}; never {@code null}
    *
    * @exception NullPointerException if any argument is {@code null}
    */
-  public static final Selectable<AttributedType, Bean<?>> cachingSelectableOf(final Matcher<? super AttributedType, ? super Id> idMatcher,
-                                                                              final Map<? extends AttributedType, ? extends List<Bean<?>>> selections,
-                                                                              final Collection<? extends Bean<?>> beans) {
+  public static final Selectable<AttributedType, Bean<?>> cachingSelectableOf(final Collection<? extends Bean<?>> beans,
+                                                                              final Matcher<? super AttributedType, ? super Id> idMatcher,
+                                                                              final Map<? extends AttributedType, ? extends List<Bean<?>>> selections) {
+
     Objects.requireNonNull(idMatcher, "idMatcher");
     final Map<AttributedType, List<Bean<?>>> selectionCache = new ConcurrentHashMap<>();
     final ArrayList<Bean<?>> newBeans = new ArrayList<>(31); // 31 == arbitrary

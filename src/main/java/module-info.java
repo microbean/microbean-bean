@@ -23,10 +23,9 @@ module org.microbean.bean {
 
   requires transitive java.compiler;
   requires transitive org.microbean.assign;
+  requires transitive org.microbean.attributes;
   requires            org.microbean.constant;
   requires transitive org.microbean.construct;
   requires transitive org.microbean.interceptor;
-  requires transitive org.microbean.qualifier;
-  requires transitive org.microbean.scope;
 
 }

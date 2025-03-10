@@ -17,7 +17,7 @@ import java.util.Collection;
 
 import org.junit.jupiter.api.Test;
 
-import org.microbean.qualifier.NamedAttributeMap;
+import org.microbean.attributes.Attributes;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -34,13 +34,13 @@ final class TestQualifiers {
 
   @Test
   final void testDefaultQualifierStaticMethod() {
-    final NamedAttributeMap<?> dq = defaultQualifier();
+    final Attributes dq = defaultQualifier();
     assertEquals("Default", dq.name());
-    final Collection<? extends NamedAttributeMap<?>> md = dq.metadata();
+    final Collection<? extends Attributes> md = dq.attributes(dq.name());
     assertEquals(1, md.size());
-    final NamedAttributeMap<?> q = md.iterator().next();
+    final Attributes q = md.iterator().next();
     assertEquals("Qualifier", q.name());
-    assertTrue(q.isEmpty());
+    assertTrue(q.values().isEmpty());
     assertTrue(qualifier(dq));
     assertFalse(qualifier(q));
   }
