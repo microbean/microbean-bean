@@ -33,7 +33,7 @@
 <span class="source-line-no">020</span><span id="line-20"></span>
 <span class="source-line-no">021</span><span id="line-21">import org.microbean.assign.Matcher;</span>
 <span class="source-line-no">022</span><span id="line-22"></span>
-<span class="source-line-no">023</span><span id="line-23">import org.microbean.qualifier.NamedAttributeMap;</span>
+<span class="source-line-no">023</span><span id="line-23">import org.microbean.attributes.Attributes;</span>
 <span class="source-line-no">024</span><span id="line-24"></span>
 <span class="source-line-no">025</span><span id="line-25">/**</span>
 <span class="source-line-no">026</span><span id="line-26"> * A {@link Matcher} that tests an {@link Id} to see if it matches an {@link AttributedType}.</span>
@@ -115,8 +115,8 @@
 <span class="source-line-no">102</span><span id="line-102">   */</span>
 <span class="source-line-no">103</span><span id="line-103">  @Override // Matcher&lt;AttributedType, Id&gt; (BiPredicate&lt;AttributedType, Id&gt;)</span>
 <span class="source-line-no">104</span><span id="line-104">  public final boolean test(final AttributedType t, final Id id) {</span>
-<span class="source-line-no">105</span><span id="line-105">    final Collection&lt;? extends NamedAttributeMap&lt;?&gt;&gt; attributes = t.attributes();</span>
-<span class="source-line-no">106</span><span id="line-106">    final Collection&lt;? extends NamedAttributeMap&lt;?&gt;&gt; idAttributes = id.attributes();</span>
+<span class="source-line-no">105</span><span id="line-105">    final Collection&lt;? extends Attributes&gt; attributes = t.attributes();</span>
+<span class="source-line-no">106</span><span id="line-106">    final Collection&lt;? extends Attributes&gt; idAttributes = id.attributes();</span>
 <span class="source-line-no">107</span><span id="line-107">    return</span>
 <span class="source-line-no">108</span><span id="line-108">      this.qm.test(attributes, idAttributes) &amp;&amp;</span>
 <span class="source-line-no">109</span><span id="line-109">      this.ibm.test(attributes, idAttributes) &amp;&amp;</span>

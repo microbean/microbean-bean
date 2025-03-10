@@ -31,89 +31,105 @@
 <span class="source-line-no">018</span><span id="line-18"></span>
 <span class="source-line-no">019</span><span id="line-19">import org.microbean.assign.Matcher;</span>
 <span class="source-line-no">020</span><span id="line-20"></span>
-<span class="source-line-no">021</span><span id="line-21">import org.microbean.qualifier.NamedAttributeMap;</span>
+<span class="source-line-no">021</span><span id="line-21">import org.microbean.attributes.Attributes;</span>
 <span class="source-line-no">022</span><span id="line-22"></span>
 <span class="source-line-no">023</span><span id="line-23">import static org.microbean.bean.InterceptorBindings.anyInterceptorBinding;</span>
-<span class="source-line-no">024</span><span id="line-24">import static org.microbean.bean.InterceptorBindings.interceptorBindings;</span>
-<span class="source-line-no">025</span><span id="line-25"></span>
-<span class="source-line-no">026</span><span id="line-26">/**</span>
-<span class="source-line-no">027</span><span id="line-27"> * A {@link Matcher} encapsulating &lt;a</span>
-<span class="source-line-no">028</span><span id="line-28"> * href="https://jakarta.ee/specifications/cdi/4.0/jakarta-cdi-spec-4.0#interceptors"&gt;CDI-compatible interceptor binding</span>
-<span class="source-line-no">029</span><span id="line-29"> * matching rules&lt;/a&gt;.</span>
-<span class="source-line-no">030</span><span id="line-30"> *</span>
-<span class="source-line-no">031</span><span id="line-31"> * @author &lt;a href="https://about.me/lairdnelson" target="_top"&gt;Laird Nelson&lt;/a&gt;</span>
-<span class="source-line-no">032</span><span id="line-32"> *</span>
-<span class="source-line-no">033</span><span id="line-33"> * @see #test(Collection, Collection)</span>
-<span class="source-line-no">034</span><span id="line-34"> */</span>
-<span class="source-line-no">035</span><span id="line-35">public final class InterceptorBindingsMatcher implements Matcher&lt;Collection&lt;? extends NamedAttributeMap&lt;?&gt;&gt;, Collection&lt;? extends NamedAttributeMap&lt;?&gt;&gt;&gt; {</span>
-<span class="source-line-no">036</span><span id="line-36"></span>
-<span class="source-line-no">037</span><span id="line-37">  /**</span>
-<span class="source-line-no">038</span><span id="line-38">   * Creates a new {@link InterceptorBindingsMatcher}.</span>
-<span class="source-line-no">039</span><span id="line-39">   */</span>
-<span class="source-line-no">040</span><span id="line-40">  public InterceptorBindingsMatcher() {</span>
-<span class="source-line-no">041</span><span id="line-41">    super();</span>
-<span class="source-line-no">042</span><span id="line-42">  }</span>
-<span class="source-line-no">043</span><span id="line-43"></span>
-<span class="source-line-no">044</span><span id="line-44">  /**</span>
-<span class="source-line-no">045</span><span id="line-45">   * Returns {@code true} if and only if either (a) both the collection of {@linkplain</span>
-<span class="source-line-no">046</span><span id="line-46">   * InterceptorBindings#interceptorBindings(Collection) interceptor bindings present} in {@code receiverAttributes} and</span>
-<span class="source-line-no">047</span><span id="line-47">   * the collection of {@linkplain InterceptorBindings#interceptorBindings(Collection) interceptor bindings present} in</span>
-<span class="source-line-no">048</span><span id="line-48">   * {@code payloadAttributes} are {@linkplain Collection#isEmpty() empty}, or (b) if the collection of {@linkplain</span>
-<span class="source-line-no">049</span><span id="line-49">   * InterceptorBindings#interceptorBindings(Collection) interceptor bindings present} in {@code payloadAttributes} has</span>
-<span class="source-line-no">050</span><span id="line-50">   * only one element and that element {@linkplain InterceptorBindings#anyInterceptorBinding(NamedAttributeMap) is the</span>
-<span class="source-line-no">051</span><span id="line-51">   * &lt;dfn&gt;any&lt;/dfn&gt; interceptor binding}, or (c) the sizes of the collection of {@linkplain</span>
-<span class="source-line-no">052</span><span id="line-52">   * InterceptorBindings#interceptorBindings(Collection) interceptor bindings present} in {@code receiverAttributes} and</span>
-<span class="source-line-no">053</span><span id="line-53">   * the collection of {@linkplain InterceptorBindings#interceptorBindings(Collection) interceptor bindings present} in</span>
-<span class="source-line-no">054</span><span id="line-54">   * {@code payloadAttributes} are the same and the collection of {@linkplain</span>
-<span class="source-line-no">055</span><span id="line-55">   * InterceptorBindings#interceptorBindings(Collection) interceptor bindings present} in {@code receiverAttributes}</span>
-<span class="source-line-no">056</span><span id="line-56">   * {@linkplain Collection#containsAll(Collection) contains all} the collection of {@linkplain</span>
-<span class="source-line-no">057</span><span id="line-57">   * InterceptorBindings#interceptorBindings(Collection) interceptor bindings present} in {@code payloadAttributes} and</span>
-<span class="source-line-no">058</span><span id="line-58">   * the collection of {@linkplain InterceptorBindings#interceptorBindings(Collection) interceptor bindings present} in</span>
-<span class="source-line-no">059</span><span id="line-59">   * {@code payloadAttributes} {@linkplain Collection#containsAll(Collection) contains all} the collection of</span>
-<span class="source-line-no">060</span><span id="line-60">   * {@linkplain InterceptorBindings#interceptorBindings(Collection) interceptor bindings present} in {@code</span>
-<span class="source-line-no">061</span><span id="line-61">   * receiverAttributes}.</span>
-<span class="source-line-no">062</span><span id="line-62">   *</span>
-<span class="source-line-no">063</span><span id="line-63">   * @param receiverAttributes a {@link Collection} of {@link NamedAttributeMap}s; must not be {@code null}</span>
-<span class="source-line-no">064</span><span id="line-64">   *</span>
-<span class="source-line-no">065</span><span id="line-65">   * @param payloadAttributes a {@link Collection} of {@link NamedAttributeMap}s; must not be {@code null}</span>
-<span class="source-line-no">066</span><span id="line-66">   *</span>
-<span class="source-line-no">067</span><span id="line-67">   * @return {@code true} if and only if either (a) both the collection of {@linkplain</span>
-<span class="source-line-no">068</span><span id="line-68">   * InterceptorBindings#interceptorBindings(Collection) interceptor bindings present} in {@code receiverAttributes} and</span>
-<span class="source-line-no">069</span><span id="line-69">   * the collection of {@linkplain InterceptorBindings#interceptorBindings(Collection) interceptor bindings present} in</span>
-<span class="source-line-no">070</span><span id="line-70">   * {@code payloadAttributes} are {@linkplain Collection#isEmpty() empty}, or (b) if the collection of {@linkplain</span>
-<span class="source-line-no">071</span><span id="line-71">   * InterceptorBindings#interceptorBindings(Collection) interceptor bindings present} in {@code payloadAttributes} has</span>
-<span class="source-line-no">072</span><span id="line-72">   * only one element and that element {@linkplain InterceptorBindings#anyInterceptorBinding(NamedAttributeMap) is the</span>
-<span class="source-line-no">073</span><span id="line-73">   * &lt;dfn&gt;any&lt;/dfn&gt; interceptor binding}, or (c) the sizes of the collection of {@linkplain</span>
-<span class="source-line-no">074</span><span id="line-74">   * InterceptorBindings#interceptorBindings(Collection) interceptor bindings present} in {@code receiverAttributes} and</span>
-<span class="source-line-no">075</span><span id="line-75">   * the collection of {@linkplain InterceptorBindings#interceptorBindings(Collection) interceptor bindings present} in</span>
-<span class="source-line-no">076</span><span id="line-76">   * {@code payloadAttributes} are the same and the collection of {@linkplain</span>
-<span class="source-line-no">077</span><span id="line-77">   * InterceptorBindings#interceptorBindings(Collection) interceptor bindings present} in {@code receiverAttributes}</span>
-<span class="source-line-no">078</span><span id="line-78">   * {@linkplain Collection#containsAll(Collection) contains all} the collection of {@linkplain</span>
-<span class="source-line-no">079</span><span id="line-79">   * InterceptorBindings#interceptorBindings(Collection) interceptor bindings present} in {@code payloadAttributes} and</span>
-<span class="source-line-no">080</span><span id="line-80">   * the collection of {@linkplain InterceptorBindings#interceptorBindings(Collection) interceptor bindings present} in</span>
-<span class="source-line-no">081</span><span id="line-81">   * {@code payloadAttributes} {@linkplain Collection#containsAll(Collection) contains all} the collection of</span>
-<span class="source-line-no">082</span><span id="line-82">   * {@linkplain InterceptorBindings#interceptorBindings(Collection) interceptor bindings present} in {@code</span>
-<span class="source-line-no">083</span><span id="line-83">   * receiverAttributes}</span>
-<span class="source-line-no">084</span><span id="line-84">   *</span>
-<span class="source-line-no">085</span><span id="line-85">   * @exception NullPointerException if either {@code receiverAttributes} or {@code payloadAttributes} is {@code null}</span>
-<span class="source-line-no">086</span><span id="line-86">   */</span>
-<span class="source-line-no">087</span><span id="line-87">  @Override // Matcher&lt;Collection&lt;? extends NamedAttributeMap&lt;?&gt;&gt;, Collection&lt;? extends NamedAttributeMap&lt;?&gt;&gt;&gt;</span>
-<span class="source-line-no">088</span><span id="line-88">  public final boolean test(final Collection&lt;? extends NamedAttributeMap&lt;?&gt;&gt; receiverAttributes,</span>
-<span class="source-line-no">089</span><span id="line-89">                            final Collection&lt;? extends NamedAttributeMap&lt;?&gt;&gt; payloadAttributes) {</span>
-<span class="source-line-no">090</span><span id="line-90">    final List&lt;? extends NamedAttributeMap&lt;?&gt;&gt; payloadBindings = interceptorBindings(payloadAttributes);</span>
-<span class="source-line-no">091</span><span id="line-91">    if (payloadBindings.isEmpty()) {</span>
-<span class="source-line-no">092</span><span id="line-92">      return interceptorBindings(receiverAttributes).isEmpty();</span>
-<span class="source-line-no">093</span><span id="line-93">    } else if (payloadBindings.size() == 1 &amp;&amp; anyInterceptorBinding(payloadBindings.get(0))) {</span>
-<span class="source-line-no">094</span><span id="line-94">      return true;</span>
-<span class="source-line-no">095</span><span id="line-95">    }</span>
-<span class="source-line-no">096</span><span id="line-96">    final List&lt;? extends NamedAttributeMap&lt;?&gt;&gt; receiverBindings = interceptorBindings(receiverAttributes);</span>
-<span class="source-line-no">097</span><span id="line-97">    return</span>
-<span class="source-line-no">098</span><span id="line-98">      receiverBindings.size() == payloadBindings.size() &amp;&amp;</span>
-<span class="source-line-no">099</span><span id="line-99">      receiverBindings.containsAll(payloadBindings) &amp;&amp;</span>
-<span class="source-line-no">100</span><span id="line-100">      payloadBindings.containsAll(receiverBindings);</span>
-<span class="source-line-no">101</span><span id="line-101">  }</span>
-<span class="source-line-no">102</span><span id="line-102"></span>
-<span class="source-line-no">103</span><span id="line-103">}</span>
+<span class="source-line-no">024</span><span id="line-24"></span>
+<span class="source-line-no">025</span><span id="line-25">/**</span>
+<span class="source-line-no">026</span><span id="line-26"> * A {@link Matcher} encapsulating &lt;a</span>
+<span class="source-line-no">027</span><span id="line-27"> * href="https://jakarta.ee/specifications/cdi/4.0/jakarta-cdi-spec-4.0#interceptors"&gt;CDI-compatible interceptor binding</span>
+<span class="source-line-no">028</span><span id="line-28"> * matching rules&lt;/a&gt;.</span>
+<span class="source-line-no">029</span><span id="line-29"> *</span>
+<span class="source-line-no">030</span><span id="line-30"> * @author &lt;a href="https://about.me/lairdnelson" target="_top"&gt;Laird Nelson&lt;/a&gt;</span>
+<span class="source-line-no">031</span><span id="line-31"> *</span>
+<span class="source-line-no">032</span><span id="line-32"> * @see #test(Collection, Collection)</span>
+<span class="source-line-no">033</span><span id="line-33"> */</span>
+<span class="source-line-no">034</span><span id="line-34">public class InterceptorBindingsMatcher implements Matcher&lt;Collection&lt;? extends Attributes&gt;, Collection&lt;? extends Attributes&gt;&gt; {</span>
+<span class="source-line-no">035</span><span id="line-35"></span>
+<span class="source-line-no">036</span><span id="line-36">  /**</span>
+<span class="source-line-no">037</span><span id="line-37">   * Creates a new {@link InterceptorBindingsMatcher}.</span>
+<span class="source-line-no">038</span><span id="line-38">   */</span>
+<span class="source-line-no">039</span><span id="line-39">  public InterceptorBindingsMatcher() {</span>
+<span class="source-line-no">040</span><span id="line-40">    super();</span>
+<span class="source-line-no">041</span><span id="line-41">  }</span>
+<span class="source-line-no">042</span><span id="line-42"></span>
+<span class="source-line-no">043</span><span id="line-43">  /**</span>
+<span class="source-line-no">044</span><span id="line-44">   * Returns {@code true} if and only if either (a) both the collection of {@linkplain</span>
+<span class="source-line-no">045</span><span id="line-45">   * InterceptorBindings#interceptorBindings(Collection) interceptor bindings present} in {@code receiverAttributes} and</span>
+<span class="source-line-no">046</span><span id="line-46">   * the collection of {@linkplain InterceptorBindings#interceptorBindings(Collection) interceptor bindings present} in</span>
+<span class="source-line-no">047</span><span id="line-47">   * {@code payloadAttributes} are {@linkplain Collection#isEmpty() empty}, or (b) if the collection of {@linkplain</span>
+<span class="source-line-no">048</span><span id="line-48">   * InterceptorBindings#interceptorBindings(Collection) interceptor bindings present} in {@code payloadAttributes} has</span>
+<span class="source-line-no">049</span><span id="line-49">   * only one element and that element {@linkplain InterceptorBindings#anyInterceptorBinding(Attributes) is the</span>
+<span class="source-line-no">050</span><span id="line-50">   * &lt;dfn&gt;any&lt;/dfn&gt; interceptor binding}, or (c) the sizes of the collection of {@linkplain</span>
+<span class="source-line-no">051</span><span id="line-51">   * InterceptorBindings#interceptorBindings(Collection) interceptor bindings present} in {@code receiverAttributes} and</span>
+<span class="source-line-no">052</span><span id="line-52">   * the collection of {@linkplain InterceptorBindings#interceptorBindings(Collection) interceptor bindings present} in</span>
+<span class="source-line-no">053</span><span id="line-53">   * {@code payloadAttributes} are the same and the collection of {@linkplain</span>
+<span class="source-line-no">054</span><span id="line-54">   * InterceptorBindings#interceptorBindings(Collection) interceptor bindings present} in {@code receiverAttributes}</span>
+<span class="source-line-no">055</span><span id="line-55">   * {@linkplain Collection#containsAll(Collection) contains all} the collection of {@linkplain</span>
+<span class="source-line-no">056</span><span id="line-56">   * InterceptorBindings#interceptorBindings(Collection) interceptor bindings present} in {@code payloadAttributes} and</span>
+<span class="source-line-no">057</span><span id="line-57">   * the collection of {@linkplain InterceptorBindings#interceptorBindings(Collection) interceptor bindings present} in</span>
+<span class="source-line-no">058</span><span id="line-58">   * {@code payloadAttributes} {@linkplain Collection#containsAll(Collection) contains all} the collection of</span>
+<span class="source-line-no">059</span><span id="line-59">   * {@linkplain InterceptorBindings#interceptorBindings(Collection) interceptor bindings present} in {@code</span>
+<span class="source-line-no">060</span><span id="line-60">   * receiverAttributes}.</span>
+<span class="source-line-no">061</span><span id="line-61">   *</span>
+<span class="source-line-no">062</span><span id="line-62">   * @param receiverAttributes a {@link Collection} of {@link Attributes}s; must not be {@code null}</span>
+<span class="source-line-no">063</span><span id="line-63">   *</span>
+<span class="source-line-no">064</span><span id="line-64">   * @param payloadAttributes a {@link Collection} of {@link Attributes}s; must not be {@code null}</span>
+<span class="source-line-no">065</span><span id="line-65">   *</span>
+<span class="source-line-no">066</span><span id="line-66">   * @return {@code true} if and only if either (a) both the collection of {@linkplain</span>
+<span class="source-line-no">067</span><span id="line-67">   * InterceptorBindings#interceptorBindings(Collection) interceptor bindings present} in {@code receiverAttributes} and</span>
+<span class="source-line-no">068</span><span id="line-68">   * the collection of {@linkplain InterceptorBindings#interceptorBindings(Collection) interceptor bindings present} in</span>
+<span class="source-line-no">069</span><span id="line-69">   * {@code payloadAttributes} are {@linkplain Collection#isEmpty() empty}, or (b) if the collection of {@linkplain</span>
+<span class="source-line-no">070</span><span id="line-70">   * InterceptorBindings#interceptorBindings(Collection) interceptor bindings present} in {@code payloadAttributes} has</span>
+<span class="source-line-no">071</span><span id="line-71">   * only one element and that element {@linkplain InterceptorBindings#anyInterceptorBinding(Attributes) is the</span>
+<span class="source-line-no">072</span><span id="line-72">   * &lt;dfn&gt;any&lt;/dfn&gt; interceptor binding}, or (c) the sizes of the collection of {@linkplain</span>
+<span class="source-line-no">073</span><span id="line-73">   * InterceptorBindings#interceptorBindings(Collection) interceptor bindings present} in {@code receiverAttributes} and</span>
+<span class="source-line-no">074</span><span id="line-74">   * the collection of {@linkplain InterceptorBindings#interceptorBindings(Collection) interceptor bindings present} in</span>
+<span class="source-line-no">075</span><span id="line-75">   * {@code payloadAttributes} are the same and the collection of {@linkplain</span>
+<span class="source-line-no">076</span><span id="line-76">   * InterceptorBindings#interceptorBindings(Collection) interceptor bindings present} in {@code receiverAttributes}</span>
+<span class="source-line-no">077</span><span id="line-77">   * {@linkplain Collection#containsAll(Collection) contains all} the collection of {@linkplain</span>
+<span class="source-line-no">078</span><span id="line-78">   * InterceptorBindings#interceptorBindings(Collection) interceptor bindings present} in {@code payloadAttributes} and</span>
+<span class="source-line-no">079</span><span id="line-79">   * the collection of {@linkplain InterceptorBindings#interceptorBindings(Collection) interceptor bindings present} in</span>
+<span class="source-line-no">080</span><span id="line-80">   * {@code payloadAttributes} {@linkplain Collection#containsAll(Collection) contains all} the collection of</span>
+<span class="source-line-no">081</span><span id="line-81">   * {@linkplain InterceptorBindings#interceptorBindings(Collection) interceptor bindings present} in {@code</span>
+<span class="source-line-no">082</span><span id="line-82">   * receiverAttributes}</span>
+<span class="source-line-no">083</span><span id="line-83">   *</span>
+<span class="source-line-no">084</span><span id="line-84">   * @exception NullPointerException if either {@code receiverAttributes} or {@code payloadAttributes} is {@code null}</span>
+<span class="source-line-no">085</span><span id="line-85">   */</span>
+<span class="source-line-no">086</span><span id="line-86">  @Override // Matcher&lt;Collection&lt;? extends Attributes&gt;, Collection&lt;? extends Attributes&gt;&gt;</span>
+<span class="source-line-no">087</span><span id="line-87">  public final boolean test(final Collection&lt;? extends Attributes&gt; receiverAttributes,</span>
+<span class="source-line-no">088</span><span id="line-88">                            final Collection&lt;? extends Attributes&gt; payloadAttributes) {</span>
+<span class="source-line-no">089</span><span id="line-89">    final Collection&lt;? extends Attributes&gt; payloadBindings = interceptorBindings(payloadAttributes);</span>
+<span class="source-line-no">090</span><span id="line-90">    if (payloadBindings.isEmpty()) {</span>
+<span class="source-line-no">091</span><span id="line-91">      return interceptorBindings(receiverAttributes).isEmpty();</span>
+<span class="source-line-no">092</span><span id="line-92">    } else if (payloadBindings.size() == 1 &amp;&amp; anyInterceptorBinding(payloadBindings.iterator().next())) {</span>
+<span class="source-line-no">093</span><span id="line-93">      return true;</span>
+<span class="source-line-no">094</span><span id="line-94">    }</span>
+<span class="source-line-no">095</span><span id="line-95">    final Collection&lt;? extends Attributes&gt; receiverBindings = interceptorBindings(receiverAttributes);</span>
+<span class="source-line-no">096</span><span id="line-96">    return</span>
+<span class="source-line-no">097</span><span id="line-97">      receiverBindings.size() == payloadBindings.size() &amp;&amp;</span>
+<span class="source-line-no">098</span><span id="line-98">      receiverBindings.containsAll(payloadBindings) &amp;&amp;</span>
+<span class="source-line-no">099</span><span id="line-99">      payloadBindings.containsAll(receiverBindings);</span>
+<span class="source-line-no">100</span><span id="line-100">  }</span>
+<span class="source-line-no">101</span><span id="line-101"></span>
+<span class="source-line-no">102</span><span id="line-102">  /**</span>
+<span class="source-line-no">103</span><span id="line-103">   * Given a {@link Collection} of {@link Attributes}s, returns an immutable {@link Collection} consisting of those</span>
+<span class="source-line-no">104</span><span id="line-104">   * {@link Attributes} instances that are deemed to be interceptor bindings.</span>
+<span class="source-line-no">105</span><span id="line-105">   *</span>
+<span class="source-line-no">106</span><span id="line-106">   * &lt;p&gt;The default implementation of this method returns the value of an invocation of the {@link</span>
+<span class="source-line-no">107</span><span id="line-107">   * InterceptorBindings#interceptorBindings(Collection)} method.&lt;/p&gt;</span>
+<span class="source-line-no">108</span><span id="line-108">   *</span>
+<span class="source-line-no">109</span><span id="line-109">   * @param as a {@link Collection}; must not be {@code null}</span>
+<span class="source-line-no">110</span><span id="line-110">   *</span>
+<span class="source-line-no">111</span><span id="line-111">   * @return a {@link List} of interceptor bindings; never {@code null}</span>
+<span class="source-line-no">112</span><span id="line-112">   *</span>
+<span class="source-line-no">113</span><span id="line-113">   * @exception NullPointerException if {@code as} is {@code null}</span>
+<span class="source-line-no">114</span><span id="line-114">   */</span>
+<span class="source-line-no">115</span><span id="line-115">  protected Collection&lt;? extends Attributes&gt; interceptorBindings(final Collection&lt;? extends Attributes&gt; as) {</span>
+<span class="source-line-no">116</span><span id="line-116">    return InterceptorBindings.interceptorBindings(as);</span>
+<span class="source-line-no">117</span><span id="line-117">  }</span>
+<span class="source-line-no">118</span><span id="line-118"></span>
+<span class="source-line-no">119</span><span id="line-119">}</span>
 
 
 

@@ -77,111 +77,122 @@
 <span class="source-line-no">064</span><span id="line-64">                        final C c,</span>
 <span class="source-line-no">065</span><span id="line-65">                        final BiFunction&lt;? super List&lt;? extends T&gt;, ? super C, ? extends T&gt; failureHandler) {</span>
 <span class="source-line-no">066</span><span id="line-66">    if (elements == null || elements.isEmpty()) {</span>
-<span class="source-line-no">067</span><span id="line-67">      return null;</span>
-<span class="source-line-no">068</span><span id="line-68">    } else if (elements.size() == 1) {</span>
-<span class="source-line-no">069</span><span id="line-69">      return elements.get(0);</span>
-<span class="source-line-no">070</span><span id="line-70">    }</span>
-<span class="source-line-no">071</span><span id="line-71"></span>
-<span class="source-line-no">072</span><span id="line-72">    T candidate = null;</span>
-<span class="source-line-no">073</span><span id="line-73">    List&lt;T&gt; unresolved = null;</span>
-<span class="source-line-no">074</span><span id="line-74">    // Highest rank wins</span>
-<span class="source-line-no">075</span><span id="line-75">    int maxRank = DEFAULT_RANK;</span>
-<span class="source-line-no">076</span><span id="line-76"></span>
-<span class="source-line-no">077</span><span id="line-77">    for (final T element : elements) {</span>
-<span class="source-line-no">078</span><span id="line-78">      if (element.alternate()) {</span>
-<span class="source-line-no">079</span><span id="line-79">        final int elementRank = element.rank();</span>
-<span class="source-line-no">080</span><span id="line-80">        if (elementRank == maxRank) {</span>
-<span class="source-line-no">081</span><span id="line-81">          if (candidate == null || !candidate.alternate()) {</span>
-<span class="source-line-no">082</span><span id="line-82">            // Prefer elements regardless of ranks.</span>
-<span class="source-line-no">083</span><span id="line-83">            candidate = element;</span>
-<span class="source-line-no">084</span><span id="line-84">          } else {</span>
-<span class="source-line-no">085</span><span id="line-85">            assert candidate.rank() == maxRank : "Unexpected rank: " + candidate.rank() + "; was expecting: " + maxRank;</span>
-<span class="source-line-no">086</span><span id="line-86">            // The existing candidate is an alternate and by definition has the highest rank we've seen so far; the</span>
-<span class="source-line-no">087</span><span id="line-87">            // incoming element is also an alternate; both have equal ranks: we can't resolve this.</span>
-<span class="source-line-no">088</span><span id="line-88">            if (unresolved == null) {</span>
-<span class="source-line-no">089</span><span id="line-89">              unresolved = new ArrayList&lt;&gt;(6);</span>
-<span class="source-line-no">090</span><span id="line-90">            }</span>
-<span class="source-line-no">091</span><span id="line-91">            unresolved.add(candidate);</span>
-<span class="source-line-no">092</span><span id="line-92">            unresolved.add(element);</span>
-<span class="source-line-no">093</span><span id="line-93">            candidate = null;</span>
-<span class="source-line-no">094</span><span id="line-94">          }</span>
-<span class="source-line-no">095</span><span id="line-95">        } else if (elementRank &gt; maxRank) {</span>
-<span class="source-line-no">096</span><span id="line-96">          if (candidate == null || !candidate.alternate() || elementRank &gt; candidate.rank()) {</span>
-<span class="source-line-no">097</span><span id="line-97">            // The existing candidate is either null, not an alternate (and alternates are always preferred), or an</span>
-<span class="source-line-no">098</span><span id="line-98">            // alternate with losing rank, so junk it in favor of the incoming element.</span>
-<span class="source-line-no">099</span><span id="line-99">            candidate = element;</span>
-<span class="source-line-no">100</span><span id="line-100">            // We have a new maxRank.</span>
-<span class="source-line-no">101</span><span id="line-101">            maxRank = elementRank;</span>
-<span class="source-line-no">102</span><span id="line-102">          } else if (elementRank == candidate.rank()) {</span>
-<span class="source-line-no">103</span><span id="line-103">            // The existing candidate is also an alternate and has the same rank.</span>
-<span class="source-line-no">104</span><span id="line-104">            if (unresolved == null) {</span>
-<span class="source-line-no">105</span><span id="line-105">              unresolved = new ArrayList&lt;&gt;(6);</span>
-<span class="source-line-no">106</span><span id="line-106">            }</span>
-<span class="source-line-no">107</span><span id="line-107">            unresolved.add(candidate);</span>
-<span class="source-line-no">108</span><span id="line-108">            unresolved.add(element);</span>
-<span class="source-line-no">109</span><span id="line-109">            candidate = null;</span>
-<span class="source-line-no">110</span><span id="line-110">          } else {</span>
-<span class="source-line-no">111</span><span id="line-111">            assert elementRank &lt; candidate.rank() : "elementRank &gt;= candidate.rank(): " + elementRank + " &gt;= " + candidate.rank();</span>
-<span class="source-line-no">112</span><span id="line-112">            // The existing candidate is also an alternate but has a higher rank than the alternate, so keep it (do</span>
-<span class="source-line-no">113</span><span id="line-113">            // nothing).</span>
-<span class="source-line-no">114</span><span id="line-114">          }</span>
-<span class="source-line-no">115</span><span id="line-115">        }</span>
-<span class="source-line-no">116</span><span id="line-116">        // ...else drop element by doing nothing</span>
-<span class="source-line-no">117</span><span id="line-117">      } else if (candidate == null) {</span>
-<span class="source-line-no">118</span><span id="line-118">        // The incoming element is not an alternate, but that doesn't matter; the candidate is null, so accept the</span>
-<span class="source-line-no">119</span><span id="line-119">        // element no matter what.</span>
-<span class="source-line-no">120</span><span id="line-120">        candidate = element;</span>
-<span class="source-line-no">121</span><span id="line-121">      } else if (!candidate.alternate()) {</span>
-<span class="source-line-no">122</span><span id="line-122">        // The existing candidate is not an alternate. The incoming element is not an alternate. Ranks in this case are</span>
-<span class="source-line-no">123</span><span id="line-123">        // irrelevant, perhaps surprisingly. We cannot resolve this.</span>
-<span class="source-line-no">124</span><span id="line-124">        if (unresolved == null) {</span>
-<span class="source-line-no">125</span><span id="line-125">          unresolved = new ArrayList&lt;&gt;(6);</span>
-<span class="source-line-no">126</span><span id="line-126">        }</span>
-<span class="source-line-no">127</span><span id="line-127">        unresolved.add(candidate);</span>
-<span class="source-line-no">128</span><span id="line-128">        unresolved.add(element);</span>
-<span class="source-line-no">129</span><span id="line-129">        candidate = null;</span>
-<span class="source-line-no">130</span><span id="line-130">      }</span>
-<span class="source-line-no">131</span><span id="line-131">      // ...else do nothing</span>
-<span class="source-line-no">132</span><span id="line-132">    }</span>
-<span class="source-line-no">133</span><span id="line-133"></span>
-<span class="source-line-no">134</span><span id="line-134">    if (unresolved != null &amp;&amp; !unresolved.isEmpty()) {</span>
-<span class="source-line-no">135</span><span id="line-135">      if (candidate != null) {</span>
-<span class="source-line-no">136</span><span id="line-136">        unresolved.add(candidate);</span>
-<span class="source-line-no">137</span><span id="line-137">      }</span>
-<span class="source-line-no">138</span><span id="line-138">      candidate =</span>
-<span class="source-line-no">139</span><span id="line-139">        failureHandler == null ? Reducer.fail(unmodifiableList(unresolved), c) : failureHandler.apply(unmodifiableList(unresolved), c);</span>
-<span class="source-line-no">140</span><span id="line-140">    }</span>
-<span class="source-line-no">141</span><span id="line-141"></span>
-<span class="source-line-no">142</span><span id="line-142">    return candidate;</span>
-<span class="source-line-no">143</span><span id="line-143">  }</span>
-<span class="source-line-no">144</span><span id="line-144"></span>
+<span class="source-line-no">067</span><span id="line-67">      // https://github.com/microbean/microbean-bean/issues/21</span>
+<span class="source-line-no">068</span><span id="line-68">      return failureHandler == null ? Reducer.fail(List.of(), c) : failureHandler.apply(List.of(), c);</span>
+<span class="source-line-no">069</span><span id="line-69">    } else if (elements.size() == 1) {</span>
+<span class="source-line-no">070</span><span id="line-70">      return elements.get(0);</span>
+<span class="source-line-no">071</span><span id="line-71">    }</span>
+<span class="source-line-no">072</span><span id="line-72"></span>
+<span class="source-line-no">073</span><span id="line-73">    T candidate = null;</span>
+<span class="source-line-no">074</span><span id="line-74">    List&lt;T&gt; unresolved = null;</span>
+<span class="source-line-no">075</span><span id="line-75">    // Highest rank wins</span>
+<span class="source-line-no">076</span><span id="line-76">    int maxRank = DEFAULT_RANK;</span>
+<span class="source-line-no">077</span><span id="line-77"></span>
+<span class="source-line-no">078</span><span id="line-78">    for (final T element : elements) {</span>
+<span class="source-line-no">079</span><span id="line-79">      if (alternate(element)) {</span>
+<span class="source-line-no">080</span><span id="line-80">        final int elementRank = rank(element);</span>
+<span class="source-line-no">081</span><span id="line-81">        if (elementRank == maxRank) {</span>
+<span class="source-line-no">082</span><span id="line-82">          if (candidate == null || !alternate(candidate)) {</span>
+<span class="source-line-no">083</span><span id="line-83">            // Prefer elements regardless of ranks.</span>
+<span class="source-line-no">084</span><span id="line-84">            candidate = element;</span>
+<span class="source-line-no">085</span><span id="line-85">          } else {</span>
+<span class="source-line-no">086</span><span id="line-86">            assert rank(candidate) == maxRank : "Unexpected rank: " + rank(candidate) + "; was expecting: " + maxRank;</span>
+<span class="source-line-no">087</span><span id="line-87">            // The existing candidate is an alternate and by definition has the highest rank we've seen so far; the</span>
+<span class="source-line-no">088</span><span id="line-88">            // incoming element is also an alternate; both have equal ranks: we can't resolve this.</span>
+<span class="source-line-no">089</span><span id="line-89">            if (unresolved == null) {</span>
+<span class="source-line-no">090</span><span id="line-90">              unresolved = new ArrayList&lt;&gt;(6);</span>
+<span class="source-line-no">091</span><span id="line-91">            }</span>
+<span class="source-line-no">092</span><span id="line-92">            unresolved.add(candidate);</span>
+<span class="source-line-no">093</span><span id="line-93">            unresolved.add(element);</span>
+<span class="source-line-no">094</span><span id="line-94">            candidate = null;</span>
+<span class="source-line-no">095</span><span id="line-95">          }</span>
+<span class="source-line-no">096</span><span id="line-96">        } else if (elementRank &gt; maxRank) {</span>
+<span class="source-line-no">097</span><span id="line-97">          if (candidate == null || !alternate(candidate) || elementRank &gt; rank(candidate)) {</span>
+<span class="source-line-no">098</span><span id="line-98">            // The existing candidate is either null, not an alternate (and alternates are always preferred), or an</span>
+<span class="source-line-no">099</span><span id="line-99">            // alternate with losing rank, so junk it in favor of the incoming element.</span>
+<span class="source-line-no">100</span><span id="line-100">            candidate = element;</span>
+<span class="source-line-no">101</span><span id="line-101">            // We have a new maxRank.</span>
+<span class="source-line-no">102</span><span id="line-102">            maxRank = elementRank;</span>
+<span class="source-line-no">103</span><span id="line-103">          } else if (elementRank == rank(candidate)) {</span>
+<span class="source-line-no">104</span><span id="line-104">            // The existing candidate is also an alternate and has the same rank.</span>
+<span class="source-line-no">105</span><span id="line-105">            if (unresolved == null) {</span>
+<span class="source-line-no">106</span><span id="line-106">              unresolved = new ArrayList&lt;&gt;(6);</span>
+<span class="source-line-no">107</span><span id="line-107">            }</span>
+<span class="source-line-no">108</span><span id="line-108">            unresolved.add(candidate);</span>
+<span class="source-line-no">109</span><span id="line-109">            unresolved.add(element);</span>
+<span class="source-line-no">110</span><span id="line-110">            candidate = null;</span>
+<span class="source-line-no">111</span><span id="line-111">          } else {</span>
+<span class="source-line-no">112</span><span id="line-112">            assert elementRank &lt; rank(candidate) : "elementRank &gt;= rank(candidate): " + elementRank + " &gt;= " + rank(candidate);</span>
+<span class="source-line-no">113</span><span id="line-113">            // The existing candidate is also an alternate but has a higher rank than the alternate, so keep it (do</span>
+<span class="source-line-no">114</span><span id="line-114">            // nothing).</span>
+<span class="source-line-no">115</span><span id="line-115">          }</span>
+<span class="source-line-no">116</span><span id="line-116">        }</span>
+<span class="source-line-no">117</span><span id="line-117">        // ...else drop element by doing nothing</span>
+<span class="source-line-no">118</span><span id="line-118">      } else if (candidate == null) {</span>
+<span class="source-line-no">119</span><span id="line-119">        // The incoming element is not an alternate, but that doesn't matter; the candidate is null, so accept the</span>
+<span class="source-line-no">120</span><span id="line-120">        // element no matter what.</span>
+<span class="source-line-no">121</span><span id="line-121">        candidate = element;</span>
+<span class="source-line-no">122</span><span id="line-122">      } else if (!alternate(candidate)) {</span>
+<span class="source-line-no">123</span><span id="line-123">        // The existing candidate is not an alternate. The incoming element is not an alternate. Ranks in this case are</span>
+<span class="source-line-no">124</span><span id="line-124">        // irrelevant, perhaps surprisingly. We cannot resolve this.</span>
+<span class="source-line-no">125</span><span id="line-125">        if (unresolved == null) {</span>
+<span class="source-line-no">126</span><span id="line-126">          unresolved = new ArrayList&lt;&gt;(6);</span>
+<span class="source-line-no">127</span><span id="line-127">        }</span>
+<span class="source-line-no">128</span><span id="line-128">        unresolved.add(candidate);</span>
+<span class="source-line-no">129</span><span id="line-129">        unresolved.add(element);</span>
+<span class="source-line-no">130</span><span id="line-130">        candidate = null;</span>
+<span class="source-line-no">131</span><span id="line-131">      }</span>
+<span class="source-line-no">132</span><span id="line-132">      // ...else do nothing</span>
+<span class="source-line-no">133</span><span id="line-133">    }</span>
+<span class="source-line-no">134</span><span id="line-134"></span>
+<span class="source-line-no">135</span><span id="line-135">    if (unresolved != null &amp;&amp; !unresolved.isEmpty()) {</span>
+<span class="source-line-no">136</span><span id="line-136">      if (candidate != null) {</span>
+<span class="source-line-no">137</span><span id="line-137">        unresolved.add(candidate);</span>
+<span class="source-line-no">138</span><span id="line-138">      }</span>
+<span class="source-line-no">139</span><span id="line-139">      candidate =</span>
+<span class="source-line-no">140</span><span id="line-140">        failureHandler == null ? Reducer.fail(unmodifiableList(unresolved), c) : failureHandler.apply(unmodifiableList(unresolved), c);</span>
+<span class="source-line-no">141</span><span id="line-141">    }</span>
+<span class="source-line-no">142</span><span id="line-142"></span>
+<span class="source-line-no">143</span><span id="line-143">    return candidate;</span>
+<span class="source-line-no">144</span><span id="line-144">  }</span>
 <span class="source-line-no">145</span><span id="line-145"></span>
-<span class="source-line-no">146</span><span id="line-146">  /*</span>
-<span class="source-line-no">147</span><span id="line-147">   * Static methods.</span>
-<span class="source-line-no">148</span><span id="line-148">   */</span>
-<span class="source-line-no">149</span><span id="line-149"></span>
+<span class="source-line-no">146</span><span id="line-146">  // Preparing for a future where alternate status is not a first-class citizen.</span>
+<span class="source-line-no">147</span><span id="line-147">  private final boolean alternate(final T t) {</span>
+<span class="source-line-no">148</span><span id="line-148">    return t.alternate();</span>
+<span class="source-line-no">149</span><span id="line-149">  }</span>
 <span class="source-line-no">150</span><span id="line-150"></span>
-<span class="source-line-no">151</span><span id="line-151">  /**</span>
-<span class="source-line-no">152</span><span id="line-152">   * Returns a {@link RankedReducer} implementation.</span>
-<span class="source-line-no">153</span><span id="line-153">   *</span>
-<span class="source-line-no">154</span><span id="line-154">   * @param &lt;C&gt; the type of criteria</span>
-<span class="source-line-no">155</span><span id="line-155">   *</span>
-<span class="source-line-no">156</span><span id="line-156">   * @param &lt;T&gt; the type of the {@link Ranked} reduction</span>
-<span class="source-line-no">157</span><span id="line-157">   *</span>
-<span class="source-line-no">158</span><span id="line-158">   * @return a {@link RankedReducer} implementation; never {@code null}</span>
-<span class="source-line-no">159</span><span id="line-159">   *</span>
-<span class="source-line-no">160</span><span id="line-160">   * @microbean.nullability This method never returns {@code null}.</span>
-<span class="source-line-no">161</span><span id="line-161">   *</span>
-<span class="source-line-no">162</span><span id="line-162">   * @microbean.idempotency This method is idempotent and deterministic.</span>
-<span class="source-line-no">163</span><span id="line-163">   *</span>
-<span class="source-line-no">164</span><span id="line-164">   * @microbean.threadsafety This method is safe for concurrent use by multiple threads.</span>
-<span class="source-line-no">165</span><span id="line-165">   */</span>
-<span class="source-line-no">166</span><span id="line-166">  @SuppressWarnings("unchecked")</span>
-<span class="source-line-no">167</span><span id="line-167">  public static final &lt;C, T extends Ranked&gt; Reducer&lt;C, T&gt; of() {</span>
-<span class="source-line-no">168</span><span id="line-168">    return (Reducer&lt;C, T&gt;)INSTANCE;</span>
-<span class="source-line-no">169</span><span id="line-169">  }</span>
-<span class="source-line-no">170</span><span id="line-170"></span>
-<span class="source-line-no">171</span><span id="line-171">}</span>
+<span class="source-line-no">151</span><span id="line-151">  // Preparing for a future where rank is not a first-class citizen.</span>
+<span class="source-line-no">152</span><span id="line-152">  private final int rank(final T t) {</span>
+<span class="source-line-no">153</span><span id="line-153">    return t.rank();</span>
+<span class="source-line-no">154</span><span id="line-154">  }</span>
+<span class="source-line-no">155</span><span id="line-155"></span>
+<span class="source-line-no">156</span><span id="line-156"></span>
+<span class="source-line-no">157</span><span id="line-157">  /*</span>
+<span class="source-line-no">158</span><span id="line-158">   * Static methods.</span>
+<span class="source-line-no">159</span><span id="line-159">   */</span>
+<span class="source-line-no">160</span><span id="line-160"></span>
+<span class="source-line-no">161</span><span id="line-161"></span>
+<span class="source-line-no">162</span><span id="line-162">  /**</span>
+<span class="source-line-no">163</span><span id="line-163">   * Returns a {@link RankedReducer} implementation.</span>
+<span class="source-line-no">164</span><span id="line-164">   *</span>
+<span class="source-line-no">165</span><span id="line-165">   * @param &lt;C&gt; the type of criteria</span>
+<span class="source-line-no">166</span><span id="line-166">   *</span>
+<span class="source-line-no">167</span><span id="line-167">   * @param &lt;T&gt; the type of the {@link Ranked} reduction</span>
+<span class="source-line-no">168</span><span id="line-168">   *</span>
+<span class="source-line-no">169</span><span id="line-169">   * @return a {@link RankedReducer} implementation; never {@code null}</span>
+<span class="source-line-no">170</span><span id="line-170">   *</span>
+<span class="source-line-no">171</span><span id="line-171">   * @microbean.nullability This method never returns {@code null}.</span>
+<span class="source-line-no">172</span><span id="line-172">   *</span>
+<span class="source-line-no">173</span><span id="line-173">   * @microbean.idempotency This method is idempotent and deterministic.</span>
+<span class="source-line-no">174</span><span id="line-174">   *</span>
+<span class="source-line-no">175</span><span id="line-175">   * @microbean.threadsafety This method is safe for concurrent use by multiple threads.</span>
+<span class="source-line-no">176</span><span id="line-176">   */</span>
+<span class="source-line-no">177</span><span id="line-177">  @SuppressWarnings("unchecked")</span>
+<span class="source-line-no">178</span><span id="line-178">  public static final &lt;C, T extends Ranked&gt; Reducer&lt;C, T&gt; of() {</span>
+<span class="source-line-no">179</span><span id="line-179">    return (Reducer&lt;C, T&gt;)INSTANCE;</span>
+<span class="source-line-no">180</span><span id="line-180">  }</span>
+<span class="source-line-no">181</span><span id="line-181"></span>
+<span class="source-line-no">182</span><span id="line-182">}</span>
 
 
 

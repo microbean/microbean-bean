@@ -192,118 +192,117 @@
 <span class="source-line-no">179</span><span id="line-179"></span>
 <span class="source-line-no">180</span><span id="line-180">  /**</span>
 <span class="source-line-no">181</span><span id="line-181">   * Returns a {@link Reducer} whose {@link #reduce(List, Object, BiFunction)} method, for a given {@link List} of</span>
-<span class="source-line-no">182</span><span id="line-182">   * elements, returns the {@link List}'s sole element if the {@link List} has exactly one element, returns {@code null}</span>
-<span class="source-line-no">183</span><span id="line-183">   * if the {@link List} {@linkplain List#isEmpty() is empty}, and returns the result of invoking its supplied failure</span>
-<span class="source-line-no">184</span><span id="line-184">   * handler otherwise.</span>
-<span class="source-line-no">185</span><span id="line-185">   *</span>
-<span class="source-line-no">186</span><span id="line-186">   * @param &lt;C&gt; the type of the criteria</span>
-<span class="source-line-no">187</span><span id="line-187">   *</span>
-<span class="source-line-no">188</span><span id="line-188">   * @param &lt;T&gt; the type of the elements</span>
-<span class="source-line-no">189</span><span id="line-189">   *</span>
-<span class="source-line-no">190</span><span id="line-190">   * @return a {@link Reducer}; never {@code null}</span>
-<span class="source-line-no">191</span><span id="line-191">   *</span>
-<span class="source-line-no">192</span><span id="line-192">   * @see #reduce(List, Object, BiFunction)</span>
-<span class="source-line-no">193</span><span id="line-193">   */</span>
-<span class="source-line-no">194</span><span id="line-194">  // A Reducer that works only when the selection is of size 0 or 1.</span>
-<span class="source-line-no">195</span><span id="line-195">  public static &lt;C, T&gt; Reducer&lt;C, T&gt; ofSimple() {</span>
-<span class="source-line-no">196</span><span id="line-196">    return Reducer::reduceObviously;</span>
-<span class="source-line-no">197</span><span id="line-197">  }</span>
-<span class="source-line-no">198</span><span id="line-198"></span>
-<span class="source-line-no">199</span><span id="line-199">  /**</span>
-<span class="source-line-no">200</span><span id="line-200">   * Returns a {@link Reducer} whose {@link #reduce(List, Object, BiFunction)} method, for a given {@link List} of</span>
-<span class="source-line-no">201</span><span id="line-201">   * elements, returns the result of invoking its supplied failure handler.</span>
-<span class="source-line-no">202</span><span id="line-202">   *</span>
-<span class="source-line-no">203</span><span id="line-203">   * @param &lt;C&gt; the type of the criteria</span>
-<span class="source-line-no">204</span><span id="line-204">   *</span>
-<span class="source-line-no">205</span><span id="line-205">   * @param &lt;T&gt; the type of the elements</span>
-<span class="source-line-no">206</span><span id="line-206">   *</span>
-<span class="source-line-no">207</span><span id="line-207">   * @return a {@link Reducer}; never {@code null}</span>
-<span class="source-line-no">208</span><span id="line-208">   *</span>
-<span class="source-line-no">209</span><span id="line-209">   * @see #reduce(List, Object, BiFunction)</span>
-<span class="source-line-no">210</span><span id="line-210">   */</span>
-<span class="source-line-no">211</span><span id="line-211">  // A Reducer that simply calls its supplied failure handler no matter what.</span>
-<span class="source-line-no">212</span><span id="line-212">  public static &lt;C, T&gt; Reducer&lt;C, T&gt; ofFailing() {</span>
-<span class="source-line-no">213</span><span id="line-213">    return Reducer::failUnconditionally;</span>
-<span class="source-line-no">214</span><span id="line-214">  }</span>
-<span class="source-line-no">215</span><span id="line-215"></span>
-<span class="source-line-no">216</span><span id="line-216">  /**</span>
-<span class="source-line-no">217</span><span id="line-217">   * Throws an {@link UnsatisfiedReductionException} if {@code elements} is empty, throws an {@link</span>
-<span class="source-line-no">218</span><span id="line-218">   * AmbiguousReductionException} if the {@linkplain List#size() size} of {@code elements} is greater than {@code 1},</span>
-<span class="source-line-no">219</span><span id="line-219">   * and returns the sole element of {@code elements} otherwise.</span>
-<span class="source-line-no">220</span><span id="line-220">   *</span>
-<span class="source-line-no">221</span><span id="line-221">   * &lt;p&gt;A reference to this method is often used as a &lt;dfn&gt;failure handler&lt;/dfn&gt; in an invocation of the {@link</span>
-<span class="source-line-no">222</span><span id="line-222">   * #reduce(List, Object, BiFunction)} method.&lt;/p&gt;</span>
-<span class="source-line-no">223</span><span id="line-223">   *</span>
-<span class="source-line-no">224</span><span id="line-224">   * @param &lt;C&gt; the type of the criteria</span>
-<span class="source-line-no">225</span><span id="line-225">   *</span>
-<span class="source-line-no">226</span><span id="line-226">   * @param &lt;T&gt; the type of the elements</span>
-<span class="source-line-no">227</span><span id="line-227">   *</span>
-<span class="source-line-no">228</span><span id="line-228">   * @param elements a {@link List} of elements under reduction; must not be {@code null}</span>
-<span class="source-line-no">229</span><span id="line-229">   *</span>
-<span class="source-line-no">230</span><span id="line-230">   * @param c a criteria object; may be {@code null}</span>
-<span class="source-line-no">231</span><span id="line-231">   *</span>
-<span class="source-line-no">232</span><span id="line-232">   * @return the sole element present in {@code elements}, which may be {@code null}</span>
-<span class="source-line-no">233</span><span id="line-233">   *</span>
-<span class="source-line-no">234</span><span id="line-234">   * @exception NullPointerException if {@code elements} is {@code null}</span>
-<span class="source-line-no">235</span><span id="line-235">   *</span>
-<span class="source-line-no">236</span><span id="line-236">   * @exception UnsatisfiedReductionException if {@code elements} is empty</span>
-<span class="source-line-no">237</span><span id="line-237">   *</span>
-<span class="source-line-no">238</span><span id="line-238">   * @exception AmbiguousReductionException if the {@linkplain List#size() size} of {@code elements} is greater than</span>
-<span class="source-line-no">239</span><span id="line-239">   * {@code 1}</span>
-<span class="source-line-no">240</span><span id="line-240">   *</span>
-<span class="source-line-no">241</span><span id="line-241">   * @see #reduce(List, Object, BiFunction)</span>
-<span class="source-line-no">242</span><span id="line-242">   *</span>
-<span class="source-line-no">243</span><span id="line-243">   * @see #reduce(List, Object)</span>
-<span class="source-line-no">244</span><span id="line-244">   */</span>
-<span class="source-line-no">245</span><span id="line-245">  // Default failure handler; call by method reference. Fails if the selection does not consist of one element.</span>
-<span class="source-line-no">246</span><span id="line-246">  public static &lt;C, T&gt; T fail(final List&lt;? extends T&gt; elements, final C c) {</span>
-<span class="source-line-no">247</span><span id="line-247">    if (elements.isEmpty()) {</span>
-<span class="source-line-no">248</span><span id="line-248">      throw new UnsatisfiedReductionException((Object)c, null, null);</span>
-<span class="source-line-no">249</span><span id="line-249">    } else if (elements.size() &gt; 1) {</span>
-<span class="source-line-no">250</span><span id="line-250">      throw new AmbiguousReductionException(c, elements, "Cannot reduce: " + elements);</span>
-<span class="source-line-no">251</span><span id="line-251">    }</span>
-<span class="source-line-no">252</span><span id="line-252">    return elements.get(0);</span>
-<span class="source-line-no">253</span><span id="line-253">  }</span>
-<span class="source-line-no">254</span><span id="line-254"></span>
-<span class="source-line-no">255</span><span id="line-255">  /**</span>
-<span class="source-line-no">256</span><span id="line-256">   * Returns {@code null} when invoked, regardless of arguments.</span>
-<span class="source-line-no">257</span><span id="line-257">   *</span>
-<span class="source-line-no">258</span><span id="line-258">   * &lt;p&gt;A reference to this method can be used as a &lt;dfn&gt;failure handler&lt;/dfn&gt; in an invocation of the {@link</span>
-<span class="source-line-no">259</span><span id="line-259">   * #reduce(List, Object, BiFunction)} method.&lt;/p&gt;</span>
+<span class="source-line-no">182</span><span id="line-182">   * elements, returns the {@link List}'s sole element if the {@link List} has exactly one element, and returns the</span>
+<span class="source-line-no">183</span><span id="line-183">   * result of invoking its supplied failure handler otherwise.</span>
+<span class="source-line-no">184</span><span id="line-184">   *</span>
+<span class="source-line-no">185</span><span id="line-185">   * @param &lt;C&gt; the type of the criteria</span>
+<span class="source-line-no">186</span><span id="line-186">   *</span>
+<span class="source-line-no">187</span><span id="line-187">   * @param &lt;T&gt; the type of the elements</span>
+<span class="source-line-no">188</span><span id="line-188">   *</span>
+<span class="source-line-no">189</span><span id="line-189">   * @return a {@link Reducer}; never {@code null}</span>
+<span class="source-line-no">190</span><span id="line-190">   *</span>
+<span class="source-line-no">191</span><span id="line-191">   * @see #reduce(List, Object, BiFunction)</span>
+<span class="source-line-no">192</span><span id="line-192">   */</span>
+<span class="source-line-no">193</span><span id="line-193">  // A Reducer that works only when the selection is of size 1.</span>
+<span class="source-line-no">194</span><span id="line-194">  public static &lt;C, T&gt; Reducer&lt;C, T&gt; ofSimple() {</span>
+<span class="source-line-no">195</span><span id="line-195">    return Reducer::reduceObviously;</span>
+<span class="source-line-no">196</span><span id="line-196">  }</span>
+<span class="source-line-no">197</span><span id="line-197"></span>
+<span class="source-line-no">198</span><span id="line-198">  /**</span>
+<span class="source-line-no">199</span><span id="line-199">   * Returns a {@link Reducer} whose {@link #reduce(List, Object, BiFunction)} method, for a given {@link List} of</span>
+<span class="source-line-no">200</span><span id="line-200">   * elements, returns the result of invoking its supplied failure handler.</span>
+<span class="source-line-no">201</span><span id="line-201">   *</span>
+<span class="source-line-no">202</span><span id="line-202">   * @param &lt;C&gt; the type of the criteria</span>
+<span class="source-line-no">203</span><span id="line-203">   *</span>
+<span class="source-line-no">204</span><span id="line-204">   * @param &lt;T&gt; the type of the elements</span>
+<span class="source-line-no">205</span><span id="line-205">   *</span>
+<span class="source-line-no">206</span><span id="line-206">   * @return a {@link Reducer}; never {@code null}</span>
+<span class="source-line-no">207</span><span id="line-207">   *</span>
+<span class="source-line-no">208</span><span id="line-208">   * @see #reduce(List, Object, BiFunction)</span>
+<span class="source-line-no">209</span><span id="line-209">   */</span>
+<span class="source-line-no">210</span><span id="line-210">  // A Reducer that simply calls its supplied failure handler no matter what.</span>
+<span class="source-line-no">211</span><span id="line-211">  public static &lt;C, T&gt; Reducer&lt;C, T&gt; ofFailing() {</span>
+<span class="source-line-no">212</span><span id="line-212">    return Reducer::failUnconditionally;</span>
+<span class="source-line-no">213</span><span id="line-213">  }</span>
+<span class="source-line-no">214</span><span id="line-214"></span>
+<span class="source-line-no">215</span><span id="line-215">  /**</span>
+<span class="source-line-no">216</span><span id="line-216">   * Throws an {@link UnsatisfiedReductionException} if {@code elements} is empty, throws an {@link</span>
+<span class="source-line-no">217</span><span id="line-217">   * AmbiguousReductionException} if the {@linkplain List#size() size} of {@code elements} is greater than {@code 1},</span>
+<span class="source-line-no">218</span><span id="line-218">   * and returns the sole element of {@code elements} otherwise.</span>
+<span class="source-line-no">219</span><span id="line-219">   *</span>
+<span class="source-line-no">220</span><span id="line-220">   * &lt;p&gt;A reference to this method is often used as a &lt;dfn&gt;failure handler&lt;/dfn&gt; in an invocation of the {@link</span>
+<span class="source-line-no">221</span><span id="line-221">   * #reduce(List, Object, BiFunction)} method.&lt;/p&gt;</span>
+<span class="source-line-no">222</span><span id="line-222">   *</span>
+<span class="source-line-no">223</span><span id="line-223">   * @param &lt;C&gt; the type of the criteria</span>
+<span class="source-line-no">224</span><span id="line-224">   *</span>
+<span class="source-line-no">225</span><span id="line-225">   * @param &lt;T&gt; the type of the elements</span>
+<span class="source-line-no">226</span><span id="line-226">   *</span>
+<span class="source-line-no">227</span><span id="line-227">   * @param elements a {@link List} of elements under reduction; must not be {@code null}</span>
+<span class="source-line-no">228</span><span id="line-228">   *</span>
+<span class="source-line-no">229</span><span id="line-229">   * @param c a criteria object; may be {@code null}</span>
+<span class="source-line-no">230</span><span id="line-230">   *</span>
+<span class="source-line-no">231</span><span id="line-231">   * @return the sole element present in {@code elements}, which may be {@code null}</span>
+<span class="source-line-no">232</span><span id="line-232">   *</span>
+<span class="source-line-no">233</span><span id="line-233">   * @exception NullPointerException if {@code elements} is {@code null}</span>
+<span class="source-line-no">234</span><span id="line-234">   *</span>
+<span class="source-line-no">235</span><span id="line-235">   * @exception UnsatisfiedReductionException if {@code elements} is empty</span>
+<span class="source-line-no">236</span><span id="line-236">   *</span>
+<span class="source-line-no">237</span><span id="line-237">   * @exception AmbiguousReductionException if the {@linkplain List#size() size} of {@code elements} is greater than</span>
+<span class="source-line-no">238</span><span id="line-238">   * {@code 1}</span>
+<span class="source-line-no">239</span><span id="line-239">   *</span>
+<span class="source-line-no">240</span><span id="line-240">   * @see #reduce(List, Object, BiFunction)</span>
+<span class="source-line-no">241</span><span id="line-241">   *</span>
+<span class="source-line-no">242</span><span id="line-242">   * @see #reduce(List, Object)</span>
+<span class="source-line-no">243</span><span id="line-243">   */</span>
+<span class="source-line-no">244</span><span id="line-244">  // Default failure handler; call by method reference. Fails if the selection does not consist of one element.</span>
+<span class="source-line-no">245</span><span id="line-245">  public static &lt;C, T&gt; T fail(final List&lt;? extends T&gt; elements, final C c) {</span>
+<span class="source-line-no">246</span><span id="line-246">    return switch (elements.size()) {</span>
+<span class="source-line-no">247</span><span id="line-247">    case 0 -&gt; throw new UnsatisfiedReductionException((Object)c, null, null);</span>
+<span class="source-line-no">248</span><span id="line-248">    case 1 -&gt; elements.get(0);</span>
+<span class="source-line-no">249</span><span id="line-249">    default -&gt; throw new AmbiguousReductionException(c, elements, "Cannot reduce: " + elements);</span>
+<span class="source-line-no">250</span><span id="line-250">    };</span>
+<span class="source-line-no">251</span><span id="line-251">  }</span>
+<span class="source-line-no">252</span><span id="line-252"></span>
+<span class="source-line-no">253</span><span id="line-253">  /**</span>
+<span class="source-line-no">254</span><span id="line-254">   * Returns {@code null} when invoked, regardless of arguments.</span>
+<span class="source-line-no">255</span><span id="line-255">   *</span>
+<span class="source-line-no">256</span><span id="line-256">   * &lt;p&gt;A reference to this method can be used as a &lt;dfn&gt;failure handler&lt;/dfn&gt; in an invocation of the {@link</span>
+<span class="source-line-no">257</span><span id="line-257">   * #reduce(List, Object, BiFunction)} method.&lt;/p&gt;</span>
+<span class="source-line-no">258</span><span id="line-258">   *</span>
+<span class="source-line-no">259</span><span id="line-259">   * @param &lt;A&gt; the type of the first parameter; ignored</span>
 <span class="source-line-no">260</span><span id="line-260">   *</span>
-<span class="source-line-no">261</span><span id="line-261">   * @param &lt;A&gt; the type of the first parameter; ignored</span>
+<span class="source-line-no">261</span><span id="line-261">   * @param &lt;B&gt; the type of the second parameter; ignored</span>
 <span class="source-line-no">262</span><span id="line-262">   *</span>
-<span class="source-line-no">263</span><span id="line-263">   * @param &lt;B&gt; the type of the second parameter; ignored</span>
+<span class="source-line-no">263</span><span id="line-263">   * @param &lt;C&gt; the type of the return type; ignored</span>
 <span class="source-line-no">264</span><span id="line-264">   *</span>
-<span class="source-line-no">265</span><span id="line-265">   * @param &lt;C&gt; the type of the return type; ignored</span>
+<span class="source-line-no">265</span><span id="line-265">   * @param a an object; may be {@code null}; ignored</span>
 <span class="source-line-no">266</span><span id="line-266">   *</span>
-<span class="source-line-no">267</span><span id="line-267">   * @param a an object; may be {@code null}; ignored</span>
+<span class="source-line-no">267</span><span id="line-267">   * @param b an object; may be {@code null}; ignored</span>
 <span class="source-line-no">268</span><span id="line-268">   *</span>
-<span class="source-line-no">269</span><span id="line-269">   * @param b an object; may be {@code null}; ignored</span>
-<span class="source-line-no">270</span><span id="line-270">   *</span>
-<span class="source-line-no">271</span><span id="line-271">   * @return {@code null} when invoked</span>
-<span class="source-line-no">272</span><span id="line-272">   */</span>
-<span class="source-line-no">273</span><span id="line-273">  // Convenience failure handler; call by method reference. Returns null when invoked.</span>
-<span class="source-line-no">274</span><span id="line-274">  public static &lt;A, B, C&gt; C returnNull(final A a, final B b) {</span>
-<span class="source-line-no">275</span><span id="line-275">    return null;</span>
-<span class="source-line-no">276</span><span id="line-276">  }</span>
-<span class="source-line-no">277</span><span id="line-277"></span>
-<span class="source-line-no">278</span><span id="line-278">  private static &lt;C, T&gt; T reduceObviously(final List&lt;? extends T&gt; l,</span>
-<span class="source-line-no">279</span><span id="line-279">                                          final C c,</span>
-<span class="source-line-no">280</span><span id="line-280">                                          final BiFunction&lt;? super List&lt;? extends T&gt;, ? super C, ? extends T&gt; fh) {</span>
-<span class="source-line-no">281</span><span id="line-281">    return</span>
-<span class="source-line-no">282</span><span id="line-282">      l.isEmpty() ? null :</span>
-<span class="source-line-no">283</span><span id="line-283">      l.size() == 1 ? l.get(0) :</span>
-<span class="source-line-no">284</span><span id="line-284">      fh.apply(l, c);</span>
-<span class="source-line-no">285</span><span id="line-285">  }</span>
-<span class="source-line-no">286</span><span id="line-286"></span>
-<span class="source-line-no">287</span><span id="line-287">  private static &lt;C, T&gt; T failUnconditionally(final List&lt;? extends T&gt; l,</span>
-<span class="source-line-no">288</span><span id="line-288">                                              final C c,</span>
-<span class="source-line-no">289</span><span id="line-289">                                              final BiFunction&lt;? super List&lt;? extends T&gt;, ? super C, ? extends T&gt; fh) {</span>
-<span class="source-line-no">290</span><span id="line-290">    return fh.apply(l, c);</span>
-<span class="source-line-no">291</span><span id="line-291">  }</span>
-<span class="source-line-no">292</span><span id="line-292"></span>
-<span class="source-line-no">293</span><span id="line-293">}</span>
+<span class="source-line-no">269</span><span id="line-269">   * @return {@code null} when invoked</span>
+<span class="source-line-no">270</span><span id="line-270">   */</span>
+<span class="source-line-no">271</span><span id="line-271">  // Convenience failure handler; call by method reference. Returns null when invoked.</span>
+<span class="source-line-no">272</span><span id="line-272">  public static &lt;A, B, C&gt; C returnNull(final A a, final B b) {</span>
+<span class="source-line-no">273</span><span id="line-273">    return null;</span>
+<span class="source-line-no">274</span><span id="line-274">  }</span>
+<span class="source-line-no">275</span><span id="line-275"></span>
+<span class="source-line-no">276</span><span id="line-276">  private static &lt;C, T&gt; T reduceObviously(final List&lt;? extends T&gt; l,</span>
+<span class="source-line-no">277</span><span id="line-277">                                          final C c,</span>
+<span class="source-line-no">278</span><span id="line-278">                                          final BiFunction&lt;? super List&lt;? extends T&gt;, ? super C, ? extends T&gt; fh) {</span>
+<span class="source-line-no">279</span><span id="line-279">    return switch (l.size()) {</span>
+<span class="source-line-no">280</span><span id="line-280">    case 0 -&gt; fh == null ? fail(List.of(), c) : fh.apply(List.of(), c);</span>
+<span class="source-line-no">281</span><span id="line-281">    case 1 -&gt; l.get(0);</span>
+<span class="source-line-no">282</span><span id="line-282">    default -&gt; fh == null ? fail(l, c) : fh.apply(l, c);</span>
+<span class="source-line-no">283</span><span id="line-283">    };</span>
+<span class="source-line-no">284</span><span id="line-284">  }</span>
+<span class="source-line-no">285</span><span id="line-285"></span>
+<span class="source-line-no">286</span><span id="line-286">  private static &lt;C, T&gt; T failUnconditionally(final List&lt;? extends T&gt; l,</span>
+<span class="source-line-no">287</span><span id="line-287">                                              final C c,</span>
+<span class="source-line-no">288</span><span id="line-288">                                              final BiFunction&lt;? super List&lt;? extends T&gt;, ? super C, ? extends T&gt; fh) {</span>
+<span class="source-line-no">289</span><span id="line-289">    return fh.apply(l, c);</span>
+<span class="source-line-no">290</span><span id="line-290">  }</span>
+<span class="source-line-no">291</span><span id="line-291"></span>
+<span class="source-line-no">292</span><span id="line-292">}</span>
 
 
 

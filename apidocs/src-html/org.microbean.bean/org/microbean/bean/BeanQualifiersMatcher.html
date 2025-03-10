@@ -29,12 +29,12 @@
 <span class="source-line-no">016</span><span id="line-16">import java.util.Collection;</span>
 <span class="source-line-no">017</span><span id="line-17"></span>
 <span class="source-line-no">018</span><span id="line-18">import org.microbean.assign.Matcher;</span>
-<span class="source-line-no">019</span><span id="line-19"></span>
-<span class="source-line-no">020</span><span id="line-20">import org.microbean.qualifier.NamedAttributeMap;</span>
-<span class="source-line-no">021</span><span id="line-21"></span>
-<span class="source-line-no">022</span><span id="line-22">import static org.microbean.assign.Qualifiers.anyAndDefaultQualifiers;</span>
-<span class="source-line-no">023</span><span id="line-23">import static org.microbean.assign.Qualifiers.defaultQualifier;</span>
-<span class="source-line-no">024</span><span id="line-24">import static org.microbean.assign.Qualifiers.qualifiers;</span>
+<span class="source-line-no">019</span><span id="line-19">import org.microbean.assign.Qualifiers;</span>
+<span class="source-line-no">020</span><span id="line-20"></span>
+<span class="source-line-no">021</span><span id="line-21">import org.microbean.attributes.Attributes;</span>
+<span class="source-line-no">022</span><span id="line-22"></span>
+<span class="source-line-no">023</span><span id="line-23">import static org.microbean.assign.Qualifiers.anyAndDefaultQualifiers;</span>
+<span class="source-line-no">024</span><span id="line-24">import static org.microbean.assign.Qualifiers.defaultQualifier;</span>
 <span class="source-line-no">025</span><span id="line-25"></span>
 <span class="source-line-no">026</span><span id="line-26">/**</span>
 <span class="source-line-no">027</span><span id="line-27"> * A {@link Matcher} encapsulating &lt;a</span>
@@ -45,7 +45,7 @@
 <span class="source-line-no">032</span><span id="line-32"> *</span>
 <span class="source-line-no">033</span><span id="line-33"> * @see #test(Collection, Collection)</span>
 <span class="source-line-no">034</span><span id="line-34"> */</span>
-<span class="source-line-no">035</span><span id="line-35">public final class BeanQualifiersMatcher implements Matcher&lt;Collection&lt;? extends NamedAttributeMap&lt;?&gt;&gt;, Collection&lt;? extends NamedAttributeMap&lt;?&gt;&gt;&gt; {</span>
+<span class="source-line-no">035</span><span id="line-35">public class BeanQualifiersMatcher implements Matcher&lt;Collection&lt;? extends Attributes&gt;, Collection&lt;? extends Attributes&gt;&gt; {</span>
 <span class="source-line-no">036</span><span id="line-36"></span>
 <span class="source-line-no">037</span><span id="line-37"></span>
 <span class="source-line-no">038</span><span id="line-38">  /*</span>
@@ -81,9 +81,9 @@
 <span class="source-line-no">068</span><span id="line-68">   * the {@linkplain org.microbean.assign.Qualifiers#qualifiers(Collection) qualifiers present} in {@code</span>
 <span class="source-line-no">069</span><span id="line-69">   * receiverAttributes}.</span>
 <span class="source-line-no">070</span><span id="line-70">   *</span>
-<span class="source-line-no">071</span><span id="line-71">   * @param receiverAttributes a {@link Collection} of {@link NamedAttributeMap}s; must not be {@code null}</span>
+<span class="source-line-no">071</span><span id="line-71">   * @param receiverAttributes a {@link Collection} of {@link Attributes}s; must not be {@code null}</span>
 <span class="source-line-no">072</span><span id="line-72">   *</span>
-<span class="source-line-no">073</span><span id="line-73">   * @param payloadAttributes a {@link Collection} of {@link NamedAttributeMap}s; must not be {@code null}</span>
+<span class="source-line-no">073</span><span id="line-73">   * @param payloadAttributes a {@link Collection} of {@link Attributes}s; must not be {@code null}</span>
 <span class="source-line-no">074</span><span id="line-74">   *</span>
 <span class="source-line-no">075</span><span id="line-75">   * @return {@code true} if and only if either (a) the collection of {@linkplain</span>
 <span class="source-line-no">076</span><span id="line-76">   * org.microbean.assign.Qualifiers#qualifiers(Collection) qualifiers present} in {@code receiverAttributes} is</span>
@@ -101,11 +101,11 @@
 <span class="source-line-no">088</span><span id="line-88">   *</span>
 <span class="source-line-no">089</span><span id="line-89">   * @exception NullPointerException if either {@code receiverAttributes} or {@code payloadAttributes} is {@code null}</span>
 <span class="source-line-no">090</span><span id="line-90">   */</span>
-<span class="source-line-no">091</span><span id="line-91">  @Override // Matcher&lt;Collection&lt;? extends NamedAttributeMap&lt;?&gt;&gt;, Collection&lt;? extends NamedAttributeMap&lt;?&gt;&gt;&gt;</span>
-<span class="source-line-no">092</span><span id="line-92">  public final boolean test(final Collection&lt;? extends NamedAttributeMap&lt;?&gt;&gt; receiverAttributes,</span>
-<span class="source-line-no">093</span><span id="line-93">                            final Collection&lt;? extends NamedAttributeMap&lt;?&gt;&gt; payloadAttributes) {</span>
-<span class="source-line-no">094</span><span id="line-94">    final Collection&lt;? extends NamedAttributeMap&lt;?&gt;&gt; receiverQualifiers = qualifiers(receiverAttributes);</span>
-<span class="source-line-no">095</span><span id="line-95">    Collection&lt;? extends NamedAttributeMap&lt;?&gt;&gt; payloadQualifiers = qualifiers(payloadAttributes);</span>
+<span class="source-line-no">091</span><span id="line-91">  @Override // Matcher&lt;Collection&lt;? extends Attributes&gt;, Collection&lt;? extends Attributes&gt;&gt;</span>
+<span class="source-line-no">092</span><span id="line-92">  public final boolean test(final Collection&lt;? extends Attributes&gt; receiverAttributes,</span>
+<span class="source-line-no">093</span><span id="line-93">                            final Collection&lt;? extends Attributes&gt; payloadAttributes) {</span>
+<span class="source-line-no">094</span><span id="line-94">    final Collection&lt;? extends Attributes&gt; receiverQualifiers = this.qualifiers(receiverAttributes);</span>
+<span class="source-line-no">095</span><span id="line-95">    Collection&lt;? extends Attributes&gt; payloadQualifiers = this.qualifiers(payloadAttributes);</span>
 <span class="source-line-no">096</span><span id="line-96">    // https://jakarta.ee/specifications/cdi/4.0/jakarta-cdi-spec-4.0#performing_typesafe_resolution</span>
 <span class="source-line-no">097</span><span id="line-97">    // "A bean is assignable to a given injection point if...the bean has all the required qualifiers. If no required</span>
 <span class="source-line-no">098</span><span id="line-98">    // qualifiers were explicitly specified, the container assumes the required qualifier @Default."</span>
@@ -123,7 +123,27 @@
 <span class="source-line-no">110</span><span id="line-110">      (payloadQualifiers.isEmpty() ? anyAndDefaultQualifiers() : payloadQualifiers).containsAll(receiverQualifiers);</span>
 <span class="source-line-no">111</span><span id="line-111">  }</span>
 <span class="source-line-no">112</span><span id="line-112"></span>
-<span class="source-line-no">113</span><span id="line-113">}</span>
+<span class="source-line-no">113</span><span id="line-113">  /**</span>
+<span class="source-line-no">114</span><span id="line-114">   * Returns an unmodifiable {@link Collection} consisting only of those {@link Attributes}s in the supplied {@link</span>
+<span class="source-line-no">115</span><span id="line-115">   * Collection} that are deemed to be qualifiers.</span>
+<span class="source-line-no">116</span><span id="line-116">   *</span>
+<span class="source-line-no">117</span><span id="line-117">   * &lt;p&gt;The default implementation of this method returns the value of an invocation of the {@link</span>
+<span class="source-line-no">118</span><span id="line-118">   * Qualifiers#qualifiers(Collection)} method.&lt;/p&gt;</span>
+<span class="source-line-no">119</span><span id="line-119">   *</span>
+<span class="source-line-no">120</span><span id="line-120">   * &lt;p&gt;This method may be removed in favor of a compositional approach in future revisions of this class.&lt;/p&gt;</span>
+<span class="source-line-no">121</span><span id="line-121">   *</span>
+<span class="source-line-no">122</span><span id="line-122">   * @param as a {@link Collection} of {@link Attributes}s; must not be {@code null}</span>
+<span class="source-line-no">123</span><span id="line-123">   *</span>
+<span class="source-line-no">124</span><span id="line-124">   * @return an unmodifiable {@link Collection} consisting only of those {@link Attributes}s in the supplied {@link</span>
+<span class="source-line-no">125</span><span id="line-125">   * Collection} that are deemed to be qualifiers; never {@code null}</span>
+<span class="source-line-no">126</span><span id="line-126">   *</span>
+<span class="source-line-no">127</span><span id="line-127">   * @exception NullPointerException if {@code as} is {@code null}</span>
+<span class="source-line-no">128</span><span id="line-128">   */</span>
+<span class="source-line-no">129</span><span id="line-129">  protected Collection&lt;? extends Attributes&gt; qualifiers(final Collection&lt;? extends Attributes&gt; as) {</span>
+<span class="source-line-no">130</span><span id="line-130">    return Qualifiers.qualifiers(as);</span>
+<span class="source-line-no">131</span><span id="line-131">  }</span>
+<span class="source-line-no">132</span><span id="line-132"></span>
+<span class="source-line-no">133</span><span id="line-133">}</span>
 
 
 
