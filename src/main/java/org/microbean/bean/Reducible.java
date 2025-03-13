@@ -51,7 +51,7 @@ public interface Reducible<C, T> {
    * Given a criteria object, which may be {@code null}, returns an object that represents the <em>reduction</em> of a
    * notional collection of objects.
    *
-   * <p>Most {@link Reducible} implementations will return determine values from invocations of this method, but there
+   * <p>Most {@link Reducible} implementations will return determinate values from invocations of this method, but there
    * is no requirement to do so.</p>
    *
    * @param criteria the criteria; may be {@code null} to indicate no criteria

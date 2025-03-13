@@ -19,15 +19,16 @@ microBean™ Bean requires a Java runtime of version 21 or higher.
 
 # Installation
 
-microBean™ Bean is available on [Maven Central](https://search.maven.org/).  Include microBean™ Bean as a Maven
+microBean™ Bean is available on [Maven
+Central](https://central.sonatype.com/artifact/org.microbean/microbean-bean). Include microBean™ Bean as a Maven
 dependency:
 
 ```xml
 <dependency>
   <groupId>org.microbean</groupId>
   <artifactId>microbean-bean</artifactId>
-  <!-- Always check https://search.maven.org/artifact/org.microbean/microbean-bean for up-to-date available versions. -->
-  <version>0.0.15</version>
+  <!-- Always check https://central.sonatype.com/artifact/org.microbean/microbean-bean for up-to-date available versions. -->
+  <version>0.0.16</version>
 </dependency>
 ```
 

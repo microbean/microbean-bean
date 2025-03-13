@@ -1,18 +1,19 @@
 /* -*- mode: Java; c-basic-offset: 2; indent-tabs-mode: nil; coding: utf-8-unix -*-
  *
- * Copyright © 2023–2024 microBean™.
+ * Copyright © 2023–2025 microBean™.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
- * the License.  You may obtain a copy of the License at
+ * the License. You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
- * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  See the License for the
+ * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
  */
 package org.microbean.bean;
 
+import java.lang.constant.ClassDesc;
 import java.lang.constant.Constable;
 import java.lang.constant.ConstantDesc;
 import java.lang.constant.DynamicConstantDesc;
@@ -22,11 +23,9 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.SequencedSet;
 
-import static java.lang.constant.ConstantDescs.BSM_INVOKE;
+import java.util.function.Function;
 
-import static org.microbean.bean.ConstantDescs.CD_Bean;
-import static org.microbean.bean.ConstantDescs.CD_Factory;
-import static org.microbean.bean.ConstantDescs.CD_Id;
+import static java.lang.constant.ConstantDescs.BSM_INVOKE;
 
 /**
  * A ({@link Constable}) pairing of an {@link Id} with a {@link Factory}.
@@ -59,9 +58,14 @@ public final record Bean<I>(Id id, Factory<I> factory) implements Aggregate, Con
     Objects.requireNonNull(factory, "factory");
   }
 
-  @Override // Alternate
+  @Override // Ranked
   public final boolean alternate() {
     return this.id().alternate();
+  }
+
+  @Override // Aggregate
+  public final SequencedSet<? extends Assignment<?>> assign(final Function<? super AttributedType, ?> r) {
+    return this.factory().assign(r);
   }
 
   /**
@@ -70,6 +74,8 @@ public final record Bean<I>(Id id, Factory<I> factory) implements Aggregate, Con
    * @param <X> the type of contextual instances this {@link Bean} creates
    *
    * @return this {@link Bean}
+   *
+   * @exception ClassCastException if the cast is inappropriate
    */
   @SuppressWarnings("unchecked")
   public final <X> Bean<X> cast() {
@@ -86,30 +92,24 @@ public final record Bean<I>(Id id, Factory<I> factory) implements Aggregate, Con
     return (this.factory() instanceof Constable c ? c.describeConstable() : Optional.<ConstantDesc>empty())
       .flatMap(factoryDesc -> this.id().describeConstable()
                .map(idDesc -> DynamicConstantDesc.of(BSM_INVOKE,
-                                                     MethodHandleDesc.ofConstructor(CD_Bean,
-                                                                                    CD_Id,
-                                                                                    CD_Factory),
+                                                     MethodHandleDesc.ofConstructor(ClassDesc.of(Bean.class.getName()),
+                                                                                    ClassDesc.of(Id.class.getName()),
+                                                                                    ClassDesc.of(Factory.class.getName())),
                                                      idDesc,
                                                      factoryDesc)));
   }
 
-  @Override // Object
+  @Override // Record (Object)
   public final boolean equals(final Object other) {
-    if (other == this) {
-      return true;
-    } else if (other != null && other.getClass() == this.getClass()) {
-      return Objects.equals(this.id(), ((Bean<?>)other).id());
-    } else {
-      return false;
-    }
+    return this == other || other != null && this.getClass() == other.getClass() && this.id().equals(((Bean<?>)other).id());
   }
 
-  @Override // Object
-  public int hashCode() {
+  @Override // Record (Object)
+  public final int hashCode() {
     return this.id().hashCode();
   }
 
-  @Override // Alternate (Ranked)
+  @Override // Ranked
   public final int rank() {
     return this.id().rank();
   }

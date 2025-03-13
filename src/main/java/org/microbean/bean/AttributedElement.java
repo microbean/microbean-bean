@@ -27,6 +27,7 @@ import javax.lang.model.element.Element;
 
 import javax.lang.model.type.TypeMirror;
 
+import org.microbean.attributes.Attributed;
 import org.microbean.attributes.Attributes;
 
 import org.microbean.constant.Constables;
@@ -43,9 +44,7 @@ import static java.lang.constant.ConstantDescs.CD_List;
  *
  * @author <a href="https://about.me/lairdnelson/" target="_top">Laird Nelson</a>
  */
-public final record AttributedElement(Element element, List<Attributes> attributes) implements Constable {
-
-  private static final ClassDesc CD_Element = ClassDesc.of("javax.lang.model.element.Element");
+public final record AttributedElement(Element element, List<Attributes> attributes) implements Attributed, Constable {
 
   /**
    * Creates a new {@link AttributedElement}.
@@ -94,7 +93,7 @@ public final record AttributedElement(Element element, List<Attributes> attribut
       .flatMap(elementDesc -> Constables.describeConstable(this.attributes())
                .map(attributesDesc -> DynamicConstantDesc.of(BSM_INVOKE,
                                                              MethodHandleDesc.ofConstructor(ClassDesc.of(this.getClass().getName()),
-                                                                                            CD_Element,
+                                                                                            ClassDesc.of("javax.lang.model.element.Element"),
                                                                                             CD_List),
                                                              elementDesc,
                                                              attributesDesc)));
