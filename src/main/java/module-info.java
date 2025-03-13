@@ -26,6 +26,5 @@ module org.microbean.bean {
   requires transitive org.microbean.attributes;
   requires            org.microbean.constant;
   requires transitive org.microbean.construct;
-  requires transitive org.microbean.interceptor;
 
 }

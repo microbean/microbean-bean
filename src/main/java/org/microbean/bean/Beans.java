@@ -41,6 +41,8 @@ import static java.util.HashSet.newHashSet;
  *
  * @see #Beans(Selectable, Reducible)
  *
+ * @see #cachingSelectableOf(Collection, Matcher, Map)
+ *
  * @see Selectable
  *
  * @see Reducible
@@ -129,17 +131,34 @@ public final class Beans implements Selectable<AttributedType, Bean<?>>, Reducib
   /**
    * Creates a new {@link Beans}.
    *
-   * <p>{@link Bean} instances selected by the supplied {@link Selectable} will be reduced using a {@link
-   * RankedReducer}.</p>
-   *
    * @param s a {@link Selectable}; must not be {@code null}
    *
    * @exception NullPointerException if {@code s} is {@code null}
    *
-   * @see RankedReducer
+   * @see #Beans(Selectable, Reducer)
+   *
+   * @see RankedReducer#of()
    */
   public Beans(final Selectable<AttributedType, Bean<?>> s) {
-    this(s, Reducible.of(s, RankedReducer.of()));
+    this(s, (Reducer<AttributedType, Bean<?>>)null);
+  }
+
+  /**
+   * Creates a new {@link Beans}.
+   *
+   * @param s a {@link Selectable}; must not be {@code null}
+   *
+   * @param r a {@link Reducer}; may be {@code null} in which case a {@link RankedReducer#of() RankedReducer} will be
+   * used instead
+   *
+   * @exception NullPointerException if {@code s} is {@code null}
+   *
+   * @see #Beans(Selectable, Reducible)
+   *
+   * @see Reducible#of(Selectable, Reducer)
+   */
+  public Beans(final Selectable<AttributedType, Bean<?>> s, final Reducer<AttributedType, Bean<?>> r) {
+    this(s, Reducible.of(s, r == null ? RankedReducer.of() : r));
   }
 
   /**
@@ -151,15 +170,8 @@ public final class Beans implements Selectable<AttributedType, Bean<?>>, Reducib
    * null}
    *
    * @exception NullPointerException if any argument is {@code null}
-   *
-   * @see #cachingSelectableOf(Collection, Matcher, Map)
-   *
-   * @see Reducible#of(Selectable, Reducer)
-   *
-   * @see RankedReducer
    */
-  public Beans(final Selectable<AttributedType, Bean<?>> s,
-               final Reducible<AttributedType, Bean<?>> r) {
+  public Beans(final Selectable<AttributedType, Bean<?>> s, final Reducible<AttributedType, Bean<?>> r) {
     this.s = Objects.requireNonNull(s, "s");
     this.r = Objects.requireNonNull(r, "r");
   }
