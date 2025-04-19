@@ -87,24 +87,25 @@
 <span class="source-line-no">074</span><span id="line-74">   * &lt;p&gt;Typically there is no need to override this method.&lt;/p&gt;</span>
 <span class="source-line-no">075</span><span id="line-75">   *</span>
 <span class="source-line-no">076</span><span id="line-76">   * @param r a {@link Function} that retrieves a contextual reference suitable for an {@link AttributedType}; if {@link</span>
-<span class="source-line-no">077</span><span id="line-77">   * #dependencies()} returns a non-empty {@link SequencedSet} then this argument must not be {@code null}; normally a</span>
-<span class="source-line-no">078</span><span id="line-78">   * reference to the {@link Request#reference(AttributedType)} method</span>
-<span class="source-line-no">079</span><span id="line-79">   *</span>
-<span class="source-line-no">080</span><span id="line-80">   * @return an immutable {@link SequencedSet} of {@link Assignment} instances; never {@code null}</span>
-<span class="source-line-no">081</span><span id="line-81">   *</span>
-<span class="source-line-no">082</span><span id="line-82">   * @exception NullPointerException if {@code r} is {@code null}</span>
-<span class="source-line-no">083</span><span id="line-83">   */</span>
-<span class="source-line-no">084</span><span id="line-84">  public default SequencedSet&lt;? extends Assignment&lt;?&gt;&gt; assign(final Function&lt;? super AttributedType, ?&gt; r) {</span>
-<span class="source-line-no">085</span><span id="line-85">    final Collection&lt;? extends AttributedElement&gt; ds = this.dependencies();</span>
-<span class="source-line-no">086</span><span id="line-86">    if (ds == null || ds.isEmpty()) {</span>
-<span class="source-line-no">087</span><span id="line-87">      return EMPTY_ASSIGNMENTS;</span>
-<span class="source-line-no">088</span><span id="line-88">    }</span>
-<span class="source-line-no">089</span><span id="line-89">    final SequencedSet&lt;Assignment&lt;?&gt;&gt; assignments = newLinkedHashSet(ds.size());</span>
-<span class="source-line-no">090</span><span id="line-90">    ds.forEach(d -&gt; assignments.add(new Assignment&lt;&gt;(d, r.apply(d.attributedType()))));</span>
-<span class="source-line-no">091</span><span id="line-91">    return Collections.unmodifiableSequencedSet(assignments);</span>
-<span class="source-line-no">092</span><span id="line-92">  }</span>
-<span class="source-line-no">093</span><span id="line-93"></span>
-<span class="source-line-no">094</span><span id="line-94">}</span>
+<span class="source-line-no">077</span><span id="line-77">   * #dependencies()} returns a non-empty {@link SequencedSet} then this argument must not be {@code null}</span>
+<span class="source-line-no">078</span><span id="line-78">   *</span>
+<span class="source-line-no">079</span><span id="line-79">   * @return an immutable {@link SequencedSet} of {@link Assignment} instances; never {@code null}</span>
+<span class="source-line-no">080</span><span id="line-80">   *</span>
+<span class="source-line-no">081</span><span id="line-81">   * @exception NullPointerException if {@code r} is {@code null}</span>
+<span class="source-line-no">082</span><span id="line-82">   *</span>
+<span class="source-line-no">083</span><span id="line-83">   * @see References</span>
+<span class="source-line-no">084</span><span id="line-84">   */</span>
+<span class="source-line-no">085</span><span id="line-85">  public default SequencedSet&lt;? extends Assignment&lt;?&gt;&gt; assign(final Function&lt;? super AttributedType, ?&gt; r) {</span>
+<span class="source-line-no">086</span><span id="line-86">    final Collection&lt;? extends AttributedElement&gt; ds = this.dependencies();</span>
+<span class="source-line-no">087</span><span id="line-87">    if (ds == null || ds.isEmpty()) {</span>
+<span class="source-line-no">088</span><span id="line-88">      return EMPTY_ASSIGNMENTS;</span>
+<span class="source-line-no">089</span><span id="line-89">    }</span>
+<span class="source-line-no">090</span><span id="line-90">    final SequencedSet&lt;Assignment&lt;?&gt;&gt; assignments = newLinkedHashSet(ds.size());</span>
+<span class="source-line-no">091</span><span id="line-91">    ds.forEach(d -&gt; assignments.add(new Assignment&lt;&gt;(d, r.apply(d.attributedType()))));</span>
+<span class="source-line-no">092</span><span id="line-92">    return Collections.unmodifiableSequencedSet(assignments);</span>
+<span class="source-line-no">093</span><span id="line-93">  }</span>
+<span class="source-line-no">094</span><span id="line-94"></span>
+<span class="source-line-no">095</span><span id="line-95">}</span>
 
 
 
