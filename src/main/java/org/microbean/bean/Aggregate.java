@@ -74,12 +74,13 @@ public interface Aggregate {
    * <p>Typically there is no need to override this method.</p>
    *
    * @param r a {@link Function} that retrieves a contextual reference suitable for an {@link AttributedType}; if {@link
-   * #dependencies()} returns a non-empty {@link SequencedSet} then this argument must not be {@code null}; normally a
-   * reference to the {@link Request#reference(AttributedType)} method
+   * #dependencies()} returns a non-empty {@link SequencedSet} then this argument must not be {@code null}
    *
    * @return an immutable {@link SequencedSet} of {@link Assignment} instances; never {@code null}
    *
    * @exception NullPointerException if {@code r} is {@code null}
+   *
+   * @see References
    */
   public default SequencedSet<? extends Assignment<?>> assign(final Function<? super AttributedType, ?> r) {
     final Collection<? extends AttributedElement> ds = this.dependencies();

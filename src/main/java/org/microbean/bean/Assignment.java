@@ -16,8 +16,8 @@ package org.microbean.bean;
 import java.util.Objects;
 
 /**
- * An assignment of a contextual reference to an {@link AttributedElement}, usually as {@linkplain
- * Request#reference(BeanSelectionCriteria) completed by} a {@link Request}.
+ * An assignment of a contextual reference to an {@link AttributedElement}, usually as completed by
+ * a {@link References}.
  *
  * @param <R> the type of contextual reference
  *
