@@ -55,14 +55,14 @@ public final record Constant<I>(I singleton) implements Constable, Factory<I> {
   /**
    * Invokes the {@link #singleton()} method and returns its result.
    *
-   * @param r a {@link Request}; may be {@code null}; ignored
+   * @param creation a {@link Creation}; may be {@code null}; ignored
    *
    * @return the result of invoking the {@link #singleton()} method
    *
    * @see #singleton()
    */
   @Override // Factory<I>
-  public final I create(final Request<I> r) {
+  public final I create(final Creation<I> creation) {
     return this.singleton();
   }
 
@@ -79,8 +79,8 @@ public final record Constant<I>(I singleton) implements Constable, Factory<I> {
   }
 
   @Override // Factory<I>
-  public final void destroy(final I i, final Request<I> request) {
-    Factory.super.destroy(i, request);
+  public final void destroy(final I i, final Destruction creation) {
+    Factory.super.destroy(i, creation);
   }
 
   @Override // Constable

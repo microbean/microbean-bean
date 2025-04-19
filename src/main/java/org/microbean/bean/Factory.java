@@ -1,6 +1,6 @@
 /* -*- mode: Java; c-basic-offset: 2; indent-tabs-mode: nil; coding: utf-8-unix -*-
  *
- * Copyright © 2023–2025 microBean™.
+ * Copyright © 2025 microBean™.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
  * the License. You may obtain a copy of the License at
@@ -13,6 +13,7 @@
  */
 package org.microbean.bean;
 
+import java.lang.constant.ClassDesc;
 import java.lang.constant.Constable;
 import java.lang.constant.ConstantDesc;
 import java.lang.constant.DynamicConstantDesc;
@@ -23,98 +24,28 @@ import java.util.Optional;
 import static java.lang.constant.ConstantDescs.BSM_INVOKE;
 
 /**
- * A creator and destroyer of contextual instances of a particular type.
+ * A source of (normally new) contextual instances.
  *
- * @param <I> the type of the contextual instances this {@link Factory} creates and destroys
+ * @param <I> the contextual instance type
  *
- * @author <a href="https://about.me/lairdnelson/" target="_top">Laird Nelson</a>
+ * @author <a href="https://about.me/lairdnelson" target="_top">Laird Nelson</a>
+ *
+ * @see #create(Creation)
+ *
+ * @see Aggregate
  */
-@FunctionalInterface
 public interface Factory<I> extends Aggregate, Constable {
 
   /**
-   * Creates a new contextual instance, possibly using the supplied {@link Request}, if it is non-{@code null}, to
-   * acquire its {@linkplain #dependencies() dependencies}.
+   * Returns a (normally new) contextual instance, which may be {@code null}.
    *
-   * <p>Implementations of this method must not call {@link #singleton()}.</p>
+   * @param creation a {@link Creation}; may be {@code null}
    *
-   * <p>Implementations of this method should consider calling {@link Creation#created(Object)} on the supplied {@link
-   * Request} with the contextual instance about to be returned.</p>
-   *
-   * @param r a {@link Request} responsible for the demand for creation and used for {@linkplain ReferenceSelector
-   * acquiring any needed dependencies}; <strong>may be {@code null}</strong> in early, uncommon bootstrap-like
-   * situations
-   *
-   * @return a new contextual instance, or {@code null}
-   *
-   * @exception CreationException if an error occurs
-   *
-   * @see Request
-   *
-   * @see ReferenceSelector
+   * @return a contextual instance, which may be {@code null}
    *
    * @see Creation
    */
-  public I create(final Request<I> r);
-
-  /**
-   * Returns the sole contextual instance of this {@link Factory}'s type, if there is one, or {@code null} in the very
-   * common case that there is not.
-   *
-   * <p>The default implementation of this method returns {@code null}.</p>
-   *
-   * <p>Overrides of this method should not call {@link #create(Request)}.</p>
-   *
-   * <p>Overrides of this method must be idempotent and must return a determinate value.</p>
-   *
-   * @return the sole contextual instance of this {@link Factory}'s type, or (commonly) {@code null}
-   */
-  public default I singleton() {
-    return null;
-  }
-
-  /**
-   * Returns {@code true} if this {@link Factory} implementation destroys its {@linkplain #create(Request) created}
-   * contextual instances in some way, or {@code false} if it does not.
-   *
-   * <p>The default implementation of this method returns {@code true}.</p>
-   *
-   * <p>Overrides of this method must be idempotent and return a determinate value.</p>
-   *
-   * @return {@code true} if this {@link Factory} implementation destroys its {@linkplain #create(Request) created}
-   * contextual instances in some way; {@code false} otherwise
-   *
-   * @see #destroy(Object, Request)
-   */
-  public default boolean destroys() {
-    return true;
-  }
-
-  /**
-   * Destroys the supplied contextual instance.
-   *
-   * @param i the contextual instance; may be {@code null} if this {@link Factory} suports returning {@code null} from
-   * its {@link #create(Request)} method
-   *
-   * @param creationRequest the {@link Request} that was {@linkplain #create(Request) present at creation time}; may be
-   * {@code null} if it was {@code null} at creation time
-   */
-  // MUST be idempotent
-  // If i is an AutoCloseable, MUST be idempotent
-  public default void destroy(final I i, final Request<I> creationRequest) {
-    if (i instanceof AutoCloseable ac) {
-      try {
-        ac.close();
-      } catch (final RuntimeException | Error re) {
-        throw re;
-      } catch (final InterruptedException e) {
-        Thread.currentThread().interrupt();
-        throw new DestructionException(e.getMessage(), e);
-      } catch (final Exception e) {
-        throw new DestructionException(e.getMessage(), e);
-      }
-    }
-  }
+  public I create(final Creation<I> creation);
 
   /**
    * Returns an {@link Optional} containing the nominal descriptor for this instance, if one can be constructed, or an
@@ -133,10 +64,104 @@ public interface Factory<I> extends Aggregate, Constable {
    */
   @Override // Constable
   public default Optional<? extends ConstantDesc> describeConstable() {
-    return this.getClass()
-      .describeConstable()
-      .map(classDesc -> DynamicConstantDesc.of(BSM_INVOKE,
-                                               MethodHandleDesc.ofConstructor(classDesc)));
+    return
+      Optional.of(DynamicConstantDesc.of(BSM_INVOKE,
+                                         MethodHandleDesc.ofConstructor(ClassDesc.of(this.getClass().getCanonicalName()))));
+  }
+
+  /**
+   * Destroys the supplied contextual instance.
+   *
+   * <p>The default implementation of this method {@linkplain AutoCloseable#close() closes} the supplied contextual
+   * instance if it is an instance of {@link AutoCloseable}, and {@linkplain AutoCloseable#close() closes} the supplied
+   * {@link Destruction} if it is non-{@code null}.</p>
+   *
+   * @param i the contextual instance to destroy; may be {@code null} in which case no action must be taken
+   *
+   * @param creation the object supplied to the {@link #create(Creation)} method represented here as a {@link
+   * Destruction}; may be {@code null}; must have an idempotent {@link AutoCloseable#close() close()} method
+   *
+   * @see #create(Creation)
+   *
+   * @see Destruction
+   *
+   * @see Creation
+   */
+  @SuppressWarnings("try")
+  public default void destroy(final I i, final Destruction creation) {
+    if (creation == null) {
+      if (i instanceof AutoCloseable ac) {
+        try {
+          ac.close();
+        } catch (final RuntimeException | Error e) {
+          throw e;
+        } catch (final InterruptedException e) {
+          Thread.currentThread().interrupt();
+          throw new DestructionException(e.getMessage(), e);
+        } catch (final Exception e) {
+          throw new DestructionException(e.getMessage(), e);
+        }
+      }
+    } else if (!(creation instanceof Creation<I>)) {
+      throw new IllegalArgumentException("creation: " + creation);
+    } else if (creation instanceof AutoCloseable cac) {
+      try (cac) {
+        if (i instanceof AutoCloseable iac) {
+          iac.close();
+        }
+      } catch (final RuntimeException | Error e) {
+        throw e;
+      } catch (final InterruptedException e) {
+        Thread.currentThread().interrupt();
+        throw new DestructionException(e.getMessage(), e);
+      } catch (final Exception e) {
+        throw new DestructionException(e.getMessage(), e);
+      }
+    } else if (i instanceof AutoCloseable ac) {
+      try {
+        ac.close();
+      } catch (final RuntimeException | Error e) {
+        throw e;
+      } catch (final InterruptedException e) {
+        Thread.currentThread().interrupt();
+        throw new DestructionException(e.getMessage(), e);
+      } catch (final Exception e) {
+        throw new DestructionException(e.getMessage(), e);
+      }
+    }
+  }
+
+  /**
+   * Returns {@code true} if this {@link Factory} implementation {@linkplain #destroy(Object, Destruction) destroys} its
+   * {@linkplain #create(Creation) created} contextual instances in some way, or {@code false} if it does not.
+   *
+   * <p>The default implementation of this method returns {@code true}.</p>
+   *
+   * <p>Overrides of this method must be idempotent and return a determinate value.</p>
+   *
+   * @return {@code true} if this {@link Factory} implementation {@linkplain #destroy(Object, Destruction) destroys} its
+   * {@linkplain #create(Creation) created} contextual instances in some way; {@code false} otherwise
+   *
+   * @see #destroy(Object, Destruction)
+   */
+  public default boolean destroys() {
+    return true;
+  }
+
+  /**
+   * Returns the sole contextual instance of this {@link Factory}'s type, if there is one, or {@code null} in the very
+   * common case that there is not.
+   *
+   * <p>The default implementation of this method returns {@code null}.</p>
+   *
+   * <p>Overrides of this method should not call {@link #create(Creation)}.</p>
+   *
+   * <p>Overrides of this method must be idempotent and must return a determinate value.</p>
+   *
+   * @return the sole contextual instance of this {@link Factory}'s type, or (commonly) {@code null}
+   */
+  public default I singleton() {
+    return null;
   }
 
 }

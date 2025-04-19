@@ -75,11 +75,13 @@ public final record AttributedType(TypeMirror type, List<Attributes> attributes)
    * @exception IllegalArgumentException if {@code type} is the wrong kind of type
    */
   public AttributedType {
-    type = switch (type.getKind()) {
-    case ARRAY, BOOLEAN, BYTE, CHAR, DECLARED, DOUBLE, FLOAT, INT, LONG, SHORT -> type;
-    case ERROR, EXECUTABLE, INTERSECTION, MODULE, NONE, NULL, OTHER, PACKAGE, TYPEVAR, UNION, VOID, WILDCARD ->
+    switch (type.getKind()) {
+    case ARRAY, BOOLEAN, BYTE, CHAR, DECLARED, DOUBLE, FLOAT, INT, LONG, SHORT:
+      break;
+    case ERROR, EXECUTABLE, INTERSECTION, MODULE, NONE, NULL, OTHER, PACKAGE, TYPEVAR, UNION, VOID, WILDCARD:
+    default:
       throw new IllegalArgumentException("type: " + type);
-    };
+    }
     attributes = List.copyOf(attributes);
   }
 
