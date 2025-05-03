@@ -25,7 +25,10 @@ import java.util.Objects;
  * @param bean a {@link Bean} deemed suitable for the {@code attributedType}
  *
  * @author <a href="https://about.me/lairdnelson" target="_top">Laird Nelson</a>
+ *
+ * @deprecated This class seems not to be needed so is tentatively deprecated.
  */
+@Deprecated(since = "0.0.18")
 public final record BeanReduction<I>(AttributedType attributedType, Bean<I> bean) {
 
   /**

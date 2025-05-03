@@ -41,7 +41,10 @@ import java.util.function.BiFunction;
  * @see #reduce(List, Object, BiFunction)
  *
  * @see Reducible
+ *
+ * @deprecated This interface is not really needed and is tentatively deprecated.
  */
+@Deprecated(since = "0.0.18")
 @FunctionalInterface
 public interface Reducer<C, T> {
 

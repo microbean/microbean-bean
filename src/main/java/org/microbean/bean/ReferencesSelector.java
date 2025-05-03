@@ -20,6 +20,8 @@ package org.microbean.bean;
  *
  * @see #references(AttributedType)
  *
+ * @see #reference(AttributedType)
+ *
  * @see References
  */
 public interface ReferencesSelector {
@@ -27,7 +29,7 @@ public interface ReferencesSelector {
   /**
    * Returns a {@link References} capable of locating contextual references of the relevant type.
    *
-   * @param <S> the contextual reference type
+   * @param <R> the contextual reference type
    *
    * @param t an {@link AttributedType} describing the contextual reference type; must not be {@code null}
    *
@@ -37,6 +39,25 @@ public interface ReferencesSelector {
    *
    * @see References
    */
-  public <S> References<S> references(final AttributedType t);
+  public <R> References<R> references(final AttributedType t);
+
+  /**
+   * Returns the sole contextual reference of the relevant type.
+   *
+   * @param <R> the contextual reference type
+   *
+   * @param t an {@link AttributedType} describing the contextual reference type; must not be {@code null}
+   *
+   * @return a non-{@code null} contextual reference
+   *
+   * @exception NullPointerException if {@code t} is {@code null}
+   *
+   * @exception UnsatisfiedReductionException if there is no contextual reference for the relevant type
+   *
+   * @exception AmbiguousReductionException if there is more than one contextual reference for the relevant type
+   */
+  public default <R> R reference(final AttributedType t) {
+    return this.<R>references(t).get();
+  }
 
 }

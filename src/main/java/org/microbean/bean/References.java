@@ -33,9 +33,9 @@ public interface References<R> extends Iterable<R>, ReferencesSelector {
    *
    * @return a contextual reference; never {@code null}
    *
-   * @exception UnsatisfiedReductionException if there are no contextual references
+   * @exception UnsatisfiedReductionException if there are no contextual references to return
    *
-   * @exception AmbiguousReductionException if there is more than one contextual reference
+   * @exception AmbiguousReductionException if there is more than one contextual reference to return
    */
   public default R get() {
     final Iterator<R> i = this.iterator();
@@ -59,5 +59,12 @@ public interface References<R> extends Iterable<R>, ReferencesSelector {
    * @exception DestructionException if an error occurs
    */
   public boolean destroy(final R r); // e.g. CDI's Instances#destroy(Object); works only on @Dependent objects
+
+  /**
+   * Returns the size of this {@link References}.
+   *
+   * @return the size of this {@link References} (a positive integer)
+   */
+  public int size();
 
 }

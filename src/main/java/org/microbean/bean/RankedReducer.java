@@ -32,7 +32,10 @@ import static org.microbean.bean.Ranked.DEFAULT_RANK;
  * @author <a href="https://about.me/lairdnelson" target="_top">Laird Nelson</a>
  *
  * @see #reduce(List, Object, BiFunction)
+ *
+ * @deprecated This class is not really needed and is tentatively deprecated.
  */
+@Deprecated(since = "0.0.18")
 public final class RankedReducer<C, T extends Ranked> implements Reducer<C, T> {
 
 

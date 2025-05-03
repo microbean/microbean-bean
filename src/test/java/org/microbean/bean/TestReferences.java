@@ -49,6 +49,11 @@ final class TestReferences {
     public boolean destroy(final R r) {
       return false;
     }
+
+    @Override
+    public final int size() {
+      return 0;
+    }
     
   }
   

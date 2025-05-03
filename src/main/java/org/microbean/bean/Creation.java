@@ -37,6 +37,22 @@ package org.microbean.bean;
 public interface Creation<I> extends ReferencesSelector {
 
   /**
+   * Returns the {@link Id} of the {@link Bean} {@linkplain Bean#factory() whose} {@link Factory}'s {@link
+   * Factory#create(Creation)} invocation is responsible for the existence of this {@link Creation}.
+   *
+   * <p>Implementations of this method may return {@code null}.</p>
+   *
+   * <p>Implementations of this method must return a determinate value.</p>
+   *
+   * @return an {@link Id}, or {@code null}
+   *
+   * @see Bean
+   *
+   * @see Factory#create(Creation)
+   */
+  public Id id();
+
+  /**
    * Signals that the supplied {@code instance} is in the process of being created, typically by an invocation of a
    * {@link Factory}'s {@link Factory#create(Creation) create(Creation)} method, and is about to be made available for
    * use.

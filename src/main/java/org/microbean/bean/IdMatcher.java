@@ -28,6 +28,14 @@ import org.microbean.attributes.Attributes;
  * @author <a href="https://about.me/lairdnelson" target="_top">Laird Nelson</a>
  *
  * @see #test(AttributedType, Id)
+ *
+ * @see BeanQualifiersMatcher
+ *
+ * @see InterceptorBindingsMatcher
+ *
+ * @see BeanTypeMatcher
+ *
+ * @see Id
  */
 public final class IdMatcher implements Matcher<AttributedType, Id> {
 

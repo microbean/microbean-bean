@@ -22,16 +22,12 @@ import java.util.Objects;
 
 import java.util.concurrent.ConcurrentHashMap;
 
-import java.util.function.Predicate;
-
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ExecutableElement;
-import javax.lang.model.element.Modifier;
 import javax.lang.model.element.QualifiedNameable;
 
 import javax.lang.model.type.ArrayType;
 import javax.lang.model.type.DeclaredType;
-import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
 
 import org.microbean.assign.Types;
@@ -44,6 +40,9 @@ import static javax.lang.model.element.Modifier.FINAL;
 import static javax.lang.model.element.Modifier.PRIVATE;
 import static javax.lang.model.element.Modifier.SEALED;
 import static javax.lang.model.element.Modifier.STATIC;
+
+import static javax.lang.model.type.TypeKind.DECLARED;
+import static javax.lang.model.type.TypeKind.TYPEVAR;
 
 /**
  * A utility for working with <dfn>bean types</dfn>.
@@ -168,13 +167,13 @@ public final class BeanTypes extends Types {
    *
    * <ol>
    *
-   * <li>{@linkplain TypeKind#ARRAY Array} types whose {@linkplain ArrayType#getComponentType() component type}s are
-   * legal bean types</li>
+   * <li>{@linkplain javax.lang.model.type.TypeKind#ARRAY Array} types whose {@linkplain ArrayType#getComponentType()
+   * component type}s are legal bean types</li>
    *
-   * <li>{@linkplain TypeKind#isPrimitive() Primitive} types</li>
+   * <li>{@linkplain javax.lang.model.type.TypeKind#isPrimitive() Primitive} types</li>
    *
-   * <li>{@linkplain TypeKind#DECLARED Declared} types that <dfn>contain</dfn> no {@linkplain TypeKind#WILDCARD wildcard
-   * type}s for every interpretation and level of containment</li>
+   * <li>{@linkplain javax.lang.model.type.TypeKind#DECLARED Declared} types that <dfn>contain</dfn> no {@linkplain
+   * javax.lang.model.type.TypeKind#WILDCARD wildcard type}s for every interpretation and level of containment</li>
    *
    * </ol>
    *
@@ -240,7 +239,7 @@ public final class BeanTypes extends Types {
     // This still seems way overstrict to me but there you have it.
     case DECLARED -> {
       for (final TypeMirror ta : ((DeclaredType)t).getTypeArguments()) {
-        if (ta.getKind() != TypeKind.TYPEVAR && !legalBeanType(ta)) { // note recursion
+        if (ta.getKind() != TYPEVAR && !legalBeanType(ta)) { // note recursion
           if (LOGGER.isLoggable(WARNING)) {
             LOGGER.log(WARNING, t + " has a type argument that is an illegal bean type (" + ta + ")");
           }
@@ -258,12 +257,12 @@ public final class BeanTypes extends Types {
       yield false;
     }
     };
-  }  
+  }
 
   /**
    * Returns {@code true} if and only if the supplied {@link TypeMirror} is a {@linkplain #legalBeanType(TypeMirror)
-   * legal}, {@linkplain TypeKind#DECLARED declared}, <dfn>proxiable bean type</dfn> as defined by the <a
-   * href="https://jakarta.ee/specifications/cdi/4.1/jakarta-cdi-spec-4.1#unproxyable">CDI specification</a>.
+   * legal}, {@linkplain javax.lang.model.type.TypeKind#DECLARED declared}, <dfn>proxiable bean type</dfn> as defined by
+   * the <a href="https://jakarta.ee/specifications/cdi/4.1/jakarta-cdi-spec-4.1#unproxyable">CDI specification</a>.
    *
    * @param t a {@link TypeMirror}; must not be {@code null}
    *
@@ -284,7 +283,7 @@ public final class BeanTypes extends Types {
   public static final boolean proxiableBeanType(final TypeMirror t) {
     // https://jakarta.ee/specifications/cdi/4.1/jakarta-cdi-spec-4.1#unproxyable
     return
-      t.getKind() == TypeKind.DECLARED &&
+      t.getKind() == DECLARED &&
       legalBeanType(t) &&
       proxiableElement(((DeclaredType)t).asElement());
   }

@@ -22,7 +22,7 @@ package org.microbean.bean;
  *
  * @see Reducer
  */
-public class ReductionException extends BeanException {
+public sealed class ReductionException extends BeanException permits AmbiguousReductionException, UnsatisfiedReductionException {
 
   private static final long serialVersionUID = 1L;
 
