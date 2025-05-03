@@ -50,179 +50,182 @@
 <span class="source-line-no">037</span><span id="line-37"> * @see #reduce(Object)</span>
 <span class="source-line-no">038</span><span id="line-38"> *</span>
 <span class="source-line-no">039</span><span id="line-39"> * @see Reducer</span>
-<span class="source-line-no">040</span><span id="line-40"> */</span>
-<span class="source-line-no">041</span><span id="line-41">@FunctionalInterface</span>
-<span class="source-line-no">042</span><span id="line-42">public interface Reducible&lt;C, T&gt; {</span>
-<span class="source-line-no">043</span><span id="line-43"></span>
-<span class="source-line-no">044</span><span id="line-44"></span>
-<span class="source-line-no">045</span><span id="line-45">  /*</span>
-<span class="source-line-no">046</span><span id="line-46">   * Instance methods.</span>
-<span class="source-line-no">047</span><span id="line-47">   */</span>
-<span class="source-line-no">048</span><span id="line-48"></span>
-<span class="source-line-no">049</span><span id="line-49"></span>
-<span class="source-line-no">050</span><span id="line-50">  /**</span>
-<span class="source-line-no">051</span><span id="line-51">   * Given a criteria object, which may be {@code null}, returns an object that represents the &lt;em&gt;reduction&lt;/em&gt; of a</span>
-<span class="source-line-no">052</span><span id="line-52">   * notional collection of objects.</span>
-<span class="source-line-no">053</span><span id="line-53">   *</span>
-<span class="source-line-no">054</span><span id="line-54">   * &lt;p&gt;Most {@link Reducible} implementations will return determinate values from invocations of this method, but there</span>
-<span class="source-line-no">055</span><span id="line-55">   * is no requirement to do so.&lt;/p&gt;</span>
+<span class="source-line-no">040</span><span id="line-40"> *</span>
+<span class="source-line-no">041</span><span id="line-41"> * @deprecated This interface is not really needed and is tentatively deprecated.</span>
+<span class="source-line-no">042</span><span id="line-42"> */</span>
+<span class="source-line-no">043</span><span id="line-43">@Deprecated(since = "0.0.18")</span>
+<span class="source-line-no">044</span><span id="line-44">@FunctionalInterface</span>
+<span class="source-line-no">045</span><span id="line-45">public interface Reducible&lt;C, T&gt; {</span>
+<span class="source-line-no">046</span><span id="line-46"></span>
+<span class="source-line-no">047</span><span id="line-47"></span>
+<span class="source-line-no">048</span><span id="line-48">  /*</span>
+<span class="source-line-no">049</span><span id="line-49">   * Instance methods.</span>
+<span class="source-line-no">050</span><span id="line-50">   */</span>
+<span class="source-line-no">051</span><span id="line-51"></span>
+<span class="source-line-no">052</span><span id="line-52"></span>
+<span class="source-line-no">053</span><span id="line-53">  /**</span>
+<span class="source-line-no">054</span><span id="line-54">   * Given a criteria object, which may be {@code null}, returns an object that represents the &lt;em&gt;reduction&lt;/em&gt; of a</span>
+<span class="source-line-no">055</span><span id="line-55">   * notional collection of objects.</span>
 <span class="source-line-no">056</span><span id="line-56">   *</span>
-<span class="source-line-no">057</span><span id="line-57">   * @param criteria the criteria; may be {@code null} to indicate no criteria</span>
-<span class="source-line-no">058</span><span id="line-58">   *</span>
-<span class="source-line-no">059</span><span id="line-59">   * @return a single object, or {@code null}</span>
-<span class="source-line-no">060</span><span id="line-60">   *</span>
-<span class="source-line-no">061</span><span id="line-61">   * @exception ReductionException if reduction could not occur or if an error occurs</span>
-<span class="source-line-no">062</span><span id="line-62">   */</span>
-<span class="source-line-no">063</span><span id="line-63">  public T reduce(final C criteria);</span>
-<span class="source-line-no">064</span><span id="line-64"></span>
-<span class="source-line-no">065</span><span id="line-65"></span>
-<span class="source-line-no">066</span><span id="line-66">  /*</span>
-<span class="source-line-no">067</span><span id="line-67">   * Static methods.</span>
-<span class="source-line-no">068</span><span id="line-68">   */</span>
-<span class="source-line-no">069</span><span id="line-69"></span>
-<span class="source-line-no">070</span><span id="line-70"></span>
-<span class="source-line-no">071</span><span id="line-71">  /**</span>
-<span class="source-line-no">072</span><span id="line-72">   * Calls the {@link #of(Selectable, Reducer, BiFunction)} method with the supplied {@code selectable}, the supplied {@code r}, and a reference to the {@link Reducer#fail(List, Object)} method,</span>
-<span class="source-line-no">073</span><span id="line-73">   * and returns the result.</span>
-<span class="source-line-no">074</span><span id="line-74">   *</span>
-<span class="source-line-no">075</span><span id="line-75">   * @param &lt;C&gt; the criteria type</span>
-<span class="source-line-no">076</span><span id="line-76">   *</span>
-<span class="source-line-no">077</span><span id="line-77">   * @param &lt;E&gt; the element type</span>
-<span class="source-line-no">078</span><span id="line-78">   *</span>
-<span class="source-line-no">079</span><span id="line-79">   * @param selectable a {@link Selectable}; must not be {@code null}</span>
-<span class="source-line-no">080</span><span id="line-80">   *</span>
-<span class="source-line-no">081</span><span id="line-81">   * @param r a {@link Reducer}; must not be {@code null}</span>
-<span class="source-line-no">082</span><span id="line-82">   *</span>
-<span class="source-line-no">083</span><span id="line-83">   * @return a {@link Reducible}; never {@code null}</span>
-<span class="source-line-no">084</span><span id="line-84">   *</span>
-<span class="source-line-no">085</span><span id="line-85">   * @exception NullPointerException if {@code selectable} or {@code r} is {@code null}</span>
-<span class="source-line-no">086</span><span id="line-86">   *</span>
-<span class="source-line-no">087</span><span id="line-87">   * @see #of(Selectable, Reducer, BiFunction)</span>
-<span class="source-line-no">088</span><span id="line-88">   *</span>
-<span class="source-line-no">089</span><span id="line-89">   * @see Reducer#fail(List, Object)</span>
-<span class="source-line-no">090</span><span id="line-90">   */</span>
-<span class="source-line-no">091</span><span id="line-91">  public static &lt;C, E&gt; Reducible&lt;C, E&gt; of(final Selectable&lt;C, E&gt; selectable,</span>
-<span class="source-line-no">092</span><span id="line-92">                                          final Reducer&lt;C, E&gt; r) {</span>
-<span class="source-line-no">093</span><span id="line-93">    return of(selectable, r, Reducer::fail);</span>
-<span class="source-line-no">094</span><span id="line-94">  }</span>
-<span class="source-line-no">095</span><span id="line-95"></span>
-<span class="source-line-no">096</span><span id="line-96">  /**</span>
-<span class="source-line-no">097</span><span id="line-97">   * Returns a {@link Reducible} implementation that uses the supplied {@link Reducer} for its reduction operations.</span>
-<span class="source-line-no">098</span><span id="line-98">   *</span>
-<span class="source-line-no">099</span><span id="line-99">   * @param &lt;C&gt; the criteria type</span>
-<span class="source-line-no">100</span><span id="line-100">   *</span>
-<span class="source-line-no">101</span><span id="line-101">   * @param &lt;E&gt; the element type</span>
-<span class="source-line-no">102</span><span id="line-102">   *</span>
-<span class="source-line-no">103</span><span id="line-103">   * @param selectable a {@link Selectable}; must not be {@code null}</span>
-<span class="source-line-no">104</span><span id="line-104">   *</span>
-<span class="source-line-no">105</span><span id="line-105">   * @param r a {@link Reducer}; must not be {@code null}</span>
-<span class="source-line-no">106</span><span id="line-106">   *</span>
-<span class="source-line-no">107</span><span id="line-107">   * @param failureHandler a {@link BiFunction} serving as the supplied {@link Reducer}'s &lt;dfn&gt;failure handler&lt;/dfn&gt;;</span>
-<span class="source-line-no">108</span><span id="line-108">   * must not be {@code null}</span>
+<span class="source-line-no">057</span><span id="line-57">   * &lt;p&gt;Most {@link Reducible} implementations will return determinate values from invocations of this method, but there</span>
+<span class="source-line-no">058</span><span id="line-58">   * is no requirement to do so.&lt;/p&gt;</span>
+<span class="source-line-no">059</span><span id="line-59">   *</span>
+<span class="source-line-no">060</span><span id="line-60">   * @param criteria the criteria; may be {@code null} to indicate no criteria</span>
+<span class="source-line-no">061</span><span id="line-61">   *</span>
+<span class="source-line-no">062</span><span id="line-62">   * @return a single object, or {@code null}</span>
+<span class="source-line-no">063</span><span id="line-63">   *</span>
+<span class="source-line-no">064</span><span id="line-64">   * @exception ReductionException if reduction could not occur or if an error occurs</span>
+<span class="source-line-no">065</span><span id="line-65">   */</span>
+<span class="source-line-no">066</span><span id="line-66">  public T reduce(final C criteria);</span>
+<span class="source-line-no">067</span><span id="line-67"></span>
+<span class="source-line-no">068</span><span id="line-68"></span>
+<span class="source-line-no">069</span><span id="line-69">  /*</span>
+<span class="source-line-no">070</span><span id="line-70">   * Static methods.</span>
+<span class="source-line-no">071</span><span id="line-71">   */</span>
+<span class="source-line-no">072</span><span id="line-72"></span>
+<span class="source-line-no">073</span><span id="line-73"></span>
+<span class="source-line-no">074</span><span id="line-74">  /**</span>
+<span class="source-line-no">075</span><span id="line-75">   * Calls the {@link #of(Selectable, Reducer, BiFunction)} method with the supplied {@code selectable}, the supplied {@code r}, and a reference to the {@link Reducer#fail(List, Object)} method,</span>
+<span class="source-line-no">076</span><span id="line-76">   * and returns the result.</span>
+<span class="source-line-no">077</span><span id="line-77">   *</span>
+<span class="source-line-no">078</span><span id="line-78">   * @param &lt;C&gt; the criteria type</span>
+<span class="source-line-no">079</span><span id="line-79">   *</span>
+<span class="source-line-no">080</span><span id="line-80">   * @param &lt;E&gt; the element type</span>
+<span class="source-line-no">081</span><span id="line-81">   *</span>
+<span class="source-line-no">082</span><span id="line-82">   * @param selectable a {@link Selectable}; must not be {@code null}</span>
+<span class="source-line-no">083</span><span id="line-83">   *</span>
+<span class="source-line-no">084</span><span id="line-84">   * @param r a {@link Reducer}; must not be {@code null}</span>
+<span class="source-line-no">085</span><span id="line-85">   *</span>
+<span class="source-line-no">086</span><span id="line-86">   * @return a {@link Reducible}; never {@code null}</span>
+<span class="source-line-no">087</span><span id="line-87">   *</span>
+<span class="source-line-no">088</span><span id="line-88">   * @exception NullPointerException if {@code selectable} or {@code r} is {@code null}</span>
+<span class="source-line-no">089</span><span id="line-89">   *</span>
+<span class="source-line-no">090</span><span id="line-90">   * @see #of(Selectable, Reducer, BiFunction)</span>
+<span class="source-line-no">091</span><span id="line-91">   *</span>
+<span class="source-line-no">092</span><span id="line-92">   * @see Reducer#fail(List, Object)</span>
+<span class="source-line-no">093</span><span id="line-93">   */</span>
+<span class="source-line-no">094</span><span id="line-94">  public static &lt;C, E&gt; Reducible&lt;C, E&gt; of(final Selectable&lt;C, E&gt; selectable,</span>
+<span class="source-line-no">095</span><span id="line-95">                                          final Reducer&lt;C, E&gt; r) {</span>
+<span class="source-line-no">096</span><span id="line-96">    return of(selectable, r, Reducer::fail);</span>
+<span class="source-line-no">097</span><span id="line-97">  }</span>
+<span class="source-line-no">098</span><span id="line-98"></span>
+<span class="source-line-no">099</span><span id="line-99">  /**</span>
+<span class="source-line-no">100</span><span id="line-100">   * Returns a {@link Reducible} implementation that uses the supplied {@link Reducer} for its reduction operations.</span>
+<span class="source-line-no">101</span><span id="line-101">   *</span>
+<span class="source-line-no">102</span><span id="line-102">   * @param &lt;C&gt; the criteria type</span>
+<span class="source-line-no">103</span><span id="line-103">   *</span>
+<span class="source-line-no">104</span><span id="line-104">   * @param &lt;E&gt; the element type</span>
+<span class="source-line-no">105</span><span id="line-105">   *</span>
+<span class="source-line-no">106</span><span id="line-106">   * @param selectable a {@link Selectable}; must not be {@code null}</span>
+<span class="source-line-no">107</span><span id="line-107">   *</span>
+<span class="source-line-no">108</span><span id="line-108">   * @param r a {@link Reducer}; must not be {@code null}</span>
 <span class="source-line-no">109</span><span id="line-109">   *</span>
-<span class="source-line-no">110</span><span id="line-110">   * @return a {@link Reducible}; never {@code null}</span>
-<span class="source-line-no">111</span><span id="line-111">   *</span>
-<span class="source-line-no">112</span><span id="line-112">   * @exception NullPointerException if any argument is {@code null}</span>
-<span class="source-line-no">113</span><span id="line-113">   *</span>
-<span class="source-line-no">114</span><span id="line-114">   * @see Reducer</span>
-<span class="source-line-no">115</span><span id="line-115">   */</span>
-<span class="source-line-no">116</span><span id="line-116">  public static &lt;C, E&gt; Reducible&lt;C, E&gt; of(final Selectable&lt;C, E&gt; selectable,</span>
-<span class="source-line-no">117</span><span id="line-117">                                          final Reducer&lt;C, E&gt; r,</span>
-<span class="source-line-no">118</span><span id="line-118">                                          final BiFunction&lt;? super List&lt;? extends E&gt;, ? super C, ? extends E&gt; failureHandler) {</span>
-<span class="source-line-no">119</span><span id="line-119">    Objects.requireNonNull(selectable, "selectable");</span>
-<span class="source-line-no">120</span><span id="line-120">    Objects.requireNonNull(r, "r");</span>
-<span class="source-line-no">121</span><span id="line-121">    final BiFunction&lt;? super List&lt;? extends E&gt;, ? super C, ? extends E&gt; fh = Objects.requireNonNull(failureHandler, "failureHandler");</span>
-<span class="source-line-no">122</span><span id="line-122">    return c -&gt; r.reduce(selectable.select(c), c, fh);</span>
-<span class="source-line-no">123</span><span id="line-123">  }</span>
-<span class="source-line-no">124</span><span id="line-124"></span>
-<span class="source-line-no">125</span><span id="line-125">  /**</span>
-<span class="source-line-no">126</span><span id="line-126">   * Calls the {@link #ofCaching(Selectable, Reducer, BiFunction)} method with the supplied {@code selectable}, the</span>
-<span class="source-line-no">127</span><span id="line-127">   * supplied {@code r}, the supplied {@code failureHandler}, and a reference to the {@link Reducer#fail(List, Object)}</span>
-<span class="source-line-no">128</span><span id="line-128">   * method, and returns its result.</span>
-<span class="source-line-no">129</span><span id="line-129">   *</span>
-<span class="source-line-no">130</span><span id="line-130">   * @param &lt;C&gt; the criteria type</span>
-<span class="source-line-no">131</span><span id="line-131">   *</span>
-<span class="source-line-no">132</span><span id="line-132">   * @param &lt;E&gt; the element type</span>
-<span class="source-line-no">133</span><span id="line-133">   *</span>
-<span class="source-line-no">134</span><span id="line-134">   * @param selectable a {@link Selectable}; must not be {@code null}</span>
-<span class="source-line-no">135</span><span id="line-135">   *</span>
-<span class="source-line-no">136</span><span id="line-136">   * @param r a {@link Reducer}; must not be {@code null}</span>
-<span class="source-line-no">137</span><span id="line-137">   *</span>
-<span class="source-line-no">138</span><span id="line-138">   * @return a {@link Reducible}; never {@code null}</span>
-<span class="source-line-no">139</span><span id="line-139">   *</span>
-<span class="source-line-no">140</span><span id="line-140">   * @exception NullPointerException if any argument is {@code null}</span>
-<span class="source-line-no">141</span><span id="line-141">   *</span>
-<span class="source-line-no">142</span><span id="line-142">   * @see #ofCaching(Selectable, Reducer, BiFunction)</span>
-<span class="source-line-no">143</span><span id="line-143">   */</span>
-<span class="source-line-no">144</span><span id="line-144">  public static &lt;C, E&gt; Reducible&lt;C, E&gt; ofCaching(final Selectable&lt;C, E&gt; selectable, final Reducer&lt;C, E&gt; r) {</span>
-<span class="source-line-no">145</span><span id="line-145">    return ofCaching(selectable, r, Reducer::fail);</span>
-<span class="source-line-no">146</span><span id="line-146">  }</span>
-<span class="source-line-no">147</span><span id="line-147"></span>
-<span class="source-line-no">148</span><span id="line-148">  /**</span>
-<span class="source-line-no">149</span><span id="line-149">   * Calls the {@link #ofCaching(Selectable, Reducer, BiFunction, BiFunction)} method with the supplied {@code</span>
-<span class="source-line-no">150</span><span id="line-150">   * selectable}, the supplied {@code r}, the supplied {@code fh}, and a reference to the {@link</span>
-<span class="source-line-no">151</span><span id="line-151">   * ConcurrentHashMap#computeIfAbsent(Object, java.util.function.Function) computeIfAbsent(Object, Function)} method of</span>
-<span class="source-line-no">152</span><span id="line-152">   * a new {@link ConcurrentHashMap}, and returns its result.</span>
-<span class="source-line-no">153</span><span id="line-153">   *</span>
-<span class="source-line-no">154</span><span id="line-154">   * @param &lt;C&gt; the criteria type</span>
-<span class="source-line-no">155</span><span id="line-155">   *</span>
-<span class="source-line-no">156</span><span id="line-156">   * @param &lt;E&gt; the element type</span>
-<span class="source-line-no">157</span><span id="line-157">   *</span>
-<span class="source-line-no">158</span><span id="line-158">   * @param selectable a {@link Selectable}; must not be {@code null}</span>
-<span class="source-line-no">159</span><span id="line-159">   *</span>
-<span class="source-line-no">160</span><span id="line-160">   * @param r a {@link Reducer}; must not be {@code null}</span>
-<span class="source-line-no">161</span><span id="line-161">   *</span>
-<span class="source-line-no">162</span><span id="line-162">   * @param fh a {@link BiFunction} serving as the supplied {@link Reducer}'s &lt;dfn&gt;failure handler&lt;/dfn&gt;;</span>
-<span class="source-line-no">163</span><span id="line-163">   * must not be {@code null}</span>
+<span class="source-line-no">110</span><span id="line-110">   * @param failureHandler a {@link BiFunction} serving as the supplied {@link Reducer}'s &lt;dfn&gt;failure handler&lt;/dfn&gt;;</span>
+<span class="source-line-no">111</span><span id="line-111">   * must not be {@code null}</span>
+<span class="source-line-no">112</span><span id="line-112">   *</span>
+<span class="source-line-no">113</span><span id="line-113">   * @return a {@link Reducible}; never {@code null}</span>
+<span class="source-line-no">114</span><span id="line-114">   *</span>
+<span class="source-line-no">115</span><span id="line-115">   * @exception NullPointerException if any argument is {@code null}</span>
+<span class="source-line-no">116</span><span id="line-116">   *</span>
+<span class="source-line-no">117</span><span id="line-117">   * @see Reducer</span>
+<span class="source-line-no">118</span><span id="line-118">   */</span>
+<span class="source-line-no">119</span><span id="line-119">  public static &lt;C, E&gt; Reducible&lt;C, E&gt; of(final Selectable&lt;C, E&gt; selectable,</span>
+<span class="source-line-no">120</span><span id="line-120">                                          final Reducer&lt;C, E&gt; r,</span>
+<span class="source-line-no">121</span><span id="line-121">                                          final BiFunction&lt;? super List&lt;? extends E&gt;, ? super C, ? extends E&gt; failureHandler) {</span>
+<span class="source-line-no">122</span><span id="line-122">    Objects.requireNonNull(selectable, "selectable");</span>
+<span class="source-line-no">123</span><span id="line-123">    Objects.requireNonNull(r, "r");</span>
+<span class="source-line-no">124</span><span id="line-124">    final BiFunction&lt;? super List&lt;? extends E&gt;, ? super C, ? extends E&gt; fh = Objects.requireNonNull(failureHandler, "failureHandler");</span>
+<span class="source-line-no">125</span><span id="line-125">    return c -&gt; r.reduce(selectable.select(c), c, fh);</span>
+<span class="source-line-no">126</span><span id="line-126">  }</span>
+<span class="source-line-no">127</span><span id="line-127"></span>
+<span class="source-line-no">128</span><span id="line-128">  /**</span>
+<span class="source-line-no">129</span><span id="line-129">   * Calls the {@link #ofCaching(Selectable, Reducer, BiFunction)} method with the supplied {@code selectable}, the</span>
+<span class="source-line-no">130</span><span id="line-130">   * supplied {@code r}, the supplied {@code failureHandler}, and a reference to the {@link Reducer#fail(List, Object)}</span>
+<span class="source-line-no">131</span><span id="line-131">   * method, and returns its result.</span>
+<span class="source-line-no">132</span><span id="line-132">   *</span>
+<span class="source-line-no">133</span><span id="line-133">   * @param &lt;C&gt; the criteria type</span>
+<span class="source-line-no">134</span><span id="line-134">   *</span>
+<span class="source-line-no">135</span><span id="line-135">   * @param &lt;E&gt; the element type</span>
+<span class="source-line-no">136</span><span id="line-136">   *</span>
+<span class="source-line-no">137</span><span id="line-137">   * @param selectable a {@link Selectable}; must not be {@code null}</span>
+<span class="source-line-no">138</span><span id="line-138">   *</span>
+<span class="source-line-no">139</span><span id="line-139">   * @param r a {@link Reducer}; must not be {@code null}</span>
+<span class="source-line-no">140</span><span id="line-140">   *</span>
+<span class="source-line-no">141</span><span id="line-141">   * @return a {@link Reducible}; never {@code null}</span>
+<span class="source-line-no">142</span><span id="line-142">   *</span>
+<span class="source-line-no">143</span><span id="line-143">   * @exception NullPointerException if any argument is {@code null}</span>
+<span class="source-line-no">144</span><span id="line-144">   *</span>
+<span class="source-line-no">145</span><span id="line-145">   * @see #ofCaching(Selectable, Reducer, BiFunction)</span>
+<span class="source-line-no">146</span><span id="line-146">   */</span>
+<span class="source-line-no">147</span><span id="line-147">  public static &lt;C, E&gt; Reducible&lt;C, E&gt; ofCaching(final Selectable&lt;C, E&gt; selectable, final Reducer&lt;C, E&gt; r) {</span>
+<span class="source-line-no">148</span><span id="line-148">    return ofCaching(selectable, r, Reducer::fail);</span>
+<span class="source-line-no">149</span><span id="line-149">  }</span>
+<span class="source-line-no">150</span><span id="line-150"></span>
+<span class="source-line-no">151</span><span id="line-151">  /**</span>
+<span class="source-line-no">152</span><span id="line-152">   * Calls the {@link #ofCaching(Selectable, Reducer, BiFunction, BiFunction)} method with the supplied {@code</span>
+<span class="source-line-no">153</span><span id="line-153">   * selectable}, the supplied {@code r}, the supplied {@code fh}, and a reference to the {@link</span>
+<span class="source-line-no">154</span><span id="line-154">   * ConcurrentHashMap#computeIfAbsent(Object, java.util.function.Function) computeIfAbsent(Object, Function)} method of</span>
+<span class="source-line-no">155</span><span id="line-155">   * a new {@link ConcurrentHashMap}, and returns its result.</span>
+<span class="source-line-no">156</span><span id="line-156">   *</span>
+<span class="source-line-no">157</span><span id="line-157">   * @param &lt;C&gt; the criteria type</span>
+<span class="source-line-no">158</span><span id="line-158">   *</span>
+<span class="source-line-no">159</span><span id="line-159">   * @param &lt;E&gt; the element type</span>
+<span class="source-line-no">160</span><span id="line-160">   *</span>
+<span class="source-line-no">161</span><span id="line-161">   * @param selectable a {@link Selectable}; must not be {@code null}</span>
+<span class="source-line-no">162</span><span id="line-162">   *</span>
+<span class="source-line-no">163</span><span id="line-163">   * @param r a {@link Reducer}; must not be {@code null}</span>
 <span class="source-line-no">164</span><span id="line-164">   *</span>
-<span class="source-line-no">165</span><span id="line-165">   * @return a {@link Reducible}; never {@code null}</span>
-<span class="source-line-no">166</span><span id="line-166">   *</span>
-<span class="source-line-no">167</span><span id="line-167">   * @exception NullPointerException if any argument is {@code null}</span>
-<span class="source-line-no">168</span><span id="line-168">   *</span>
-<span class="source-line-no">169</span><span id="line-169">   * @see #ofCaching(Selectable, Reducer, BiFunction, BiFunction)</span>
-<span class="source-line-no">170</span><span id="line-170">   */</span>
-<span class="source-line-no">171</span><span id="line-171">  public static &lt;C, E&gt; Reducible&lt;C, E&gt; ofCaching(final Selectable&lt;C, E&gt; selectable,</span>
-<span class="source-line-no">172</span><span id="line-172">                                                 final Reducer&lt;C, E&gt; r,</span>
-<span class="source-line-no">173</span><span id="line-173">                                                 final BiFunction&lt;? super List&lt;? extends E&gt;, ? super C, ? extends E&gt; fh) {</span>
-<span class="source-line-no">174</span><span id="line-174">    return ofCaching(selectable, r, fh, new ConcurrentHashMap&lt;C, E&gt;()::computeIfAbsent);</span>
-<span class="source-line-no">175</span><span id="line-175">  }</span>
-<span class="source-line-no">176</span><span id="line-176"></span>
-<span class="source-line-no">177</span><span id="line-177">  /**</span>
-<span class="source-line-no">178</span><span id="line-178">   * Returns a {@link Reducible} implementation that uses the supplied {@link Reducer} for its reduction operations and</span>
-<span class="source-line-no">179</span><span id="line-179">   * the supplied {@code computeIfAbsent} {@link BiFunction} for its caching implementation.</span>
-<span class="source-line-no">180</span><span id="line-180">   *</span>
-<span class="source-line-no">181</span><span id="line-181">   * @param &lt;C&gt; the criteria type</span>
-<span class="source-line-no">182</span><span id="line-182">   *</span>
-<span class="source-line-no">183</span><span id="line-183">   * @param &lt;E&gt; the element type</span>
-<span class="source-line-no">184</span><span id="line-184">   *</span>
-<span class="source-line-no">185</span><span id="line-185">   * @param selectable a {@link Selectable}; must not be {@code null}</span>
-<span class="source-line-no">186</span><span id="line-186">   *</span>
-<span class="source-line-no">187</span><span id="line-187">   * @param r a {@link Reducer}; must not be {@code null}</span>
-<span class="source-line-no">188</span><span id="line-188">   *</span>
-<span class="source-line-no">189</span><span id="line-189">   * @param fh a {@link BiFunction} serving as the supplied {@link Reducer}'s &lt;dfn&gt;failure handler&lt;/dfn&gt;; must not be</span>
-<span class="source-line-no">190</span><span id="line-190">   * {@code null}</span>
+<span class="source-line-no">165</span><span id="line-165">   * @param fh a {@link BiFunction} serving as the supplied {@link Reducer}'s &lt;dfn&gt;failure handler&lt;/dfn&gt;;</span>
+<span class="source-line-no">166</span><span id="line-166">   * must not be {@code null}</span>
+<span class="source-line-no">167</span><span id="line-167">   *</span>
+<span class="source-line-no">168</span><span id="line-168">   * @return a {@link Reducible}; never {@code null}</span>
+<span class="source-line-no">169</span><span id="line-169">   *</span>
+<span class="source-line-no">170</span><span id="line-170">   * @exception NullPointerException if any argument is {@code null}</span>
+<span class="source-line-no">171</span><span id="line-171">   *</span>
+<span class="source-line-no">172</span><span id="line-172">   * @see #ofCaching(Selectable, Reducer, BiFunction, BiFunction)</span>
+<span class="source-line-no">173</span><span id="line-173">   */</span>
+<span class="source-line-no">174</span><span id="line-174">  public static &lt;C, E&gt; Reducible&lt;C, E&gt; ofCaching(final Selectable&lt;C, E&gt; selectable,</span>
+<span class="source-line-no">175</span><span id="line-175">                                                 final Reducer&lt;C, E&gt; r,</span>
+<span class="source-line-no">176</span><span id="line-176">                                                 final BiFunction&lt;? super List&lt;? extends E&gt;, ? super C, ? extends E&gt; fh) {</span>
+<span class="source-line-no">177</span><span id="line-177">    return ofCaching(selectable, r, fh, new ConcurrentHashMap&lt;C, E&gt;()::computeIfAbsent);</span>
+<span class="source-line-no">178</span><span id="line-178">  }</span>
+<span class="source-line-no">179</span><span id="line-179"></span>
+<span class="source-line-no">180</span><span id="line-180">  /**</span>
+<span class="source-line-no">181</span><span id="line-181">   * Returns a {@link Reducible} implementation that uses the supplied {@link Reducer} for its reduction operations and</span>
+<span class="source-line-no">182</span><span id="line-182">   * the supplied {@code computeIfAbsent} {@link BiFunction} for its caching implementation.</span>
+<span class="source-line-no">183</span><span id="line-183">   *</span>
+<span class="source-line-no">184</span><span id="line-184">   * @param &lt;C&gt; the criteria type</span>
+<span class="source-line-no">185</span><span id="line-185">   *</span>
+<span class="source-line-no">186</span><span id="line-186">   * @param &lt;E&gt; the element type</span>
+<span class="source-line-no">187</span><span id="line-187">   *</span>
+<span class="source-line-no">188</span><span id="line-188">   * @param selectable a {@link Selectable}; must not be {@code null}</span>
+<span class="source-line-no">189</span><span id="line-189">   *</span>
+<span class="source-line-no">190</span><span id="line-190">   * @param r a {@link Reducer}; must not be {@code null}</span>
 <span class="source-line-no">191</span><span id="line-191">   *</span>
-<span class="source-line-no">192</span><span id="line-192">   * @param cache a {@link BiFunction} with the same semantics as the {@link</span>
-<span class="source-line-no">193</span><span id="line-193">   * java.util.Map#computeIfAbsent(Object, java.util.function.Function)} method; must not be {@code null}</span>
+<span class="source-line-no">192</span><span id="line-192">   * @param fh a {@link BiFunction} serving as the supplied {@link Reducer}'s &lt;dfn&gt;failure handler&lt;/dfn&gt;; must not be</span>
+<span class="source-line-no">193</span><span id="line-193">   * {@code null}</span>
 <span class="source-line-no">194</span><span id="line-194">   *</span>
-<span class="source-line-no">195</span><span id="line-195">   * @return a {@link Reducible}; never {@code null}</span>
-<span class="source-line-no">196</span><span id="line-196">   *</span>
-<span class="source-line-no">197</span><span id="line-197">   * @exception NullPointerException if any argument is {@code null}</span>
-<span class="source-line-no">198</span><span id="line-198">   *</span>
-<span class="source-line-no">199</span><span id="line-199">   * @see #of(Selectable, Reducer, BiFunction)</span>
-<span class="source-line-no">200</span><span id="line-200">   *</span>
-<span class="source-line-no">201</span><span id="line-201">   * @see java.util.Map#computeIfAbsent(Object, java.util.function.Function)</span>
-<span class="source-line-no">202</span><span id="line-202">   */</span>
-<span class="source-line-no">203</span><span id="line-203">  public static &lt;C, E&gt; Reducible&lt;C, E&gt; ofCaching(final Selectable&lt;C, E&gt; selectable,</span>
-<span class="source-line-no">204</span><span id="line-204">                                                 final Reducer&lt;C, E&gt; r,</span>
-<span class="source-line-no">205</span><span id="line-205">                                                 final BiFunction&lt;? super List&lt;? extends E&gt;, ? super C, ? extends E&gt; fh,</span>
-<span class="source-line-no">206</span><span id="line-206">                                                 final BiFunction&lt;? super C, Function&lt;C, E&gt;, ? extends E&gt; cache) {</span>
-<span class="source-line-no">207</span><span id="line-207">    Objects.requireNonNull(cache, "cache");</span>
-<span class="source-line-no">208</span><span id="line-208">    final Reducible&lt;C, E&gt; reducible = of(selectable, r, fh);</span>
-<span class="source-line-no">209</span><span id="line-209">    return c -&gt; cache.apply(c, reducible::reduce);</span>
-<span class="source-line-no">210</span><span id="line-210">  }</span>
-<span class="source-line-no">211</span><span id="line-211"></span>
-<span class="source-line-no">212</span><span id="line-212">}</span>
+<span class="source-line-no">195</span><span id="line-195">   * @param cache a {@link BiFunction} with the same semantics as the {@link</span>
+<span class="source-line-no">196</span><span id="line-196">   * java.util.Map#computeIfAbsent(Object, java.util.function.Function)} method; must not be {@code null}</span>
+<span class="source-line-no">197</span><span id="line-197">   *</span>
+<span class="source-line-no">198</span><span id="line-198">   * @return a {@link Reducible}; never {@code null}</span>
+<span class="source-line-no">199</span><span id="line-199">   *</span>
+<span class="source-line-no">200</span><span id="line-200">   * @exception NullPointerException if any argument is {@code null}</span>
+<span class="source-line-no">201</span><span id="line-201">   *</span>
+<span class="source-line-no">202</span><span id="line-202">   * @see #of(Selectable, Reducer, BiFunction)</span>
+<span class="source-line-no">203</span><span id="line-203">   *</span>
+<span class="source-line-no">204</span><span id="line-204">   * @see java.util.Map#computeIfAbsent(Object, java.util.function.Function)</span>
+<span class="source-line-no">205</span><span id="line-205">   */</span>
+<span class="source-line-no">206</span><span id="line-206">  public static &lt;C, E&gt; Reducible&lt;C, E&gt; ofCaching(final Selectable&lt;C, E&gt; selectable,</span>
+<span class="source-line-no">207</span><span id="line-207">                                                 final Reducer&lt;C, E&gt; r,</span>
+<span class="source-line-no">208</span><span id="line-208">                                                 final BiFunction&lt;? super List&lt;? extends E&gt;, ? super C, ? extends E&gt; fh,</span>
+<span class="source-line-no">209</span><span id="line-209">                                                 final BiFunction&lt;? super C, Function&lt;C, E&gt;, ? extends E&gt; cache) {</span>
+<span class="source-line-no">210</span><span id="line-210">    Objects.requireNonNull(cache, "cache");</span>
+<span class="source-line-no">211</span><span id="line-211">    final Reducible&lt;C, E&gt; reducible = of(selectable, r, fh);</span>
+<span class="source-line-no">212</span><span id="line-212">    return c -&gt; cache.apply(c, reducible::reduce);</span>
+<span class="source-line-no">213</span><span id="line-213">  }</span>
+<span class="source-line-no">214</span><span id="line-214"></span>
+<span class="source-line-no">215</span><span id="line-215">}</span>
 
 
 
