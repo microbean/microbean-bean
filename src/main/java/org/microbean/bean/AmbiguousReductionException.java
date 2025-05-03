@@ -21,7 +21,7 @@ import java.util.List;
  *
  * @author <a href="https://about.me/lairdnelson" target="_top">Laird Nelson</a>
  */
-public class AmbiguousReductionException extends ReductionException {
+public final class AmbiguousReductionException extends ReductionException {
 
   private static final long serialVersionUID = 1L;
 

@@ -37,7 +37,10 @@ import java.util.function.Function;
  * @see #reduce(Object)
  *
  * @see Reducer
+ *
+ * @deprecated This interface is not really needed and is tentatively deprecated.
  */
+@Deprecated(since = "0.0.18")
 @FunctionalInterface
 public interface Reducible<C, T> {
 

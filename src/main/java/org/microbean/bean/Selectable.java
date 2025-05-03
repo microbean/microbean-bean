@@ -1,6 +1,6 @@
 /* -*- mode: Java; c-basic-offset: 2; indent-tabs-mode: nil; coding: utf-8-unix -*-
  *
- * Copyright © 2024 microBean™.
+ * Copyright © 2024–2025 microBean™.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
@@ -13,26 +13,20 @@
  */
 package org.microbean.bean;
 
-import java.util.Collection;
 import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-
-import java.util.concurrent.ConcurrentHashMap;
-
-import java.util.function.BiFunction;
 
 /**
- * A notional list of elements from which sublists may be <dfn>selected</dfn> according to some <dfn>criteria</dfn>.
+ * A notional list of elements from which immutable sublists may be <dfn>selected</dfn> according to some
+ * <dfn>criteria</dfn>.
  *
- * @param <C> the type of criteria
+ * @param <C> the criteria type
  *
- * @param <T> the type of the elements
+ * @param <E> the element type
  *
  * @author <a href="https://about.me/lairdnelson" target="_top">Laird Nelson</a>
  */
 @FunctionalInterface
-public interface Selectable<C, T> {
+public interface Selectable<C, E> {
 
   /**
    * <em>Selects</em> and returns an immutable {@link List} representing a sublist of this {@link Selectable}'s
@@ -43,7 +37,7 @@ public interface Selectable<C, T> {
    * <p>Implementations of this method must not return {@code null}.</p>
    *
    * <p>Implementations of this method should not call {@link #list()}, since that method is typically implemented in
-   * terms of this one.</p>
+   * terms of this one, or undefined behavior may result.</p>
    *
    * @param criteria the criteria to use; may be {@code null}
    *
@@ -56,7 +50,7 @@ public interface Selectable<C, T> {
   // List not Collection so equals() is well-defined
   // List is unmodifiable and is always valid for the supplied criteria (unenforceable)
   // C and not Predicate because equality semantics for Predicate are not well-defined (caching again)
-  public List<T> select(final C criteria);
+  public List<E> select(final C criteria);
 
   /**
    * Returns an immutable {@link List} of all of this {@link Selectable}'s elements.
@@ -72,102 +66,8 @@ public interface Selectable<C, T> {
    *
    * @see #select(Object)
    */
-  public default List<T> list() {
+  public default List<E> list() {
     return this.select(null);
-  }
-
-
-  /*
-   * Static methods.
-   */
-
-
-  /**
-   * Returns a {@link Selectable} using the supplied {@link Collection} as its elements, and the supplied {@link
-   * BiFunction} as its <em>selector function</em>.
-   *
-   * <p>There is no guarantee that this method will return new {@link Selectable} instances.</p>
-   *
-   * <p>The {@link Selectable} instances returned by this method may or may not cache their selections.</p>
-   *
-   * <p>The selector function must select a sublist from the supplied {@link Collection} as mediated by the supplied
-   * criteria. The selector function must additionally be idempotent and must produce a determinate value when given the
-   * same arguments.</p>
-   *
-   * <p>No validation of these semantics of the selector function is performed.</p>
-   *
-   * @param <C> the type of criteria
-   *
-   * @param <E> the type of the elements
-   *
-   * @param collection a {@link Collection} of elements from which sublists may be selected; must not be {@code null}
-   *
-   * @param f the selector function; must not be {@code null}
-   *
-   * @return a {@link Selectable}; never {@code null}
-   *
-   * @exception NullPointerException if either {@code collection} or {@code f} is {@code null}
-   */
-  @SuppressWarnings("unchecked")
-  public static <C, E> Selectable<C, E> of(final Collection<? extends E> collection, final BiFunction<? super E, ? super C, ? extends Boolean> f) {
-    Objects.requireNonNull(f, "f");
-    return collection.isEmpty() ? of() : c -> (List<E>)collection.stream()
-      .filter(e -> f.apply(e, c))
-      .toList();
-  }
-
-  /**
-   * Returns a {@link Selectable} whose {@link #select(Object)} method always returns an {@linkplain List#of() empty
-   * {@code List}}.
-   *
-   * @param <C> the type of criteria
-   *
-   * @param <E> the type of the elements
-   *
-   * @return a {@link Selectable} whose {@link #select(Object)} method always returns an {@linkplain List#of() empty
-   * {@code List}}; never {@code null}
-   */
-  public static <C, E> Selectable<C, E> of() {
-    return c -> List.of();
-  }
-
-  /**
-   * Returns a {@link Selectable} using the supplied {@link Collection} as its elements, and the supplied {@link
-   * BiFunction} as its <dfn>selector function</dfn>.
-   *
-   * <p>There is no guarantee that this method will return new {@link Selectable} instances.</p>
-   *
-   * <p>The {@link Selectable} instances returned by this method will cache their selections.</p>
-   *
-   * <p>The selector function must select a sublist from the supplied {@link Collection} as mediated by the supplied
-   * criteria. The selector function must additionally be idempotent and must produce a determinate value when given the
-   * same arguments.</p>
-   *
-   * <p>No validation of these semantics of the selector function is performed.</p>
-   *
-   * @param <C> the type of criteria
-   *
-   * @param <E> the type of the elements
-   *
-   * @param collection a {@link Collection} of elements from which sublists may be selected; must not be {@code null}
-   *
-   * @param f the selector function; must not be {@code null}
-   *
-   * @return a {@link Selectable}; never {@code null}
-   *
-   * @exception NullPointerException if either {@code collection} or {@code f} is {@code null}
-   */
-  @SuppressWarnings("unchecked")
-  public static <C, E> Selectable<C, E> ofCaching(final Collection<? extends E> collection, final BiFunction<? super E, ? super C, ? extends Boolean> f) {
-    Objects.requireNonNull(f, "f");
-    if (collection.isEmpty()) {
-      return c -> List.of();
-    }
-    final Map<C, List<? extends E>> m = new ConcurrentHashMap<>();
-    return c ->
-      (List<E>)m.computeIfAbsent(c, fc -> collection.stream()
-                                 .filter(e -> f.apply(e, fc))
-                                 .toList());
   }
 
 }

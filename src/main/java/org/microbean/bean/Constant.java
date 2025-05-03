@@ -29,7 +29,7 @@ import static java.lang.constant.ConstantDescs.CD_Object;
 /**
  * A {@link Factory} that returns its singleton from its {@link #create(Request)} method.
  *
- * @param <I> the type of the singleton
+ * @param <I> the singleton type
  *
  * @param singleton the singleton
  *
@@ -87,7 +87,7 @@ public final record Constant<I>(I singleton) implements Constable, Factory<I> {
   public final Optional<DynamicConstantDesc<I>> describeConstable() {
     return Constables.describeConstable(this.singleton())
       .map(iDesc -> DynamicConstantDesc.of(BSM_INVOKE,
-                                           MethodHandleDesc.ofConstructor(ClassDesc.of(this.getClass().getName()),
+                                           MethodHandleDesc.ofConstructor(this.getClass().describeConstable().orElseThrow(),
                                                                           CD_Object),
                                            iDesc));
   }

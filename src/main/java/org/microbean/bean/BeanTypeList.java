@@ -69,7 +69,7 @@ import static org.microbean.bean.BeanTypes.proxiableElement;
  */
 public final class BeanTypeList extends AbstractList<TypeMirror> implements Constable {
 
-  private final Domain domain; // for Constable only
+  private final Domain domain; // for Constable only; used by elementKind()
 
   private final List<TypeMirror> types;
 
@@ -96,7 +96,8 @@ public final class BeanTypeList extends AbstractList<TypeMirror> implements Cons
         final ArrayList<TypeMirror> newTypes;
         if (types instanceof SupertypeList stl) {
           // SupertypeList instances are already sorted, which is why we check here. Now we can (potentially) avoid
-          // copying, too, since we can use List#copyOf() in the sunny-day case.
+          // copying, too, since we can use List#copyOf() in the sunny-day case, which itself tries very hard not to
+          // copy.
           int i = 0;
           for (; i < size; i++) {
             if (!legalBeanType(stl.get(i))) {
