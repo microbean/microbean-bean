@@ -13,50 +13,32 @@
  */
 package org.microbean.bean;
 
-import java.util.Iterator;
-import java.util.List;
+import java.util.function.Supplier;
 
 import org.junit.jupiter.api.Test;
 
-import org.microbean.assign.AttributedType;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 
-final class TestReferences {
+import static org.microbean.assign.Qualifiers.anyAndDefaultQualifiers;
 
-  private TestReferences() {
+final class TestSelectables {
+
+  private TestSelectables() {
     super();
   }
 
   @Test
-  public void test() {
+  final void testMethodReferenceAndNull() {
+    final String hello = null;
+    try {
+      final Supplier<String> s = hello::toString;
+      fail();
+    } catch (final NullPointerException expected) {
 
-  }
-
-  private static final class DummyReferences<R> implements References<R> {
-
-    private DummyReferences() {
-      super();
     }
-
-    @Override
-    public Iterator<R> iterator() {
-      return List.<R>of().iterator();
-    }
-
-    @Override
-    public <S> DummyReferences<S> references(final AttributedType t) {
-      return new DummyReferences<>();
-    }
-
-    @Override
-    public boolean destroy(final Object r) {
-      return false;
-    }
-
-    @Override
-    public final int size() {
-      return 0;
-    }
-    
   }
   
 }

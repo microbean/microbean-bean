@@ -125,7 +125,7 @@
       <dependency>
         <groupId>org.junit</groupId>
         <artifactId>junit-bom</artifactId>
-        <version>5.12.2</version>
+        <version>5.13.1</version>
         <type>pom</type>
         <scope>import</scope>
       </dependency>
@@ -134,7 +134,7 @@
       <dependency>
         <groupId>org.jboss.weld</groupId>
         <artifactId>weld-core-bom</artifactId>
-        <version>6.0.2.Final</version>
+        <version>6.0.3.Final</version>
         <type>pom</type>
         <scope>import</scope>
       </dependency>
@@ -144,13 +144,13 @@
       <dependency>
         <groupId>org.microbean</groupId>
         <artifactId>microbean-assign</artifactId>
-        <version>0.0.5</version>
+        <version>0.0.6</version>
       </dependency>
 
       <dependency>
         <groupId>org.microbean</groupId>
         <artifactId>microbean-attributes</artifactId>
-        <version>0.0.2</version>
+        <version>0.0.3</version>
       </dependency>
 
       <dependency>
@@ -162,7 +162,7 @@
       <dependency>
         <groupId>org.microbean</groupId>
         <artifactId>microbean-construct</artifactId>
-        <version>0.0.10</version>
+        <version>0.0.11</version>
       </dependency>
 
     </dependencies>
@@ -347,7 +347,7 @@
         </plugin>
         <plugin>
           <artifactId>maven-clean-plugin</artifactId>
-          <version>3.4.1</version>
+          <version>3.5.0</version>
           <configuration>
             <filesets>
               <fileset>
@@ -481,7 +481,7 @@
         <plugin>
           <groupId>io.smallrye</groupId>
           <artifactId>jandex-maven-plugin</artifactId>
-          <version>3.3.0</version>
+          <version>3.3.1</version>
         </plugin>
         <plugin>
           <groupId>org.sonatype.plugins</groupId>

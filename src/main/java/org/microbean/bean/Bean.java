@@ -25,6 +25,11 @@ import java.util.SequencedSet;
 
 import java.util.function.Function;
 
+import org.microbean.assign.Aggregate;
+import org.microbean.assign.Assignment;
+import org.microbean.assign.AttributedElement;
+import org.microbean.assign.AttributedType;
+
 import static java.lang.constant.ConstantDescs.BSM_INVOKE;
 
 /**

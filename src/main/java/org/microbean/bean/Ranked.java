@@ -35,7 +35,10 @@ package org.microbean.bean;
  * @see #outranks(int)
  *
  * @see #outranks(int, int)
+ *
+ * @deprecated This class is deprecated for future removal.
  */
+@Deprecated
 public interface Ranked {
 
 

@@ -17,10 +17,6 @@ package org.microbean.bean;
  * A {@link BeanException} concerning problematic <dfn>reductions</dfn>.
  *
  * @author <a href="https://about.me/lairdnelson" target="_top">Laird Nelson</a>
- *
- * @see Reducible
- *
- * @see Reducer
  */
 public sealed class ReductionException extends BeanException permits AmbiguousReductionException, UnsatisfiedReductionException {
 
