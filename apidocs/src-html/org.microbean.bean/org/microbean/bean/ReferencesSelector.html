@@ -26,54 +26,73 @@
 <span class="source-line-no">013</span><span id="line-13"> */</span>
 <span class="source-line-no">014</span><span id="line-14">package org.microbean.bean;</span>
 <span class="source-line-no">015</span><span id="line-15"></span>
-<span class="source-line-no">016</span><span id="line-16">/**</span>
-<span class="source-line-no">017</span><span id="line-17"> * A supplier of {@link References} objects.</span>
-<span class="source-line-no">018</span><span id="line-18"> *</span>
-<span class="source-line-no">019</span><span id="line-19"> * @author &lt;a href="https://about.me/lairdnelson" target="_top"&gt;Laird Nelson&lt;/a&gt;</span>
+<span class="source-line-no">016</span><span id="line-16">import org.microbean.assign.AttributedType;</span>
+<span class="source-line-no">017</span><span id="line-17"></span>
+<span class="source-line-no">018</span><span id="line-18">/**</span>
+<span class="source-line-no">019</span><span id="line-19"> * A supplier of {@link References} objects.</span>
 <span class="source-line-no">020</span><span id="line-20"> *</span>
-<span class="source-line-no">021</span><span id="line-21"> * @see #references(AttributedType)</span>
+<span class="source-line-no">021</span><span id="line-21"> * @author &lt;a href="https://about.me/lairdnelson" target="_top"&gt;Laird Nelson&lt;/a&gt;</span>
 <span class="source-line-no">022</span><span id="line-22"> *</span>
-<span class="source-line-no">023</span><span id="line-23"> * @see #reference(AttributedType)</span>
+<span class="source-line-no">023</span><span id="line-23"> * @see #references(AttributedType)</span>
 <span class="source-line-no">024</span><span id="line-24"> *</span>
-<span class="source-line-no">025</span><span id="line-25"> * @see References</span>
-<span class="source-line-no">026</span><span id="line-26"> */</span>
-<span class="source-line-no">027</span><span id="line-27">public interface ReferencesSelector {</span>
-<span class="source-line-no">028</span><span id="line-28"></span>
-<span class="source-line-no">029</span><span id="line-29">  /**</span>
-<span class="source-line-no">030</span><span id="line-30">   * Returns a {@link References} capable of locating contextual references of the relevant type.</span>
-<span class="source-line-no">031</span><span id="line-31">   *</span>
-<span class="source-line-no">032</span><span id="line-32">   * @param &lt;R&gt; the contextual reference type</span>
-<span class="source-line-no">033</span><span id="line-33">   *</span>
-<span class="source-line-no">034</span><span id="line-34">   * @param t an {@link AttributedType} describing the contextual reference type; must not be {@code null}</span>
-<span class="source-line-no">035</span><span id="line-35">   *</span>
-<span class="source-line-no">036</span><span id="line-36">   * @return a non-{@code null} {@link References}</span>
-<span class="source-line-no">037</span><span id="line-37">   *</span>
-<span class="source-line-no">038</span><span id="line-38">   * @exception NullPointerException if {@code t} is {@code null}</span>
-<span class="source-line-no">039</span><span id="line-39">   *</span>
-<span class="source-line-no">040</span><span id="line-40">   * @see References</span>
-<span class="source-line-no">041</span><span id="line-41">   */</span>
-<span class="source-line-no">042</span><span id="line-42">  public &lt;R&gt; References&lt;R&gt; references(final AttributedType t);</span>
-<span class="source-line-no">043</span><span id="line-43"></span>
-<span class="source-line-no">044</span><span id="line-44">  /**</span>
-<span class="source-line-no">045</span><span id="line-45">   * Returns the sole contextual reference of the relevant type.</span>
-<span class="source-line-no">046</span><span id="line-46">   *</span>
-<span class="source-line-no">047</span><span id="line-47">   * @param &lt;R&gt; the contextual reference type</span>
-<span class="source-line-no">048</span><span id="line-48">   *</span>
-<span class="source-line-no">049</span><span id="line-49">   * @param t an {@link AttributedType} describing the contextual reference type; must not be {@code null}</span>
-<span class="source-line-no">050</span><span id="line-50">   *</span>
-<span class="source-line-no">051</span><span id="line-51">   * @return a non-{@code null} contextual reference</span>
-<span class="source-line-no">052</span><span id="line-52">   *</span>
-<span class="source-line-no">053</span><span id="line-53">   * @exception NullPointerException if {@code t} is {@code null}</span>
-<span class="source-line-no">054</span><span id="line-54">   *</span>
-<span class="source-line-no">055</span><span id="line-55">   * @exception UnsatisfiedReductionException if there is no contextual reference for the relevant type</span>
-<span class="source-line-no">056</span><span id="line-56">   *</span>
-<span class="source-line-no">057</span><span id="line-57">   * @exception AmbiguousReductionException if there is more than one contextual reference for the relevant type</span>
-<span class="source-line-no">058</span><span id="line-58">   */</span>
-<span class="source-line-no">059</span><span id="line-59">  public default &lt;R&gt; R reference(final AttributedType t) {</span>
-<span class="source-line-no">060</span><span id="line-60">    return this.&lt;R&gt;references(t).get();</span>
-<span class="source-line-no">061</span><span id="line-61">  }</span>
-<span class="source-line-no">062</span><span id="line-62"></span>
-<span class="source-line-no">063</span><span id="line-63">}</span>
+<span class="source-line-no">025</span><span id="line-25"> * @see #reference(AttributedType)</span>
+<span class="source-line-no">026</span><span id="line-26"> *</span>
+<span class="source-line-no">027</span><span id="line-27"> * @see References</span>
+<span class="source-line-no">028</span><span id="line-28"> */</span>
+<span class="source-line-no">029</span><span id="line-29">// TODO: not crazy about the circular dependencies, but they're no worse than, say, a sealed class</span>
+<span class="source-line-no">030</span><span id="line-30">public interface ReferencesSelector {</span>
+<span class="source-line-no">031</span><span id="line-31"></span>
+<span class="source-line-no">032</span><span id="line-32">  /**</span>
+<span class="source-line-no">033</span><span id="line-33">   * Destroys the supplied contextual reference if and only if it meets the conditions for destruction.</span>
+<span class="source-line-no">034</span><span id="line-34">   *</span>
+<span class="source-line-no">035</span><span id="line-35">   * @param r a contextual reference; may be {@code null} in which case {@code false} will be returned</span>
+<span class="source-line-no">036</span><span id="line-36">   *</span>
+<span class="source-line-no">037</span><span id="line-37">   * @return {@code true} if and only if destruction occurred</span>
+<span class="source-line-no">038</span><span id="line-38">   *</span>
+<span class="source-line-no">039</span><span id="line-39">   * @exception DestructionException if an error occurs</span>
+<span class="source-line-no">040</span><span id="line-40">   */</span>
+<span class="source-line-no">041</span><span id="line-41">  public boolean destroy(final Object r); // e.g. CDI's Instance#destroy(Object); works only on normal- and @Dependent-scoped objects</span>
+<span class="source-line-no">042</span><span id="line-42"></span>
+<span class="source-line-no">043</span><span id="line-43">  /**</span>
+<span class="source-line-no">044</span><span id="line-44">   * Returns a {@link References} capable of locating contextual references of the relevant type.</span>
+<span class="source-line-no">045</span><span id="line-45">   *</span>
+<span class="source-line-no">046</span><span id="line-46">   * @param &lt;R&gt; the contextual reference type</span>
+<span class="source-line-no">047</span><span id="line-47">   *</span>
+<span class="source-line-no">048</span><span id="line-48">   * @param t an {@link AttributedType} describing the contextual reference type; must not be {@code null}</span>
+<span class="source-line-no">049</span><span id="line-49">   *</span>
+<span class="source-line-no">050</span><span id="line-50">   * @return a non-{@code null} {@link References}</span>
+<span class="source-line-no">051</span><span id="line-51">   *</span>
+<span class="source-line-no">052</span><span id="line-52">   * @exception NullPointerException if {@code t} is {@code null}</span>
+<span class="source-line-no">053</span><span id="line-53">   *</span>
+<span class="source-line-no">054</span><span id="line-54">   * @see References</span>
+<span class="source-line-no">055</span><span id="line-55">   */</span>
+<span class="source-line-no">056</span><span id="line-56">  public &lt;R&gt; References&lt;R&gt; references(final AttributedType t);</span>
+<span class="source-line-no">057</span><span id="line-57"></span>
+<span class="source-line-no">058</span><span id="line-58">  /**</span>
+<span class="source-line-no">059</span><span id="line-59">   * A convenience method that acquires and returns what is presumed, possibly incorrectly, to be the sole contextual</span>
+<span class="source-line-no">060</span><span id="line-60">   * reference of the relevant type.</span>
+<span class="source-line-no">061</span><span id="line-61">   *</span>
+<span class="source-line-no">062</span><span id="line-62">   * @param &lt;R&gt; the contextual reference type</span>
+<span class="source-line-no">063</span><span id="line-63">   *</span>
+<span class="source-line-no">064</span><span id="line-64">   * @param t an {@link AttributedType} describing the contextual reference type; must not be {@code null}</span>
+<span class="source-line-no">065</span><span id="line-65">   *</span>
+<span class="source-line-no">066</span><span id="line-66">   * @return a non-{@code null} contextual reference</span>
+<span class="source-line-no">067</span><span id="line-67">   *</span>
+<span class="source-line-no">068</span><span id="line-68">   * @exception NullPointerException if {@code t} is {@code null}</span>
+<span class="source-line-no">069</span><span id="line-69">   *</span>
+<span class="source-line-no">070</span><span id="line-70">   * @exception UnsatisfiedReductionException if there is no contextual reference for the relevant type</span>
+<span class="source-line-no">071</span><span id="line-71">   *</span>
+<span class="source-line-no">072</span><span id="line-72">   * @exception AmbiguousReductionException if there is more than one contextual reference for the relevant type</span>
+<span class="source-line-no">073</span><span id="line-73">   *</span>
+<span class="source-line-no">074</span><span id="line-74">   * @see #references(AttributedType)</span>
+<span class="source-line-no">075</span><span id="line-75">   *</span>
+<span class="source-line-no">076</span><span id="line-76">   * @see References#get()</span>
+<span class="source-line-no">077</span><span id="line-77">   */</span>
+<span class="source-line-no">078</span><span id="line-78">  public default &lt;R&gt; R reference(final AttributedType t) {</span>
+<span class="source-line-no">079</span><span id="line-79">    return this.&lt;R&gt;references(t).get();</span>
+<span class="source-line-no">080</span><span id="line-80">  }</span>
+<span class="source-line-no">081</span><span id="line-81"></span>
+<span class="source-line-no">082</span><span id="line-82">}</span>
 
 
 

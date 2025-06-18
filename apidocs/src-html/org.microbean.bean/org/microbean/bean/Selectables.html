@@ -35,253 +35,196 @@
 <span class="source-line-no">022</span><span id="line-22">import java.util.concurrent.ConcurrentHashMap;</span>
 <span class="source-line-no">023</span><span id="line-23"></span>
 <span class="source-line-no">024</span><span id="line-24">import java.util.function.BiFunction;</span>
-<span class="source-line-no">025</span><span id="line-25">import java.util.function.Function;</span>
-<span class="source-line-no">026</span><span id="line-26"></span>
-<span class="source-line-no">027</span><span id="line-27">import org.microbean.assign.Matcher;</span>
-<span class="source-line-no">028</span><span id="line-28"></span>
-<span class="source-line-no">029</span><span id="line-29">import static org.microbean.bean.Beans.normalize;</span>
-<span class="source-line-no">030</span><span id="line-30"></span>
-<span class="source-line-no">031</span><span id="line-31">import static org.microbean.bean.Ranked.DEFAULT_RANK;</span>
-<span class="source-line-no">032</span><span id="line-32"></span>
-<span class="source-line-no">033</span><span id="line-33">/**</span>
-<span class="source-line-no">034</span><span id="line-34"> * Utility methods for working with {@link Selectable}s.</span>
-<span class="source-line-no">035</span><span id="line-35"> *</span>
-<span class="source-line-no">036</span><span id="line-36"> * @author &lt;a href="https://about.me/lairdnelson" target="_top"&gt;Laird Nelson&lt;/a&gt;</span>
-<span class="source-line-no">037</span><span id="line-37"> *</span>
-<span class="source-line-no">038</span><span id="line-38"> * @see Selectable</span>
-<span class="source-line-no">039</span><span id="line-39"> */</span>
-<span class="source-line-no">040</span><span id="line-40">public final class Selectables {</span>
-<span class="source-line-no">041</span><span id="line-41"></span>
-<span class="source-line-no">042</span><span id="line-42">  private Selectables() {</span>
-<span class="source-line-no">043</span><span id="line-43">    super();</span>
-<span class="source-line-no">044</span><span id="line-44">  }</span>
-<span class="source-line-no">045</span><span id="line-45"></span>
-<span class="source-line-no">046</span><span id="line-46">  /**</span>
-<span class="source-line-no">047</span><span id="line-47">   * Returns a {@link Selectable} that reduces any ambiguity in the results returned by another {@link Selectable},</span>
-<span class="source-line-no">048</span><span id="line-48">   * considering alternate status and rank.</span>
-<span class="source-line-no">049</span><span id="line-49">   *</span>
-<span class="source-line-no">050</span><span id="line-50">   * @param &lt;C&gt; the criteria type</span>
-<span class="source-line-no">051</span><span id="line-51">   *</span>
-<span class="source-line-no">052</span><span id="line-52">   * @param &lt;E&gt; the element type</span>
-<span class="source-line-no">053</span><span id="line-53">   *</span>
-<span class="source-line-no">054</span><span id="line-54">   * @param s a {@link Selectable}; must not be {@code null}</span>
-<span class="source-line-no">055</span><span id="line-55">   *</span>
-<span class="source-line-no">056</span><span id="line-56">   * @return a non-{@code null} {@link Selectable}</span>
-<span class="source-line-no">057</span><span id="line-57">   *</span>
-<span class="source-line-no">058</span><span id="line-58">   * @exception NullPointerException if {@code s} is {@code null}</span>
-<span class="source-line-no">059</span><span id="line-59">   *</span>
-<span class="source-line-no">060</span><span id="line-60">   * @see Ranked#rank()</span>
-<span class="source-line-no">061</span><span id="line-61">   *</span>
-<span class="source-line-no">062</span><span id="line-62">   * @see Ranked#alternate()</span>
-<span class="source-line-no">063</span><span id="line-63">   */</span>
-<span class="source-line-no">064</span><span id="line-64">  public static final &lt;C, E extends Ranked&gt; Selectable&lt;C, E&gt; ambiguityReducing(final Selectable&lt;C, E&gt; s) {</span>
-<span class="source-line-no">065</span><span id="line-65">    Objects.requireNonNull(s, "s");</span>
-<span class="source-line-no">066</span><span id="line-66">    // Relevant bits:</span>
-<span class="source-line-no">067</span><span id="line-67">    //</span>
-<span class="source-line-no">068</span><span id="line-68">    // https://jakarta.ee/specifications/cdi/4.1/jakarta-cdi-spec-4.1#unsatisfied_and_ambig_dependencies</span>
-<span class="source-line-no">069</span><span id="line-69">    // https://jakarta.ee/specifications/cdi/4.1/jakarta-cdi-spec-4.1#dynamic_lookup (Search for "The iterator() method</span>
-<span class="source-line-no">070</span><span id="line-70">    // must")</span>
-<span class="source-line-no">071</span><span id="line-71">    return c -&gt; {</span>
-<span class="source-line-no">072</span><span id="line-72">      final List&lt;E&gt; elements = s.select(c);</span>
-<span class="source-line-no">073</span><span id="line-73">      if (elements.isEmpty()) {</span>
-<span class="source-line-no">074</span><span id="line-74">        return List.of();</span>
-<span class="source-line-no">075</span><span id="line-75">      } else if (elements.size() == 1) {</span>
-<span class="source-line-no">076</span><span id="line-76">        return List.of(elements.get(0));</span>
-<span class="source-line-no">077</span><span id="line-77">      }</span>
-<span class="source-line-no">078</span><span id="line-78"></span>
-<span class="source-line-no">079</span><span id="line-79">      int maxRank = Integer.MIN_VALUE;</span>
-<span class="source-line-no">080</span><span id="line-80">      final List&lt;E&gt; reductionList = new ArrayList&lt;&gt;(elements.size()); // will never be larger, only smaller</span>
-<span class="source-line-no">081</span><span id="line-81">      boolean reductionListContainsOnlyRankedAlternates = false;</span>
-<span class="source-line-no">082</span><span id="line-82"></span>
-<span class="source-line-no">083</span><span id="line-83">      for (final E element : elements) {</span>
-<span class="source-line-no">084</span><span id="line-84">        if (!element.alternate()) { // TODO: eventually this method will go away</span>
-<span class="source-line-no">085</span><span id="line-85">          // The element is not an alternate. We skip it.</span>
-<span class="source-line-no">086</span><span id="line-86">          continue;</span>
-<span class="source-line-no">087</span><span id="line-87">        }</span>
-<span class="source-line-no">088</span><span id="line-88"></span>
-<span class="source-line-no">089</span><span id="line-89">        final int rank = element.rank(); // TODO: eventually this method will go away</span>
-<span class="source-line-no">090</span><span id="line-90">        if (rank == DEFAULT_RANK) {</span>
-<span class="source-line-no">091</span><span id="line-91">          // The element is an alternate. It has the default rank, so no explicit rank. Headed toward ambiguity. No need</span>
-<span class="source-line-no">092</span><span id="line-92">          // to look at maxRank etc.</span>
-<span class="source-line-no">093</span><span id="line-93">          if (reductionListContainsOnlyRankedAlternates) {</span>
-<span class="source-line-no">094</span><span id="line-94">            reductionListContainsOnlyRankedAlternates = false;</span>
-<span class="source-line-no">095</span><span id="line-95">          }</span>
-<span class="source-line-no">096</span><span id="line-96">          reductionList.add(element);</span>
-<span class="source-line-no">097</span><span id="line-97">          continue;</span>
-<span class="source-line-no">098</span><span id="line-98">        }</span>
-<span class="source-line-no">099</span><span id="line-99"></span>
-<span class="source-line-no">100</span><span id="line-100">        if (reductionList.isEmpty()) {</span>
-<span class="source-line-no">101</span><span id="line-101">          // The element is an alternate. It has an explicit rank. The reduction list is empty. The element's rank is</span>
-<span class="source-line-no">102</span><span id="line-102">          // therefore the highest one encountered so far. Add the element to the reduction list.</span>
-<span class="source-line-no">103</span><span id="line-103">          assert !reductionListContainsOnlyRankedAlternates : "Unexpected reductionListContainsOnlyRankedAlternates: " + reductionListContainsOnlyRankedAlternates;</span>
-<span class="source-line-no">104</span><span id="line-104">          if (rank &gt; maxRank) {</span>
-<span class="source-line-no">105</span><span id="line-105">            maxRank = rank;</span>
-<span class="source-line-no">106</span><span id="line-106">          }</span>
-<span class="source-line-no">107</span><span id="line-107">          reductionList.add(element);</span>
-<span class="source-line-no">108</span><span id="line-108">          reductionListContainsOnlyRankedAlternates = true;</span>
-<span class="source-line-no">109</span><span id="line-109">          continue;</span>
-<span class="source-line-no">110</span><span id="line-110">        }</span>
-<span class="source-line-no">111</span><span id="line-111"></span>
-<span class="source-line-no">112</span><span id="line-112">        if (reductionListContainsOnlyRankedAlternates) {</span>
-<span class="source-line-no">113</span><span id="line-113">          // The element is an alternate. It has an explicit rank. The reduction list is known to contain only ranked</span>
-<span class="source-line-no">114</span><span id="line-114">          // alternates (in fact it should contain exactly one).</span>
-<span class="source-line-no">115</span><span id="line-115">          assert reductionList.size() == 1 : "Unexpected reductionList size: " + reductionList;</span>
-<span class="source-line-no">116</span><span id="line-116">          if (rank &gt; maxRank) {</span>
-<span class="source-line-no">117</span><span id="line-117">            // The element's rank is higher than the rank of the (sole) element in the list. Record the new highest rank</span>
-<span class="source-line-no">118</span><span id="line-118">            // and replace the sole element in the list with this element.</span>
-<span class="source-line-no">119</span><span id="line-119">            maxRank = rank;</span>
-<span class="source-line-no">120</span><span id="line-120">            reductionList.set(0, element);</span>
-<span class="source-line-no">121</span><span id="line-121">          }</span>
-<span class="source-line-no">122</span><span id="line-122">          continue;</span>
-<span class="source-line-no">123</span><span id="line-123">        }</span>
-<span class="source-line-no">124</span><span id="line-124"></span>
-<span class="source-line-no">125</span><span id="line-125">        // The element is an alternate. It has an explicit rank (but this does not matter as we'll see). The list we're</span>
-<span class="source-line-no">126</span><span id="line-126">        // using to store alternates does not have a possibility of reducing to size 1, because it already contains</span>
-<span class="source-line-no">127</span><span id="line-127">        // unranked alternates, so we have to add this element to it, regardless of what its rank is. This operation</span>
-<span class="source-line-no">128</span><span id="line-128">        // will not affect the highest rank.</span>
-<span class="source-line-no">129</span><span id="line-129">        reductionList.add(element);</span>
-<span class="source-line-no">130</span><span id="line-130">      }</span>
-<span class="source-line-no">131</span><span id="line-131"></span>
-<span class="source-line-no">132</span><span id="line-132">      assert reductionListContainsOnlyRankedAlternates ? reductionList.size() == 1 : true : "Unexpected reductionList size: " + reductionList;</span>
-<span class="source-line-no">133</span><span id="line-133">      if (reductionList.isEmpty()) {</span>
-<span class="source-line-no">134</span><span id="line-134">        // No reduction at all took place. "If typesafe resolution results in an ambiguous dependency and the set of</span>
-<span class="source-line-no">135</span><span id="line-135">        // candidate beans contains no alternative, the set of resulting beans contains all candidate beans."</span>
-<span class="source-line-no">136</span><span id="line-136">        return elements;</span>
-<span class="source-line-no">137</span><span id="line-137">      } else if (reductionList.size() == 1) {</span>
-<span class="source-line-no">138</span><span id="line-138">        return List.of(reductionList.get(0));</span>
-<span class="source-line-no">139</span><span id="line-139">      }</span>
-<span class="source-line-no">140</span><span id="line-140">      return List.copyOf(reductionList);</span>
-<span class="source-line-no">141</span><span id="line-141">    };</span>
-<span class="source-line-no">142</span><span id="line-142">  }</span>
-<span class="source-line-no">143</span><span id="line-143"></span>
-<span class="source-line-no">144</span><span id="line-144">  /**</span>
-<span class="source-line-no">145</span><span id="line-145">   * Returns a {@link Selectable} that caches its results.</span>
-<span class="source-line-no">146</span><span id="line-146">   *</span>
-<span class="source-line-no">147</span><span id="line-147">   * &lt;p&gt;The cache is unbounded.&lt;/p&gt;</span>
-<span class="source-line-no">148</span><span id="line-148">   *</span>
-<span class="source-line-no">149</span><span id="line-149">   * @param &lt;C&gt; the criteria type</span>
-<span class="source-line-no">150</span><span id="line-150">   *</span>
-<span class="source-line-no">151</span><span id="line-151">   * @param &lt;E&gt; the element type</span>
-<span class="source-line-no">152</span><span id="line-152">   *</span>
-<span class="source-line-no">153</span><span id="line-153">   * @param selectable a {@link Selectable}; must not be {@code null}</span>
-<span class="source-line-no">154</span><span id="line-154">   *</span>
-<span class="source-line-no">155</span><span id="line-155">   * @return a non-{@code null} {@link Selectable}</span>
-<span class="source-line-no">156</span><span id="line-156">   *</span>
-<span class="source-line-no">157</span><span id="line-157">   * @exception NullPointerException if {@code selectable} is {@code null}</span>
-<span class="source-line-no">158</span><span id="line-158">   *</span>
-<span class="source-line-no">159</span><span id="line-159">   * @see #caching(Selectable, BiFunction)</span>
-<span class="source-line-no">160</span><span id="line-160">   */</span>
-<span class="source-line-no">161</span><span id="line-161">  public static &lt;C, E&gt; Selectable&lt;C, E&gt; caching(final Selectable&lt;C, E&gt; selectable) {</span>
-<span class="source-line-no">162</span><span id="line-162">    final Map&lt;C, List&lt;E&gt;&gt; selectionCache = new ConcurrentHashMap&lt;&gt;();</span>
-<span class="source-line-no">163</span><span id="line-163">    return Selectables.&lt;C, E&gt;caching(selectable, selectionCache::computeIfAbsent);</span>
-<span class="source-line-no">164</span><span id="line-164">  }</span>
-<span class="source-line-no">165</span><span id="line-165"></span>
-<span class="source-line-no">166</span><span id="line-166">  /**</span>
-<span class="source-line-no">167</span><span id="line-167">   * Returns a {@link Selectable} that caches its results.</span>
-<span class="source-line-no">168</span><span id="line-168">   *</span>
-<span class="source-line-no">169</span><span id="line-169">   * @param &lt;C&gt; the criteria type</span>
-<span class="source-line-no">170</span><span id="line-170">   *</span>
-<span class="source-line-no">171</span><span id="line-171">   * @param &lt;E&gt; the element type</span>
-<span class="source-line-no">172</span><span id="line-172">   *</span>
-<span class="source-line-no">173</span><span id="line-173">   * @param selectable a {@link Selectable}; must not be {@code null}</span>
-<span class="source-line-no">174</span><span id="line-174">   *</span>
-<span class="source-line-no">175</span><span id="line-175">   * @param f a {@link BiFunction} that returns a cached result, computing it on demand via its supplied mapping {@link</span>
-<span class="source-line-no">176</span><span id="line-176">   * Function} if necessary; must not be {@code null}; normally safe for concurrent use by multiple threads; often a</span>
-<span class="source-line-no">177</span><span id="line-177">   * reference to the {@link ConcurrentHashMap#computeIfAbsent(Object, Function)} method</span>
-<span class="source-line-no">178</span><span id="line-178">   *</span>
-<span class="source-line-no">179</span><span id="line-179">   * @return a non-{@code null} {@link Selectable}</span>
-<span class="source-line-no">180</span><span id="line-180">   *</span>
-<span class="source-line-no">181</span><span id="line-181">   * @exception NullPointerException if {@code selectable} or {@code f} is {@code null}</span>
-<span class="source-line-no">182</span><span id="line-182">   *</span>
-<span class="source-line-no">183</span><span id="line-183">   * @see ConcurrentHashMap#computeIfAbsent(Object, Function)</span>
-<span class="source-line-no">184</span><span id="line-184">   */</span>
-<span class="source-line-no">185</span><span id="line-185">  public static &lt;C, E&gt; Selectable&lt;C, E&gt; caching(final Selectable&lt;C, E&gt; selectable,</span>
-<span class="source-line-no">186</span><span id="line-186">                                                final BiFunction&lt;? super C, Function&lt;? super C, ? extends List&lt;E&gt;&gt;, ? extends List&lt;E&gt;&gt; f) {</span>
-<span class="source-line-no">187</span><span id="line-187">    Objects.requireNonNull(selectable, "selectable");</span>
-<span class="source-line-no">188</span><span id="line-188">    return c -&gt; f.apply(c, selectable::select);</span>
-<span class="source-line-no">189</span><span id="line-189">  }</span>
-<span class="source-line-no">190</span><span id="line-190"></span>
-<span class="source-line-no">191</span><span id="line-191">  /**</span>
-<span class="source-line-no">192</span><span id="line-192">   * Returns a {@link Selectable} whose {@link Selectable#select(Object)} method always returns an {@linkplain List#of()</span>
-<span class="source-line-no">193</span><span id="line-193">   * empty, immutable &lt;code&gt;List&lt;/code&gt;}.</span>
-<span class="source-line-no">194</span><span id="line-194">   *</span>
-<span class="source-line-no">195</span><span id="line-195">   * @param &lt;C&gt; the criteria type</span>
-<span class="source-line-no">196</span><span id="line-196">   *</span>
-<span class="source-line-no">197</span><span id="line-197">   * @param &lt;E&gt; the element type</span>
-<span class="source-line-no">198</span><span id="line-198">   *</span>
-<span class="source-line-no">199</span><span id="line-199">   * @return a non-{@code null} {@link Selectable}</span>
-<span class="source-line-no">200</span><span id="line-200">   */</span>
-<span class="source-line-no">201</span><span id="line-201">  public static final &lt;C, E&gt; Selectable&lt;C, E&gt; empty() {</span>
-<span class="source-line-no">202</span><span id="line-202">    return Selectables::empty;</span>
-<span class="source-line-no">203</span><span id="line-203">  }</span>
-<span class="source-line-no">204</span><span id="line-204"></span>
-<span class="source-line-no">205</span><span id="line-205">  private static final &lt;C, E&gt; List&lt;E&gt; empty(final C ignored) {</span>
-<span class="source-line-no">206</span><span id="line-206">    return List.of();</span>
-<span class="source-line-no">207</span><span id="line-207">  }</span>
-<span class="source-line-no">208</span><span id="line-208"></span>
-<span class="source-line-no">209</span><span id="line-209">  /**</span>
-<span class="source-line-no">210</span><span id="line-210">   * Returns a {@link Selectable} using the supplied {@link Collection} as its elements, and the supplied {@link</span>
-<span class="source-line-no">211</span><span id="line-211">   * BiFunction} as its &lt;em&gt;selector function&lt;/em&gt;.</span>
-<span class="source-line-no">212</span><span id="line-212">   *</span>
-<span class="source-line-no">213</span><span id="line-213">   * &lt;p&gt;There is no guarantee that this method will return new {@link Selectable} instances.&lt;/p&gt;</span>
-<span class="source-line-no">214</span><span id="line-214">   *</span>
-<span class="source-line-no">215</span><span id="line-215">   * &lt;p&gt;The {@link Selectable} instances returned by this method may or may not cache their selections.&lt;/p&gt;</span>
-<span class="source-line-no">216</span><span id="line-216">   *</span>
-<span class="source-line-no">217</span><span id="line-217">   * &lt;p&gt;The selector function must select a sublist from the supplied {@link Collection} as mediated by the supplied</span>
-<span class="source-line-no">218</span><span id="line-218">   * criteria. The selector function must additionally be idempotent and must produce a determinate value when given the</span>
-<span class="source-line-no">219</span><span id="line-219">   * same arguments.&lt;/p&gt;</span>
-<span class="source-line-no">220</span><span id="line-220">   *</span>
-<span class="source-line-no">221</span><span id="line-221">   * &lt;p&gt;No validation of these semantics of the selector function is performed.&lt;/p&gt;</span>
-<span class="source-line-no">222</span><span id="line-222">   *</span>
-<span class="source-line-no">223</span><span id="line-223">   * @param &lt;C&gt; the criteria type</span>
-<span class="source-line-no">224</span><span id="line-224">   *</span>
-<span class="source-line-no">225</span><span id="line-225">   * @param &lt;E&gt; the element type</span>
-<span class="source-line-no">226</span><span id="line-226">   *</span>
-<span class="source-line-no">227</span><span id="line-227">   * @param collection a {@link Collection} of elements from which sublists may be selected; must not be {@code null}</span>
-<span class="source-line-no">228</span><span id="line-228">   *</span>
-<span class="source-line-no">229</span><span id="line-229">   * @param f the selector function; must not be {@code null}</span>
-<span class="source-line-no">230</span><span id="line-230">   *</span>
-<span class="source-line-no">231</span><span id="line-231">   * @return a {@link Selectable}; never {@code null}</span>
-<span class="source-line-no">232</span><span id="line-232">   *</span>
-<span class="source-line-no">233</span><span id="line-233">   * @exception NullPointerException if either {@code collection} or {@code f} is {@code null}</span>
-<span class="source-line-no">234</span><span id="line-234">   */</span>
-<span class="source-line-no">235</span><span id="line-235">  @SuppressWarnings("unchecked")</span>
-<span class="source-line-no">236</span><span id="line-236">  public static &lt;C, E&gt; Selectable&lt;C, E&gt; filtering(final Collection&lt;? extends E&gt; collection,</span>
-<span class="source-line-no">237</span><span id="line-237">                                                  final BiFunction&lt;? super E, ? super C, ? extends Boolean&gt; f) {</span>
-<span class="source-line-no">238</span><span id="line-238">    Objects.requireNonNull(f, "f");</span>
-<span class="source-line-no">239</span><span id="line-239">    return collection.isEmpty() ? empty() : c -&gt; (List&lt;E&gt;)collection.stream().filter(e -&gt; f.apply(e, c)).toList();</span>
-<span class="source-line-no">240</span><span id="line-240">  }</span>
-<span class="source-line-no">241</span><span id="line-241"></span>
-<span class="source-line-no">242</span><span id="line-242">  /**</span>
-<span class="source-line-no">243</span><span id="line-243">   * {@linkplain Beans#normalize(Collection) Normalizes} the supplied {@link Collection} of {@link Bean}s and returns a</span>
-<span class="source-line-no">244</span><span id="line-244">   * {@link Selectable} for it and the supplied {@link Matcher}.</span>
-<span class="source-line-no">245</span><span id="line-245">   *</span>
-<span class="source-line-no">246</span><span id="line-246">   * &lt;p&gt;The {@link Selectable} does not cache its results.&lt;/p&gt;</span>
-<span class="source-line-no">247</span><span id="line-247">   *</span>
-<span class="source-line-no">248</span><span id="line-248">   * @param beans a {@link Collection} of {@link Bean}s; must not be {@code null}</span>
-<span class="source-line-no">249</span><span id="line-249">   *</span>
-<span class="source-line-no">250</span><span id="line-250">   * @param m an {@link IdMatcher}; must not be {@code null}</span>
-<span class="source-line-no">251</span><span id="line-251">   *</span>
-<span class="source-line-no">252</span><span id="line-252">   * @return a non-{@code null} {@link Selectable}</span>
-<span class="source-line-no">253</span><span id="line-253">   *</span>
-<span class="source-line-no">254</span><span id="line-254">   * @exception NullPointerException if any argument is {@code null}</span>
-<span class="source-line-no">255</span><span id="line-255">   *</span>
-<span class="source-line-no">256</span><span id="line-256">   * @see #filtering(Collection, BiFunction)</span>
-<span class="source-line-no">257</span><span id="line-257">   *</span>
-<span class="source-line-no">258</span><span id="line-258">   * @see #ambiguityReducing(Selectable)</span>
-<span class="source-line-no">259</span><span id="line-259">   *</span>
-<span class="source-line-no">260</span><span id="line-260">   * @see #caching(Selectable)</span>
-<span class="source-line-no">261</span><span id="line-261">   *</span>
-<span class="source-line-no">262</span><span id="line-262">   * @see Beans#normalize(Collection)</span>
-<span class="source-line-no">263</span><span id="line-263">   */</span>
-<span class="source-line-no">264</span><span id="line-264">  public static final Selectable&lt;AttributedType, Bean&lt;?&gt;&gt; typesafeReducing(final Collection&lt;? extends Bean&lt;?&gt;&gt; beans,</span>
-<span class="source-line-no">265</span><span id="line-265">                                                                           final Matcher&lt;? super AttributedType, ? super Id&gt; m) {</span>
-<span class="source-line-no">266</span><span id="line-266">    Objects.requireNonNull(m, "m");</span>
-<span class="source-line-no">267</span><span id="line-267">    final List&lt;Bean&lt;?&gt;&gt; normalizedBeans = normalize(beans);</span>
-<span class="source-line-no">268</span><span id="line-268">    return normalizedBeans.isEmpty() ? empty() : filtering(normalizedBeans, (b, c) -&gt; m.test(c, b.id()));</span>
-<span class="source-line-no">269</span><span id="line-269">  }</span>
-<span class="source-line-no">270</span><span id="line-270"></span>
-<span class="source-line-no">271</span><span id="line-271">}</span>
+<span class="source-line-no">025</span><span id="line-25">import java.util.function.BiPredicate;</span>
+<span class="source-line-no">026</span><span id="line-26">import java.util.function.Function;</span>
+<span class="source-line-no">027</span><span id="line-27">import java.util.function.Predicate;</span>
+<span class="source-line-no">028</span><span id="line-28">import java.util.function.ToIntFunction;</span>
+<span class="source-line-no">029</span><span id="line-29"></span>
+<span class="source-line-no">030</span><span id="line-30">import org.microbean.assign.AttributedType;</span>
+<span class="source-line-no">031</span><span id="line-31">import org.microbean.assign.Matcher;</span>
+<span class="source-line-no">032</span><span id="line-32">import org.microbean.assign.Selectable;</span>
+<span class="source-line-no">033</span><span id="line-33"></span>
+<span class="source-line-no">034</span><span id="line-34">import static org.microbean.bean.Beans.normalize;</span>
+<span class="source-line-no">035</span><span id="line-35"></span>
+<span class="source-line-no">036</span><span id="line-36">/**</span>
+<span class="source-line-no">037</span><span id="line-37"> * Utility methods for working with {@link Selectable}s.</span>
+<span class="source-line-no">038</span><span id="line-38"> *</span>
+<span class="source-line-no">039</span><span id="line-39"> * @author &lt;a href="https://about.me/lairdnelson" target="_top"&gt;Laird Nelson&lt;/a&gt;</span>
+<span class="source-line-no">040</span><span id="line-40"> *</span>
+<span class="source-line-no">041</span><span id="line-41"> * @see Selectable</span>
+<span class="source-line-no">042</span><span id="line-42"> *</span>
+<span class="source-line-no">043</span><span id="line-43"> * @see org.microbean.assign.Selectables</span>
+<span class="source-line-no">044</span><span id="line-44"> */</span>
+<span class="source-line-no">045</span><span id="line-45">public final class Selectables {</span>
+<span class="source-line-no">046</span><span id="line-46"></span>
+<span class="source-line-no">047</span><span id="line-47">  private Selectables() {</span>
+<span class="source-line-no">048</span><span id="line-48">    super();</span>
+<span class="source-line-no">049</span><span id="line-49">  }</span>
+<span class="source-line-no">050</span><span id="line-50"></span>
+<span class="source-line-no">051</span><span id="line-51">  /**</span>
+<span class="source-line-no">052</span><span id="line-52">   * Returns a {@link Selectable} that reduces any ambiguity in the results returned by another {@link Selectable},</span>
+<span class="source-line-no">053</span><span id="line-53">   * considering alternate status and rank.</span>
+<span class="source-line-no">054</span><span id="line-54">   *</span>
+<span class="source-line-no">055</span><span id="line-55">   * @param &lt;C&gt; the criteria type</span>
+<span class="source-line-no">056</span><span id="line-56">   *</span>
+<span class="source-line-no">057</span><span id="line-57">   * @param &lt;E&gt; the element type</span>
+<span class="source-line-no">058</span><span id="line-58">   *</span>
+<span class="source-line-no">059</span><span id="line-59">   * @param s a {@link Selectable}; must not be {@code null}</span>
+<span class="source-line-no">060</span><span id="line-60">   *</span>
+<span class="source-line-no">061</span><span id="line-61">   * @return a non-{@code null} {@link Selectable}</span>
+<span class="source-line-no">062</span><span id="line-62">   *</span>
+<span class="source-line-no">063</span><span id="line-63">   * @exception NullPointerException if {@code s} is {@code null}</span>
+<span class="source-line-no">064</span><span id="line-64">   *</span>
+<span class="source-line-no">065</span><span id="line-65">   * @see Ranked#rank()</span>
+<span class="source-line-no">066</span><span id="line-66">   *</span>
+<span class="source-line-no">067</span><span id="line-67">   * @see Ranked#alternate()</span>
+<span class="source-line-no">068</span><span id="line-68">   *</span>
+<span class="source-line-no">069</span><span id="line-69">   * @see #ambiguityReducing(Selectable, Predicate, ToIntFunction)</span>
+<span class="source-line-no">070</span><span id="line-70">   *</span>
+<span class="source-line-no">071</span><span id="line-71">   * @deprecated Please use the {@link #ambiguityReducing(Selectable, Predicate, ToIntFunction)} method instead.</span>
+<span class="source-line-no">072</span><span id="line-72">   */</span>
+<span class="source-line-no">073</span><span id="line-73">  @Deprecated(forRemoval = true, since = "0.0.19")</span>
+<span class="source-line-no">074</span><span id="line-74">  public static final &lt;C, E extends Ranked&gt; Selectable&lt;C, E&gt; ambiguityReducing(final Selectable&lt;C, E&gt; s) {</span>
+<span class="source-line-no">075</span><span id="line-75">    return ambiguityReducing(s, Ranked::alternate, Ranked::rank);</span>
+<span class="source-line-no">076</span><span id="line-76">  }</span>
+<span class="source-line-no">077</span><span id="line-77"></span>
+<span class="source-line-no">078</span><span id="line-78">  /**</span>
+<span class="source-line-no">079</span><span id="line-79">   * Returns a {@link Selectable} that reduces any ambiguity in the results returned by another {@link Selectable},</span>
+<span class="source-line-no">080</span><span id="line-80">   * considering alternate status and rank.</span>
+<span class="source-line-no">081</span><span id="line-81">   *</span>
+<span class="source-line-no">082</span><span id="line-82">   * @param &lt;C&gt; the criteria type</span>
+<span class="source-line-no">083</span><span id="line-83">   *</span>
+<span class="source-line-no">084</span><span id="line-84">   * @param &lt;E&gt; the element type</span>
+<span class="source-line-no">085</span><span id="line-85">   *</span>
+<span class="source-line-no">086</span><span id="line-86">   * @param s a {@link Selectable}; must not be {@code null}</span>
+<span class="source-line-no">087</span><span id="line-87">   *</span>
+<span class="source-line-no">088</span><span id="line-88">   * @param p a {@link Predicate} that tests whether an element is an &lt;dfn&gt;alternate&lt;/dfn&gt;; must not be {@code null}</span>
+<span class="source-line-no">089</span><span id="line-89">   *</span>
+<span class="source-line-no">090</span><span id="line-90">   * @param ranker a {@link ToIntFunction} that returns a &lt;dfn&gt;rank&lt;/dfn&gt; for an alternate; a rank of {@code 0}</span>
+<span class="source-line-no">091</span><span id="line-91">   * indicates no particular rank; must not be {@code null}</span>
+<span class="source-line-no">092</span><span id="line-92">   *</span>
+<span class="source-line-no">093</span><span id="line-93">   * @return a non-{@code null} {@link Selectable}</span>
+<span class="source-line-no">094</span><span id="line-94">   *</span>
+<span class="source-line-no">095</span><span id="line-95">   * @exception NullPointerException if any argument is {@code null}</span>
+<span class="source-line-no">096</span><span id="line-96">   */</span>
+<span class="source-line-no">097</span><span id="line-97">  public static final &lt;C, E&gt; Selectable&lt;C, E&gt; ambiguityReducing(final Selectable&lt;C, E&gt; s,</span>
+<span class="source-line-no">098</span><span id="line-98">                                                                final Predicate&lt;? super E&gt; p,</span>
+<span class="source-line-no">099</span><span id="line-99">                                                                final ToIntFunction&lt;? super E&gt; ranker) {</span>
+<span class="source-line-no">100</span><span id="line-100">    Objects.requireNonNull(s, "s");</span>
+<span class="source-line-no">101</span><span id="line-101">    Objects.requireNonNull(p, "p");</span>
+<span class="source-line-no">102</span><span id="line-102">    Objects.requireNonNull(ranker, "ranker");</span>
+<span class="source-line-no">103</span><span id="line-103"></span>
+<span class="source-line-no">104</span><span id="line-104">    // Relevant bits:</span>
+<span class="source-line-no">105</span><span id="line-105">    //</span>
+<span class="source-line-no">106</span><span id="line-106">    // https://jakarta.ee/specifications/cdi/4.1/jakarta-cdi-spec-4.1#unsatisfied_and_ambig_dependencies</span>
+<span class="source-line-no">107</span><span id="line-107">    // https://jakarta.ee/specifications/cdi/4.1/jakarta-cdi-spec-4.1#dynamic_lookup (Search for "The iterator() method</span>
+<span class="source-line-no">108</span><span id="line-108">    // must")</span>
+<span class="source-line-no">109</span><span id="line-109">    return c -&gt; {</span>
+<span class="source-line-no">110</span><span id="line-110">      final List&lt;E&gt; elements = s.select(c);</span>
+<span class="source-line-no">111</span><span id="line-111">      final int size = elements.size();</span>
+<span class="source-line-no">112</span><span id="line-112">      switch (size) {</span>
+<span class="source-line-no">113</span><span id="line-113">      case 0 -&gt; List.of();</span>
+<span class="source-line-no">114</span><span id="line-114">      case 1 -&gt; List.of(elements.get(0));</span>
+<span class="source-line-no">115</span><span id="line-115">      default -&gt; {}</span>
+<span class="source-line-no">116</span><span id="line-116">      };</span>
+<span class="source-line-no">117</span><span id="line-117"></span>
+<span class="source-line-no">118</span><span id="line-118">      int maxRank = Integer.MIN_VALUE;</span>
+<span class="source-line-no">119</span><span id="line-119">      final List&lt;E&gt; reductionList = new ArrayList&lt;&gt;(size); // will never be larger, only smaller</span>
+<span class="source-line-no">120</span><span id="line-120">      boolean reductionListContainsOnlyRankedAlternates = false;</span>
+<span class="source-line-no">121</span><span id="line-121"></span>
+<span class="source-line-no">122</span><span id="line-122">      for (final E element : elements) {</span>
+<span class="source-line-no">123</span><span id="line-123">        if (!p.test(element)) { // TODO: eventually this method will go away</span>
+<span class="source-line-no">124</span><span id="line-124">          // The element is not an alternate. We skip it.</span>
+<span class="source-line-no">125</span><span id="line-125">          continue;</span>
+<span class="source-line-no">126</span><span id="line-126">        }</span>
+<span class="source-line-no">127</span><span id="line-127"></span>
+<span class="source-line-no">128</span><span id="line-128">        final int rank = ranker.applyAsInt(element);</span>
+<span class="source-line-no">129</span><span id="line-129">        if (rank == 0) {</span>
+<span class="source-line-no">130</span><span id="line-130">          // The element is an alternate. It has the default rank, so no explicit rank. Headed toward ambiguity. No need</span>
+<span class="source-line-no">131</span><span id="line-131">          // to look at maxRank etc.</span>
+<span class="source-line-no">132</span><span id="line-132">          if (reductionListContainsOnlyRankedAlternates) {</span>
+<span class="source-line-no">133</span><span id="line-133">            reductionListContainsOnlyRankedAlternates = false;</span>
+<span class="source-line-no">134</span><span id="line-134">          }</span>
+<span class="source-line-no">135</span><span id="line-135">          reductionList.add(element);</span>
+<span class="source-line-no">136</span><span id="line-136">          continue;</span>
+<span class="source-line-no">137</span><span id="line-137">        }</span>
+<span class="source-line-no">138</span><span id="line-138"></span>
+<span class="source-line-no">139</span><span id="line-139">        if (reductionList.isEmpty()) {</span>
+<span class="source-line-no">140</span><span id="line-140">          // The element is an alternate with an explicit rank. The reduction list is empty. The element's rank is</span>
+<span class="source-line-no">141</span><span id="line-141">          // therefore by definition the highest one encountered so far. Add the element to the reduction list.</span>
+<span class="source-line-no">142</span><span id="line-142">          assert !reductionListContainsOnlyRankedAlternates : "Unexpected reductionListContainsOnlyRankedAlternates: " + reductionListContainsOnlyRankedAlternates;</span>
+<span class="source-line-no">143</span><span id="line-143">          assert rank &gt; maxRank : "rank &lt;= maxRank: " + rank + " &lt;= " + maxRank; // TODO: I think this is correct</span>
+<span class="source-line-no">144</span><span id="line-144">          maxRank = rank;</span>
+<span class="source-line-no">145</span><span id="line-145">          reductionList.add(element);</span>
+<span class="source-line-no">146</span><span id="line-146">          reductionListContainsOnlyRankedAlternates = true;</span>
+<span class="source-line-no">147</span><span id="line-147">          continue;</span>
+<span class="source-line-no">148</span><span id="line-148">        }</span>
+<span class="source-line-no">149</span><span id="line-149"></span>
+<span class="source-line-no">150</span><span id="line-150">        if (reductionListContainsOnlyRankedAlternates) {</span>
+<span class="source-line-no">151</span><span id="line-151">          // The element is an alternate. It has an explicit rank. The (non-empty) reduction list is known to contain</span>
+<span class="source-line-no">152</span><span id="line-152">          // only ranked alternates (in fact it should contain exactly one).</span>
+<span class="source-line-no">153</span><span id="line-153">          assert reductionList.size() == 1 : "Unexpected reductionList size: " + reductionList;</span>
+<span class="source-line-no">154</span><span id="line-154">          if (rank &gt; maxRank) {</span>
+<span class="source-line-no">155</span><span id="line-155">            // The element's rank is higher than the rank of the (sole) element in the list. Record the new highest rank</span>
+<span class="source-line-no">156</span><span id="line-156">            // and replace the sole element in the list with this element.</span>
+<span class="source-line-no">157</span><span id="line-157">            maxRank = rank;</span>
+<span class="source-line-no">158</span><span id="line-158">            reductionList.set(0, element);</span>
+<span class="source-line-no">159</span><span id="line-159">          }</span>
+<span class="source-line-no">160</span><span id="line-160">          continue;</span>
+<span class="source-line-no">161</span><span id="line-161">        }</span>
+<span class="source-line-no">162</span><span id="line-162"></span>
+<span class="source-line-no">163</span><span id="line-163">        // The element is an alternate. It has an explicit rank (but this does not matter as we'll see). The list we're</span>
+<span class="source-line-no">164</span><span id="line-164">        // using to store alternates does not have a possibility of reducing to size 1, because it already contains</span>
+<span class="source-line-no">165</span><span id="line-165">        // unranked alternates, so we have to add this element to it, regardless of what its rank is. This operation</span>
+<span class="source-line-no">166</span><span id="line-166">        // will not affect the highest rank.</span>
+<span class="source-line-no">167</span><span id="line-167">        reductionList.add(element);</span>
+<span class="source-line-no">168</span><span id="line-168">      }</span>
+<span class="source-line-no">169</span><span id="line-169"></span>
+<span class="source-line-no">170</span><span id="line-170">      assert reductionListContainsOnlyRankedAlternates ? reductionList.size() == 1 : true : "Unexpected reductionList size: " + reductionList;</span>
+<span class="source-line-no">171</span><span id="line-171">      if (reductionList.isEmpty()) {</span>
+<span class="source-line-no">172</span><span id="line-172">        // No reduction at all took place. "If typesafe resolution results in an ambiguous dependency and the set of</span>
+<span class="source-line-no">173</span><span id="line-173">        // candidate beans contains no alternative, the set of resulting beans contains all candidate beans."</span>
+<span class="source-line-no">174</span><span id="line-174">        return elements;</span>
+<span class="source-line-no">175</span><span id="line-175">      } else if (reductionList.size() == 1) {</span>
+<span class="source-line-no">176</span><span id="line-176">        return List.of(reductionList.get(0));</span>
+<span class="source-line-no">177</span><span id="line-177">      }</span>
+<span class="source-line-no">178</span><span id="line-178">      return List.copyOf(reductionList);</span>
+<span class="source-line-no">179</span><span id="line-179">    };</span>
+<span class="source-line-no">180</span><span id="line-180">  }</span>
+<span class="source-line-no">181</span><span id="line-181"></span>
+<span class="source-line-no">182</span><span id="line-182">  /**</span>
+<span class="source-line-no">183</span><span id="line-183">   * {@linkplain Beans#normalize(Collection) Normalizes} the supplied {@link Collection} of {@link Bean}s and returns a</span>
+<span class="source-line-no">184</span><span id="line-184">   * {@link Selectable} for it and the supplied {@link Matcher}.</span>
+<span class="source-line-no">185</span><span id="line-185">   *</span>
+<span class="source-line-no">186</span><span id="line-186">   * &lt;p&gt;The {@link Selectable} does not cache its results.&lt;/p&gt;</span>
+<span class="source-line-no">187</span><span id="line-187">   *</span>
+<span class="source-line-no">188</span><span id="line-188">   * @param beans a {@link Collection} of {@link Bean}s; must not be {@code null}</span>
+<span class="source-line-no">189</span><span id="line-189">   *</span>
+<span class="source-line-no">190</span><span id="line-190">   * @param m an {@link IdMatcher}; must not be {@code null}</span>
+<span class="source-line-no">191</span><span id="line-191">   *</span>
+<span class="source-line-no">192</span><span id="line-192">   * @return a non-{@code null} {@link Selectable}</span>
+<span class="source-line-no">193</span><span id="line-193">   *</span>
+<span class="source-line-no">194</span><span id="line-194">   * @exception NullPointerException if any argument is {@code null}</span>
+<span class="source-line-no">195</span><span id="line-195">   *</span>
+<span class="source-line-no">196</span><span id="line-196">   * @see org.microbean.assign.Selectables#filtering(Collection, BiPredicate)</span>
+<span class="source-line-no">197</span><span id="line-197">   *</span>
+<span class="source-line-no">198</span><span id="line-198">   * @see #ambiguityReducing(Selectable)</span>
+<span class="source-line-no">199</span><span id="line-199">   *</span>
+<span class="source-line-no">200</span><span id="line-200">   * @see org.microbean.assign.Selectables#caching(Selectable)</span>
+<span class="source-line-no">201</span><span id="line-201">   *</span>
+<span class="source-line-no">202</span><span id="line-202">   * @see Beans#normalize(Collection)</span>
+<span class="source-line-no">203</span><span id="line-203">   */</span>
+<span class="source-line-no">204</span><span id="line-204">  public static final Selectable&lt;AttributedType, Bean&lt;?&gt;&gt; typesafeReducing(final Collection&lt;? extends Bean&lt;?&gt;&gt; beans,</span>
+<span class="source-line-no">205</span><span id="line-205">                                                                           final Matcher&lt;? super AttributedType, ? super Id&gt; m) {</span>
+<span class="source-line-no">206</span><span id="line-206">    Objects.requireNonNull(m, "m");</span>
+<span class="source-line-no">207</span><span id="line-207">    final List&lt;Bean&lt;?&gt;&gt; normalizedBeans = normalize(beans);</span>
+<span class="source-line-no">208</span><span id="line-208">    return</span>
+<span class="source-line-no">209</span><span id="line-209">      normalizedBeans.isEmpty() ?</span>
+<span class="source-line-no">210</span><span id="line-210">      org.microbean.assign.Selectables.empty() :</span>
+<span class="source-line-no">211</span><span id="line-211">      org.microbean.assign.Selectables.filtering(normalizedBeans, (b, c) -&gt; m.test(c, b.id()));</span>
+<span class="source-line-no">212</span><span id="line-212">  }</span>
+<span class="source-line-no">213</span><span id="line-213"></span>
+<span class="source-line-no">214</span><span id="line-214">}</span>
 
 
 
