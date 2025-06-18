@@ -21,6 +21,8 @@ import java.lang.constant.MethodHandleDesc;
 
 import java.util.Optional;
 
+import org.microbean.assign.Aggregate;
+
 import static java.lang.constant.ConstantDescs.BSM_INVOKE;
 
 /**

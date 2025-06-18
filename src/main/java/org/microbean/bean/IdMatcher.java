@@ -18,6 +18,7 @@ import java.util.Objects;
 
 import javax.lang.model.type.TypeMirror;
 
+import org.microbean.assign.AttributedType;
 import org.microbean.assign.Matcher;
 
 import org.microbean.attributes.Attributes;
@@ -31,38 +32,53 @@ import org.microbean.attributes.Attributes;
  *
  * @see BeanQualifiersMatcher
  *
- * @see InterceptorBindingsMatcher
- *
  * @see BeanTypeMatcher
+ *
+ * @see Matcher
  *
  * @see Id
  */
 public final class IdMatcher implements Matcher<AttributedType, Id> {
 
+  private final BeanTypeMatcher tm;
+
   private final BeanQualifiersMatcher qm;
 
-  private final InterceptorBindingsMatcher ibm;
-
-  private final BeanTypeMatcher tm;
+  private final Matcher<AttributedType, Id> other;
 
   /**
    * Creates a new {@link IdMatcher}.
    *
+   * @param tm a {@link BeanTypeMatcher}; must not be {@code null}
+   *
    * @param qm a {@link BeanQualifiersMatcher}; must not be {@code null}
    *
-   * @param ibm an {@link InterceptorBindingsMatcher}; must not be {@code null}
+   * @exception NullPointerException} if {@code tm} or {@code qm} is {@code null}
+   *
+   * @see #IdMatcher(BeanTypeMatcher, BeanQualifiersMatcher, Matcher)
+   */
+  public IdMatcher(final BeanTypeMatcher tm, final BeanQualifiersMatcher qm) {
+    this(tm, qm, null);
+  }
+
+  /**
+   * Creates a new {@link IdMatcher}.
    *
    * @param tm a {@link BeanTypeMatcher}; must not be {@code null}
    *
-   * @exception NullPointerException} if any argument is {@code null}
+   * @param qm a {@link BeanQualifiersMatcher}; must not be {@code null}
+   *
+   * @param other a supplementary {@link Matcher}; may be {@code null}
+   *
+   * @exception NullPointerException} if {@code tm} or {@code qm} is {@code null}
    */
-  public IdMatcher(final BeanQualifiersMatcher qm,
-                   final InterceptorBindingsMatcher ibm,
-                   final BeanTypeMatcher tm) {
+  public IdMatcher(final BeanTypeMatcher tm,
+                   final BeanQualifiersMatcher qm,
+                   final Matcher<AttributedType, Id> other) {
     super();
-    this.qm = Objects.requireNonNull(qm, "qm");
-    this.ibm = Objects.requireNonNull(ibm, "ibm");
     this.tm = Objects.requireNonNull(tm, "tm");
+    this.qm = Objects.requireNonNull(qm, "qm");
+    this.other = other == null ? (t, i) -> true : other;
   }
 
   /**
@@ -75,16 +91,14 @@ public final class IdMatcher implements Matcher<AttributedType, Id> {
    * <ol>
    *
    * <li>An invocation of the {@link BeanQualifiersMatcher#test(Collection, Collection)} method on the {@link
-   * BeanQualifiersMatcher} supplied at {@linkplain #IdMatcher(BeanQualifiersMatcher, InterceptorBindingsMatcher,
-   * BeanTypeMatcher) construction time} supplied with the supplied {@linkplain AttributedType#attributes()
+   * BeanQualifiersMatcher} supplied at {@linkplain #IdMatcher(BeanTypeMatcher, BeanQualifiersMatcher,
+   * Matcher) construction time} supplied with the supplied {@linkplain AttributedType#attributes()
    * <code>AttributedType</code>'s attributes} and the supplied {@linkplain Id#attributes() <code>Id</code>'s
    * attributes} returns {@code true}</li>
    *
-   * <li>An invocation of the {@link InterceptorBindingsMatcher#test(Collection, Collection)} method on the {@link
-   * BeanQualifiersMatcher} supplied at {@linkplain #IdMatcher(BeanQualifiersMatcher, InterceptorBindingsMatcher,
-   * BeanTypeMatcher) construction time} supplied with the supplied {@linkplain AttributedType#attributes()
-   * <code>AttributedType</code>'s attributes} and the supplied {@linkplain Id#attributes() <code>Id</code>'s
-   * attributes} returns {@code true}</li>
+   * <li>An invocation of the {@link Matcher#test(Object, Object)} method on the supplementary {@link Matcher} supplied
+   * at {@linkplain #IdMatcher(BeanTypeMatcher, BeanQualifiersMatcher, Matcher) construction time} supplied with the
+   * supplied {@linkplain AttributedType} and the supplied {@link Id} returns {@code true}</li>
    *
    * <li>An invocation of this {@link IdMatcher}'s {@link #test(TypeMirror, Iterable)} method supplied with the supplied
    * {@linkplain AttributedType#type() <code>AttributedType</code>'s type} and the supplied {@linkplain Id#attributes()
@@ -102,20 +116,16 @@ public final class IdMatcher implements Matcher<AttributedType, Id> {
    *
    * @see BeanQualifiersMatcher#test(Collection, Collection)
    *
-   * @see InterceptorBindingsMatcher#test(Collection, Collection)
-   *
    * @see #test(TypeMirror, Iterable)
    *
    * @see BeanTypeMatcher#test(TypeMirror, TypeMirror)
    */
   @Override // Matcher<AttributedType, Id> (BiPredicate<AttributedType, Id>)
   public final boolean test(final AttributedType t, final Id id) {
-    final Collection<? extends Attributes> attributes = t.attributes();
-    final Collection<? extends Attributes> idAttributes = id.attributes();
     return
-      this.qm.test(attributes, idAttributes) &&
-      this.ibm.test(attributes, idAttributes) &&
-      this.test(t.type(), id.types());
+      this.test(t.type(), id.types()) &&
+      this.qm.test(t.attributes(), id.attributes()) &&
+      this.other.test(t, id);
   }
 
   /**
@@ -124,7 +134,7 @@ public final class IdMatcher implements Matcher<AttributedType, Id> {
    *
    * <p>A {@link TypeMirror} <em>t</em> from the supplied {@link Iterable} <dfn>matches</dfn> the supplied {@code type}
    * argument if an invocation of the {@link BeanTypeMatcher#test(TypeMirror, TypeMirror)} method invoked on the
-   * {@linkplain #IdMatcher(BeanQualifiersMatcher, InterceptorBindingsMatcher, BeanTypeMatcher)
+   * {@linkplain #IdMatcher(BeanTypeMatcher, BeanQualifiersMatcher, InterceptorBindingsMatcher)
    * <code>BeanTypeManager</code> supplied at construction time} supplied with {@code type} and <em>t</em> returns
    * {@code true}.</p>
    *
@@ -138,7 +148,7 @@ public final class IdMatcher implements Matcher<AttributedType, Id> {
    *
    * @see BeanTypeMatcher#test(TypeMirror, TypeMirror)
    */
-  public final boolean test(final TypeMirror type, final Iterable<? extends TypeMirror> ts) {
+  private final boolean test(final TypeMirror type, final Iterable<? extends TypeMirror> ts) {
     Objects.requireNonNull(type, "type");
     for (final TypeMirror t : ts) {
       if (this.tm.test(type, t)) {

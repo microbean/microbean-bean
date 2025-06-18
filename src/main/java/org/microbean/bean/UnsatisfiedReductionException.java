@@ -17,10 +17,6 @@ package org.microbean.bean;
  * A {@link ReductionException} indicating that a reduction did not occur because there were no elements to reduce.
  *
  * @author <a href="https://about.me/lairdnelson" target="_top">Laird Nelson</a>
- *
- * @see Reducible
- *
- * @see Reducer
  */
 public final class UnsatisfiedReductionException extends ReductionException {
 

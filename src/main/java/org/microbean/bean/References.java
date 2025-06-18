@@ -25,6 +25,7 @@ import java.util.Iterator;
  *
  * @see ReferencesSelector
  */
+// TODO: not crazy about the circular dependencies, but they're no worse than, say, a sealed class
 public interface References<R> extends Iterable<R>, ReferencesSelector {
 
   /**
@@ -48,17 +49,6 @@ public interface References<R> extends Iterable<R>, ReferencesSelector {
     }
     return r;
   }
-
-  /**
-   * Destroys the supplied contextual reference if and only if it meets the conditions for destruction.
-   *
-   * @param r a contextual reference; may be {@code null} in which case {@code false} will be returned
-   *
-   * @return {@code true} if and only if destruction occurred
-   *
-   * @exception DestructionException if an error occurs
-   */
-  public boolean destroy(final R r); // e.g. CDI's Instances#destroy(Object); works only on @Dependent objects
 
   /**
    * Returns the size of this {@link References}.

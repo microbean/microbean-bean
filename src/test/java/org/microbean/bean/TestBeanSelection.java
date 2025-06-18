@@ -22,6 +22,7 @@ import javax.lang.model.type.TypeKind;
 
 import org.junit.jupiter.api.Test;
 
+import org.microbean.assign.AttributedType;
 import org.microbean.assign.Matcher;
 
 import org.microbean.construct.Domain;
@@ -35,7 +36,7 @@ final class TestBeanSelection {
   private static final Domain domain = new DefaultDomain();
 
   private static final Matcher<AttributedType, Id> matcher =
-    new IdMatcher(new BeanQualifiersMatcher(), new InterceptorBindingsMatcher(), new BeanTypeMatcher(domain));
+    new IdMatcher(new BeanTypeMatcher(domain), new BeanQualifiersMatcher());
 
   private TestBeanSelection() {
     super();

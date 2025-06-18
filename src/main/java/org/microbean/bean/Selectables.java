@@ -22,13 +22,16 @@ import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 
 import java.util.function.BiFunction;
+import java.util.function.BiPredicate;
 import java.util.function.Function;
+import java.util.function.Predicate;
+import java.util.function.ToIntFunction;
 
+import org.microbean.assign.AttributedType;
 import org.microbean.assign.Matcher;
+import org.microbean.assign.Selectable;
 
 import static org.microbean.bean.Beans.normalize;
-
-import static org.microbean.bean.Ranked.DEFAULT_RANK;
 
 /**
  * Utility methods for working with {@link Selectable}s.
@@ -36,6 +39,8 @@ import static org.microbean.bean.Ranked.DEFAULT_RANK;
  * @author <a href="https://about.me/lairdnelson" target="_top">Laird Nelson</a>
  *
  * @see Selectable
+ *
+ * @see org.microbean.assign.Selectables
  */
 public final class Selectables {
 
@@ -60,9 +65,42 @@ public final class Selectables {
    * @see Ranked#rank()
    *
    * @see Ranked#alternate()
+   *
+   * @see #ambiguityReducing(Selectable, Predicate, ToIntFunction)
+   *
+   * @deprecated Please use the {@link #ambiguityReducing(Selectable, Predicate, ToIntFunction)} method instead.
    */
+  @Deprecated(forRemoval = true, since = "0.0.19")
   public static final <C, E extends Ranked> Selectable<C, E> ambiguityReducing(final Selectable<C, E> s) {
+    return ambiguityReducing(s, Ranked::alternate, Ranked::rank);
+  }
+
+  /**
+   * Returns a {@link Selectable} that reduces any ambiguity in the results returned by another {@link Selectable},
+   * considering alternate status and rank.
+   *
+   * @param <C> the criteria type
+   *
+   * @param <E> the element type
+   *
+   * @param s a {@link Selectable}; must not be {@code null}
+   *
+   * @param p a {@link Predicate} that tests whether an element is an <dfn>alternate</dfn>; must not be {@code null}
+   *
+   * @param ranker a {@link ToIntFunction} that returns a <dfn>rank</dfn> for an alternate; a rank of {@code 0}
+   * indicates no particular rank; must not be {@code null}
+   *
+   * @return a non-{@code null} {@link Selectable}
+   *
+   * @exception NullPointerException if any argument is {@code null}
+   */
+  public static final <C, E> Selectable<C, E> ambiguityReducing(final Selectable<C, E> s,
+                                                                final Predicate<? super E> p,
+                                                                final ToIntFunction<? super E> ranker) {
     Objects.requireNonNull(s, "s");
+    Objects.requireNonNull(p, "p");
+    Objects.requireNonNull(ranker, "ranker");
+
     // Relevant bits:
     //
     // https://jakarta.ee/specifications/cdi/4.1/jakarta-cdi-spec-4.1#unsatisfied_and_ambig_dependencies
@@ -70,24 +108,25 @@ public final class Selectables {
     // must")
     return c -> {
       final List<E> elements = s.select(c);
-      if (elements.isEmpty()) {
-        return List.of();
-      } else if (elements.size() == 1) {
-        return List.of(elements.get(0));
-      }
+      final int size = elements.size();
+      switch (size) {
+      case 0 -> List.of();
+      case 1 -> List.of(elements.get(0));
+      default -> {}
+      };
 
       int maxRank = Integer.MIN_VALUE;
-      final List<E> reductionList = new ArrayList<>(elements.size()); // will never be larger, only smaller
+      final List<E> reductionList = new ArrayList<>(size); // will never be larger, only smaller
       boolean reductionListContainsOnlyRankedAlternates = false;
 
       for (final E element : elements) {
-        if (!element.alternate()) { // TODO: eventually this method will go away
+        if (!p.test(element)) { // TODO: eventually this method will go away
           // The element is not an alternate. We skip it.
           continue;
         }
 
-        final int rank = element.rank(); // TODO: eventually this method will go away
-        if (rank == DEFAULT_RANK) {
+        final int rank = ranker.applyAsInt(element);
+        if (rank == 0) {
           // The element is an alternate. It has the default rank, so no explicit rank. Headed toward ambiguity. No need
           // to look at maxRank etc.
           if (reductionListContainsOnlyRankedAlternates) {
@@ -98,20 +137,19 @@ public final class Selectables {
         }
 
         if (reductionList.isEmpty()) {
-          // The element is an alternate. It has an explicit rank. The reduction list is empty. The element's rank is
-          // therefore the highest one encountered so far. Add the element to the reduction list.
+          // The element is an alternate with an explicit rank. The reduction list is empty. The element's rank is
+          // therefore by definition the highest one encountered so far. Add the element to the reduction list.
           assert !reductionListContainsOnlyRankedAlternates : "Unexpected reductionListContainsOnlyRankedAlternates: " + reductionListContainsOnlyRankedAlternates;
-          if (rank > maxRank) {
-            maxRank = rank;
-          }
+          assert rank > maxRank : "rank <= maxRank: " + rank + " <= " + maxRank; // TODO: I think this is correct
+          maxRank = rank;
           reductionList.add(element);
           reductionListContainsOnlyRankedAlternates = true;
           continue;
         }
 
         if (reductionListContainsOnlyRankedAlternates) {
-          // The element is an alternate. It has an explicit rank. The reduction list is known to contain only ranked
-          // alternates (in fact it should contain exactly one).
+          // The element is an alternate. It has an explicit rank. The (non-empty) reduction list is known to contain
+          // only ranked alternates (in fact it should contain exactly one).
           assert reductionList.size() == 1 : "Unexpected reductionList size: " + reductionList;
           if (rank > maxRank) {
             // The element's rank is higher than the rank of the (sole) element in the list. Record the new highest rank
@@ -142,104 +180,6 @@ public final class Selectables {
   }
 
   /**
-   * Returns a {@link Selectable} that caches its results.
-   *
-   * <p>The cache is unbounded.</p>
-   *
-   * @param <C> the criteria type
-   *
-   * @param <E> the element type
-   *
-   * @param selectable a {@link Selectable}; must not be {@code null}
-   *
-   * @return a non-{@code null} {@link Selectable}
-   *
-   * @exception NullPointerException if {@code selectable} is {@code null}
-   *
-   * @see #caching(Selectable, BiFunction)
-   */
-  public static <C, E> Selectable<C, E> caching(final Selectable<C, E> selectable) {
-    final Map<C, List<E>> selectionCache = new ConcurrentHashMap<>();
-    return Selectables.<C, E>caching(selectable, selectionCache::computeIfAbsent);
-  }
-
-  /**
-   * Returns a {@link Selectable} that caches its results.
-   *
-   * @param <C> the criteria type
-   *
-   * @param <E> the element type
-   *
-   * @param selectable a {@link Selectable}; must not be {@code null}
-   *
-   * @param f a {@link BiFunction} that returns a cached result, computing it on demand via its supplied mapping {@link
-   * Function} if necessary; must not be {@code null}; normally safe for concurrent use by multiple threads; often a
-   * reference to the {@link ConcurrentHashMap#computeIfAbsent(Object, Function)} method
-   *
-   * @return a non-{@code null} {@link Selectable}
-   *
-   * @exception NullPointerException if {@code selectable} or {@code f} is {@code null}
-   *
-   * @see ConcurrentHashMap#computeIfAbsent(Object, Function)
-   */
-  public static <C, E> Selectable<C, E> caching(final Selectable<C, E> selectable,
-                                                final BiFunction<? super C, Function<? super C, ? extends List<E>>, ? extends List<E>> f) {
-    Objects.requireNonNull(selectable, "selectable");
-    return c -> f.apply(c, selectable::select);
-  }
-
-  /**
-   * Returns a {@link Selectable} whose {@link Selectable#select(Object)} method always returns an {@linkplain List#of()
-   * empty, immutable <code>List</code>}.
-   *
-   * @param <C> the criteria type
-   *
-   * @param <E> the element type
-   *
-   * @return a non-{@code null} {@link Selectable}
-   */
-  public static final <C, E> Selectable<C, E> empty() {
-    return Selectables::empty;
-  }
-
-  private static final <C, E> List<E> empty(final C ignored) {
-    return List.of();
-  }
-
-  /**
-   * Returns a {@link Selectable} using the supplied {@link Collection} as its elements, and the supplied {@link
-   * BiFunction} as its <em>selector function</em>.
-   *
-   * <p>There is no guarantee that this method will return new {@link Selectable} instances.</p>
-   *
-   * <p>The {@link Selectable} instances returned by this method may or may not cache their selections.</p>
-   *
-   * <p>The selector function must select a sublist from the supplied {@link Collection} as mediated by the supplied
-   * criteria. The selector function must additionally be idempotent and must produce a determinate value when given the
-   * same arguments.</p>
-   *
-   * <p>No validation of these semantics of the selector function is performed.</p>
-   *
-   * @param <C> the criteria type
-   *
-   * @param <E> the element type
-   *
-   * @param collection a {@link Collection} of elements from which sublists may be selected; must not be {@code null}
-   *
-   * @param f the selector function; must not be {@code null}
-   *
-   * @return a {@link Selectable}; never {@code null}
-   *
-   * @exception NullPointerException if either {@code collection} or {@code f} is {@code null}
-   */
-  @SuppressWarnings("unchecked")
-  public static <C, E> Selectable<C, E> filtering(final Collection<? extends E> collection,
-                                                  final BiFunction<? super E, ? super C, ? extends Boolean> f) {
-    Objects.requireNonNull(f, "f");
-    return collection.isEmpty() ? empty() : c -> (List<E>)collection.stream().filter(e -> f.apply(e, c)).toList();
-  }
-
-  /**
    * {@linkplain Beans#normalize(Collection) Normalizes} the supplied {@link Collection} of {@link Bean}s and returns a
    * {@link Selectable} for it and the supplied {@link Matcher}.
    *
@@ -253,11 +193,11 @@ public final class Selectables {
    *
    * @exception NullPointerException if any argument is {@code null}
    *
-   * @see #filtering(Collection, BiFunction)
+   * @see org.microbean.assign.Selectables#filtering(Collection, BiPredicate)
    *
    * @see #ambiguityReducing(Selectable)
    *
-   * @see #caching(Selectable)
+   * @see org.microbean.assign.Selectables#caching(Selectable)
    *
    * @see Beans#normalize(Collection)
    */
@@ -265,7 +205,10 @@ public final class Selectables {
                                                                            final Matcher<? super AttributedType, ? super Id> m) {
     Objects.requireNonNull(m, "m");
     final List<Bean<?>> normalizedBeans = normalize(beans);
-    return normalizedBeans.isEmpty() ? empty() : filtering(normalizedBeans, (b, c) -> m.test(c, b.id()));
+    return
+      normalizedBeans.isEmpty() ?
+      org.microbean.assign.Selectables.empty() :
+      org.microbean.assign.Selectables.filtering(normalizedBeans, (b, c) -> m.test(c, b.id()));
   }
 
 }

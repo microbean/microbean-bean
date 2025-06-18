@@ -13,6 +13,8 @@
  */
 package org.microbean.bean;
 
+import org.microbean.assign.AttributedType;
+
 /**
  * A supplier of {@link References} objects.
  *
@@ -24,7 +26,19 @@ package org.microbean.bean;
  *
  * @see References
  */
+// TODO: not crazy about the circular dependencies, but they're no worse than, say, a sealed class
 public interface ReferencesSelector {
+
+  /**
+   * Destroys the supplied contextual reference if and only if it meets the conditions for destruction.
+   *
+   * @param r a contextual reference; may be {@code null} in which case {@code false} will be returned
+   *
+   * @return {@code true} if and only if destruction occurred
+   *
+   * @exception DestructionException if an error occurs
+   */
+  public boolean destroy(final Object r); // e.g. CDI's Instance#destroy(Object); works only on normal- and @Dependent-scoped objects
 
   /**
    * Returns a {@link References} capable of locating contextual references of the relevant type.
@@ -42,7 +56,8 @@ public interface ReferencesSelector {
   public <R> References<R> references(final AttributedType t);
 
   /**
-   * Returns the sole contextual reference of the relevant type.
+   * A convenience method that acquires and returns what is presumed, possibly incorrectly, to be the sole contextual
+   * reference of the relevant type.
    *
    * @param <R> the contextual reference type
    *
@@ -55,6 +70,10 @@ public interface ReferencesSelector {
    * @exception UnsatisfiedReductionException if there is no contextual reference for the relevant type
    *
    * @exception AmbiguousReductionException if there is more than one contextual reference for the relevant type
+   *
+   * @see #references(AttributedType)
+   *
+   * @see References#get()
    */
   public default <R> R reference(final AttributedType t) {
     return this.<R>references(t).get();

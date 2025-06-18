@@ -38,7 +38,7 @@ public interface Creation<I> extends ReferencesSelector {
 
   /**
    * Returns the {@link Id} of the {@link Bean} {@linkplain Bean#factory() whose} {@link Factory}'s {@link
-   * Factory#create(Creation)} invocation is responsible for the existence of this {@link Creation}.
+   * Factory#create(Creation)} invocation was responsible for the existence of this {@link Creation}.
    *
    * <p>Implementations of this method may return {@code null}.</p>
    *
