@@ -17,13 +17,25 @@ import java.util.Collection;
 import java.util.List;
 
 /**
- * A {@link ReductionException} indicating that many contextual instances could not be reduced to one.
+ * A {@link ResolutionException} indicating that many contextual instances could not be reduced to one.
  *
  * @author <a href="https://about.me/lairdnelson" target="_top">Laird Nelson</a>
  */
-public final class AmbiguousReductionException extends ReductionException {
+public final class AmbiguousResolutionException extends ResolutionException {
+
+
+  /*
+   * Static fields.
+   */
+
 
   private static final long serialVersionUID = 1L;
+
+
+  /*
+   * Instance fields.
+   */
+
 
   private final transient Collection<?> alternates;
 
@@ -34,23 +46,19 @@ public final class AmbiguousReductionException extends ReductionException {
 
 
   /**
-   * Creates a new {@link AmbiguousReductionException}.
+   * Creates a new {@link AmbiguousResolutionException}.
    *
-   * @param criteria the criteria by which a reduction was supposed to be effected; may be {@code null}
+   * @param criteria the criteria by which a resolution was supposed to be effected; may be {@code null}
    *
    * @param alternates the contextual instances that could not be reduced; may be {@code null}
    *
    * @param message a detail message describing the exception; may be {@code null}
    */
-  public AmbiguousReductionException(final Object criteria,
-                                     final Collection<?> alternates,
-                                     final String message) {
+  public AmbiguousResolutionException(final Object criteria,
+                                      final Collection<?> alternates,
+                                      final String message) {
     super(criteria, message, null);
-    if (alternates == null || alternates.isEmpty()) {
-      this.alternates = List.of();
-    } else {
-      this.alternates = List.copyOf(alternates);
-    }
+    this.alternates = alternates == null || alternates.isEmpty() ? List.of() : List.copyOf(alternates);
   }
 
   /**

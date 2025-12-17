@@ -20,6 +20,8 @@ import org.junit.jupiter.api.Test;
 
 import org.microbean.assign.AttributedType;
 
+import org.microbean.construct.Domain;
+
 final class TestReferences {
 
   private TestReferences() {
@@ -38,10 +40,20 @@ final class TestReferences {
     }
 
     @Override
+    public Domain domain() {
+      return null;
+    }
+
+    @Override
     public Iterator<R> iterator() {
       return List.<R>of().iterator();
     }
 
+    @Override
+    public <R> R reference(final Bean<R> bean) {
+      throw new IllegalArgumentException();
+    }
+    
     @Override
     public <S> DummyReferences<S> references(final AttributedType t) {
       return new DummyReferences<>();

@@ -25,7 +25,6 @@ import java.util.Iterator;
  *
  * @see ReferencesSelector
  */
-// TODO: not crazy about the circular dependencies, but they're no worse than, say, a sealed class
 public interface References<R> extends Iterable<R>, ReferencesSelector {
 
   /**
@@ -34,27 +33,28 @@ public interface References<R> extends Iterable<R>, ReferencesSelector {
    *
    * @return a contextual reference; never {@code null}
    *
-   * @exception UnsatisfiedReductionException if there are no contextual references to return
+   * @exception UnsatisfiedResolutionException if there are no contextual references to return
    *
-   * @exception AmbiguousReductionException if there is more than one contextual reference to return
+   * @exception AmbiguousResolutionException if there is more than one contextual reference to return
    */
   public default R get() {
     final Iterator<R> i = this.iterator();
     if (!i.hasNext()) {
-      throw new UnsatisfiedReductionException(null, null, null);
+      throw new UnsatisfiedResolutionException(null, null, null);
     }
     final R r = i.next();
     if (i.hasNext()) {
-      throw new AmbiguousReductionException(null, null, null);
+      throw new AmbiguousResolutionException(null, null, null);
     }
     return r;
   }
 
   /**
-   * Returns the size of this {@link References}.
+   * Returns the size of this {@link References}, if known, or a negative {@code int} if the size is not known.
    *
-   * @return the size of this {@link References} (a positive integer)
+   * @return the size of this {@link References} or a negative {@code int} if it is not known
    */
+  // @Deprecated // Thinking about deprecating/removing this
   public int size();
 
 }

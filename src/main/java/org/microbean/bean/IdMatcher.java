@@ -14,7 +14,6 @@
 package org.microbean.bean;
 
 import java.util.Collection;
-import java.util.Objects;
 
 import javax.lang.model.type.TypeMirror;
 
@@ -22,6 +21,8 @@ import org.microbean.assign.AttributedType;
 import org.microbean.assign.Matcher;
 
 import org.microbean.attributes.Attributes;
+
+import static java.util.Objects.requireNonNull;
 
 /**
  * A {@link Matcher} that tests an {@link Id} to see if it matches an {@link AttributedType}.
@@ -37,7 +38,10 @@ import org.microbean.attributes.Attributes;
  * @see Matcher
  *
  * @see Id
+ *
+ * @see Selectables#typesafeFiltering(Collection, Matcher)
  */
+// Convenience. Nothing actually refers to this class. See Selectables#typesafeFiltering(Collection, Matcher)
 public final class IdMatcher implements Matcher<AttributedType, Id> {
 
   private final BeanTypeMatcher tm;
@@ -76,8 +80,8 @@ public final class IdMatcher implements Matcher<AttributedType, Id> {
                    final BeanQualifiersMatcher qm,
                    final Matcher<AttributedType, Id> other) {
     super();
-    this.tm = Objects.requireNonNull(tm, "tm");
-    this.qm = Objects.requireNonNull(qm, "qm");
+    this.tm = requireNonNull(tm, "tm");
+    this.qm = requireNonNull(qm, "qm");
     this.other = other == null ? (t, i) -> true : other;
   }
 
@@ -149,7 +153,7 @@ public final class IdMatcher implements Matcher<AttributedType, Id> {
    * @see BeanTypeMatcher#test(TypeMirror, TypeMirror)
    */
   private final boolean test(final TypeMirror type, final Iterable<? extends TypeMirror> ts) {
-    Objects.requireNonNull(type, "type");
+    requireNonNull(type, "type");
     for (final TypeMirror t : ts) {
       if (this.tm.test(type, t)) {
         return true;

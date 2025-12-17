@@ -14,25 +14,25 @@
 package org.microbean.bean;
 
 /**
- * A {@link ReductionException} indicating that a reduction did not occur because there were no elements to reduce.
+ * A {@link ResolutionException} indicating that a resolution did not occur because there were no elements to resolve.
  *
  * @author <a href="https://about.me/lairdnelson" target="_top">Laird Nelson</a>
  */
-public final class UnsatisfiedReductionException extends ReductionException {
+public final class UnsatisfiedResolutionException extends ResolutionException {
 
   private static final long serialVersionUID = 1L;
 
   /**
-   * Creates a new {@link UnsatisfiedReductionException}.
+   * Creates a new {@link UnsatisfiedResolutionException}.
    *
-   * @param criteria an {@link Object} representing reduction criteria; may be {@code null}
+   * @param criteria an {@link Object} representing resolution criteria; may be {@code null}
    *
    * @param message a detail message; may be {@code null}
    *
-   * @param cause a {@link Throwable} that caused this {@link UnsatisfiedReductionException} to be created; may be
+   * @param cause a {@link Throwable} that caused this {@link UnsatisfiedResolutionException} to be created; may be
    * {@code null}
    */
-  public UnsatisfiedReductionException(final Object criteria, final String message, final Throwable cause) {
+  public UnsatisfiedResolutionException(final Object criteria, final String message, final Throwable cause) {
     super(criteria, message, cause);
   }
 

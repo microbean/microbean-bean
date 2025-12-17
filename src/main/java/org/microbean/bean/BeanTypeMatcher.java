@@ -15,30 +15,21 @@ package org.microbean.bean;
 
 import java.lang.System.Logger;
 
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
-import java.util.Objects;
 
 import java.util.function.Predicate;
 
-import javax.lang.model.element.Element;
-import javax.lang.model.element.ElementKind;
-import javax.lang.model.element.Parameterizable;
-import javax.lang.model.element.QualifiedNameable;
-
 import javax.lang.model.type.ArrayType;
 import javax.lang.model.type.DeclaredType;
-import javax.lang.model.type.IntersectionType;
-import javax.lang.model.type.ReferenceType;
-import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
-import javax.lang.model.type.TypeVariable;
-import javax.lang.model.type.WildcardType;
 
 import org.microbean.assign.AbstractTypeMatcher;
 
 import org.microbean.construct.Domain;
+
+import static java.util.Objects.requireNonNull;
+
+import static javax.lang.model.type.TypeKind.DECLARED;
 
 /**
  * An {@link AbstractTypeMatcher} encapsulating <a
@@ -107,8 +98,9 @@ public final class BeanTypeMatcher extends AbstractTypeMatcher {
    *
    * @exception NullPointerException if either argument is {@code null}
    *
-   * @exception IllegalArgumentException if either type is any type other than an {@linkplain TypeKind#ARRAY array
-   * type}, a {@link TypeKind#isPrimitive() primitive type}, or a {@linkplain TypeKind#DECLARED declared type}
+   * @exception IllegalArgumentException if either type is any type other than an {@linkplain
+   * javax.lang.model.type.TypeKind#ARRAY array type}, a {@link javax.lang.model.type.TypeKind#isPrimitive() primitive
+   * type}, or a {@linkplain javax.lang.model.type.TypeKind#DECLARED declared type}
    */
   // Is the payload assignable to the receiver? That is, does the payload "match the receiver", in CDI parlance?
   @Override // Matcher<TypeMirror, TypeMirror>
@@ -117,7 +109,7 @@ public final class BeanTypeMatcher extends AbstractTypeMatcher {
     //
     // "The bean has a [legal] bean type [payload] that matches the [legal] required type [receiver]. For this
     // purpose..."
-    return receiver == Objects.requireNonNull(payload, "payload") || switch (receiver.getKind()) {
+    return receiver == requireNonNull(payload, "payload") || switch (receiver.getKind()) {
 
       case ARRAY    -> switch (payload.getKind()) {
         // "...array types are considered to match only if their element types [note: not component types] are
@@ -227,8 +219,8 @@ public final class BeanTypeMatcher extends AbstractTypeMatcher {
    */
 
   private final boolean assignable(final DeclaredType receiver, final DeclaredType payload) {
-    assert receiver.getKind() == TypeKind.DECLARED;
-    assert payload.getKind() == TypeKind.DECLARED;
+    assert receiver.getKind() == DECLARED;
+    assert payload.getKind() == DECLARED;
     return switch (payload) {
 
       case DeclaredType parameterizedPayload when this.domain().parameterized(payload) -> switch (receiver) {
@@ -448,7 +440,7 @@ public final class BeanTypeMatcher extends AbstractTypeMatcher {
                   yield false;
 
                 case WILDCARD: // pta
-                  throw illegalPayload(payload); // bean types can't have wildcard type arguments
+                  throw illegalPayload(payload); // bean types can't have wildcard type arguments at any level of nesting
 
                 default: // pta
                   throw new AssertionError();

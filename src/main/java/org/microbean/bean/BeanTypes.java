@@ -15,7 +15,9 @@ package org.microbean.bean;
 
 import java.lang.System.Logger;
 
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -23,13 +25,20 @@ import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 
 import javax.lang.model.element.Element;
+import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.QualifiedNameable;
+import javax.lang.model.element.TypeElement;
 
 import javax.lang.model.type.ArrayType;
 import javax.lang.model.type.DeclaredType;
+import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
 
+import org.microbean.assign.ClassesThenInterfacesElementKindComparator;
+import org.microbean.assign.PrimitiveAndReferenceTypeKindComparator;
+import org.microbean.assign.SpecializationComparator;
+import org.microbean.assign.SupertypeList;
 import org.microbean.assign.Types;
 
 import org.microbean.construct.Domain;
@@ -98,9 +107,107 @@ public final class BeanTypes extends Types {
 
   /**
    * Returns a {@link BeanTypeList} of {@linkplain #legalBeanType(TypeMirror) legal bean types} that the supplied {@link
+   * Collection} of {@link TypeMirror}s contains.
+   *
+   * <p>The returned {@link BeanTypeList} may be {@linkplain BeanTypeList#isEmpty() empty}.</p>
+   *
+   * @param types a {@link Collection} of {@link TypeMirror}s; must not be {@code null}
+   *
+   * @return a {@link BeanTypeList} of {@linkplain #legalBeanType(TypeMirror) legal bean types} drawn from the supplied
+   * {@link Collection}; never {@code null}
+   *
+   * @exception NullPointerException if {@code types} is {@code null}
+   *
+   * @microbean.nullability This method never returns {@code null}.
+   *
+   * @microbean.idempotency This method is idempotent and returns determinate values.
+   *
+   * @microbean.threadsafety This method is safe for concurrent use by multiple threads.
+   *
+   * @see #supertypes(TypeMirror, java.util.function.Predicate)
+   */
+  public final BeanTypeList beanTypes(final Collection<? extends TypeMirror> types) {
+    return switch (types) {
+    case null -> throw new NullPointerException("types");
+    case BeanTypeList btl -> btl;
+    case Collection<?> c when c.isEmpty() -> BeanTypeList.of();
+    case SupertypeList stl -> this.beanTypes(stl);
+    default -> {
+      int size = types.size();
+      final ArrayList<TypeMirror> newTypes = new ArrayList<>(size);
+      for (final TypeMirror t : types) {
+        if (legalBeanType(t)) {
+          newTypes.add(t);
+        }
+      }
+      if (newTypes.isEmpty()) {
+        yield BeanTypeList.of();
+      }
+      size = newTypes.size();
+      if (size > 1) {
+        newTypes.sort(Comparator.comparing(TypeMirror::getKind,
+                                           PrimitiveAndReferenceTypeKindComparator.INSTANCE)
+                      .thenComparing(new SpecializationComparator(this.domain()))
+                      .thenComparing(this::elementKind,
+                                     ClassesThenInterfacesElementKindComparator.INSTANCE)
+                      .thenComparing(Types::erasedName));
+      }
+      int interfaceIndex = -1;
+      for (int i = 0; i < size; i++) {
+        final ElementKind k = this.elementKind(newTypes.get(i));
+        if (k != null && k.isInterface()) {
+          interfaceIndex = i;
+          break;
+        }
+      }
+      yield BeanTypeList.of(this, newTypes, interfaceIndex, proxiable(newTypes.get(0), size));
+    }
+    };
+  }
+
+  private final BeanTypeList beanTypes(final SupertypeList stl) {
+    if (stl.isEmpty()) {
+      return BeanTypeList.of();
+    }
+    int size = stl.size();
+    int i = 0;
+    for (; i < size; i++) {
+      if (!legalBeanType(stl.get(i))) {
+        break;
+      }
+    }
+    if (i == size) {
+      // All types were legal.
+      return BeanTypeList.of(this, stl, proxiable(stl.get(0), size));
+    }
+    // At least one type was illegal. Start copying.
+    final ArrayList<TypeMirror> newTypes = new ArrayList<>(size);
+    for (int j = 0; j < i; j++) {
+      newTypes.add(stl.get(j)); // the type is known to be legal
+    }
+    ++i; // skip past the illegal type that was encountered
+    for (; i < size; i++) {
+      final TypeMirror t = stl.get(i);
+      if (legalBeanType(t)) {
+        newTypes.add(t);
+      }
+    }
+    newTypes.trimToSize();
+    size = newTypes.size();
+    return
+      size <= 0 ?
+      BeanTypeList.of() :
+      BeanTypeList.of(this,
+                      newTypes,
+                      stl.interfaceIndex() >= size ? -1 : stl.interfaceIndex(),
+                      proxiable(newTypes.get(0), size));
+  }
+
+  /**
+   * Returns a {@link BeanTypeList} of {@linkplain #legalBeanType(TypeMirror) legal bean types} that the supplied {@link
    * TypeMirror} bears.
    *
-   * <p>The returned {@link BeanTypeList} may be empty.</p>
+   * <p>The returned {@link BeanTypeList} may be {@linkplain BeanTypeList#isEmpty() empty}.</p>
    *
    * @param t a {@link TypeMirror}; must not be {@code null}
    *
@@ -118,27 +225,20 @@ public final class BeanTypes extends Types {
    * @see #supertypes(TypeMirror, java.util.function.Predicate)
    */
   public final BeanTypeList beanTypes(final TypeMirror t) {
-    // https://jakarta.ee/specifications/cdi/4.1/jakarta-cdi-spec-4.1#assignable_parameters
-    // https://jakarta.ee/specifications/cdi/4.1/jakarta-cdi-spec-4.1#legal_bean_types
-    // https://jakarta.ee/specifications/cdi/4.1/jakarta-cdi-spec-4.1#managed_bean_types
-    // https://jakarta.ee/specifications/cdi/4.1/jakarta-cdi-spec-4.1#producer_field_types
-    // https://jakarta.ee/specifications/cdi/4.1/jakarta-cdi-spec-4.1#producer_method_types
     final Domain d = this.domain();
-    return switch (t.getKind()) {
-    case ARRAY ->
-      this.beanTypesCache.computeIfAbsent(t, t0 -> BeanTypeList.of(d,
-                                                                   (legalBeanType(t0) ?
-                                                                    List.of(t0, d.javaLangObject().asType()) :
-                                                                    List.of())));
-    case BOOLEAN, BYTE, CHAR, DOUBLE, FLOAT, INT, LONG, SHORT ->
-      this.beanTypesCache.computeIfAbsent(t, t0 -> BeanTypeList.of(d,
-                                                                   List.of(t0, d.javaLangObject().asType())));
-    case DECLARED, TYPEVAR ->
-      this.beanTypesCache.computeIfAbsent(t, t0 -> BeanTypeList.of(d,
-                                                                   this.supertypes(t0, BeanTypes::legalBeanType)));
-    default ->
-      BeanTypeList.of(d, List.of());
-    };
+    switch (t.getKind()) {
+    case ARRAY:
+      return legalBeanType(t) ? BeanTypeList.of(this, List.of(t, d.javaLangObject().asType())) : BeanTypeList.of();
+    case BOOLEAN, BYTE, CHAR, DOUBLE, FLOAT, INT, LONG, SHORT:
+      return BeanTypeList.of(this, List.of(t, d.javaLangObject().asType()));
+    case DECLARED, TYPEVAR:
+      final SupertypeList legalBeanSupertypes = this.supertypes(t, BeanTypes::legalBeanType);
+      return BeanTypeList.of(this,
+                             legalBeanSupertypes,
+                             proxiable(legalBeanSupertypes.get(0), legalBeanSupertypes.size()));
+    default:
+      return BeanTypeList.of();
+    }
   }
 
   /**
@@ -152,11 +252,35 @@ public final class BeanTypes extends Types {
     this.beanTypesCache.clear();
   }
 
+  private final ElementKind elementKind(final TypeMirror t) {
+    final Element e = this.domain().element(t);
+    return e == null ? null : e.getKind();
+  }
+
+
 
   /*
    * Static methods.
    */
 
+  
+  /**
+   * Returns a non-{@code null} {@link BeanTypeList}.
+   *
+   * @param domain a {@link Domain}; must not be {@code null}
+   *
+   * @param types a {@link Collection} of {@link TypeMirror}s; must not be {@code null}
+   *
+   * @return a non-{@code null} {@link BeanTypeList}
+   *
+   * @exception NullPointerException if any argument is {@code null}
+   *
+   * @deprecated This method is for internal use only.
+   */
+  @Deprecated // for internal use only
+  public static final BeanTypeList beanTypes(final Domain domain, final Collection<? extends TypeMirror> types) {
+    return new BeanTypes(domain).beanTypes(types); // yuck.
+  }
 
   /**
    * Returns {@code true} if and only if the supplied {@link TypeMirror} is a <dfn>legal bean type</dfn> as defined by
@@ -342,6 +466,18 @@ public final class BeanTypes extends Types {
     default:
       return false;
     }
+  }
+
+  private static final boolean proxiable(final TypeMirror firstLegalBeanType, final int size) {
+    return
+      // Non-declared legal bean types cannot be proxied.
+      firstLegalBeanType.getKind() == TypeKind.DECLARED &&
+      ((DeclaredType)firstLegalBeanType).asElement() instanceof TypeElement e &&
+      (proxiableElement(e) ||
+       // Still potentially proxiable if the reason the firstLegalBeanType's element failed the
+       // #proxiableElement(Element) test was because the first non-interface bean type was java.lang.Object but we know
+       // that there are interfaces in this list.
+       e.getQualifiedName().contentEquals("java.lang.Object") && size > 1);
   }
 
 }

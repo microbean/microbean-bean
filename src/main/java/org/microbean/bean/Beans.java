@@ -104,7 +104,6 @@ public final class Beans {
     }
     assert !newBeans.isEmpty();
     if (newBeans.size() > 1) {
-      // Sort
       sort(newBeans, byAlternateThenByRankComparator);
     }
     return List.copyOf(newBeans);

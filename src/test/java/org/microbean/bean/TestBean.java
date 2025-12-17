@@ -33,6 +33,8 @@ import static org.microbean.assign.Qualifiers.anyAndDefaultQualifiers;
 final class TestBean {
 
   private static final Domain domain = new DefaultDomain();
+
+  private static final BeanTypes beanTypes = new BeanTypes(domain);
   
   private TestBean() {
     super();
@@ -43,9 +45,8 @@ final class TestBean {
   final void testConstableStuff() {
     final Factory<String> f = new Constant<>("Hello");
     final Id id =
-      new Id(BeanTypeList.of(domain,
-                             List.of(domain.declaredType("java.lang.String"),
-                                     domain.javaLangObject().asType())),
+      new Id(beanTypes.beanTypes(List.of(domain.declaredType("java.lang.String"),
+                                         domain.javaLangObject().asType())),
              anyAndDefaultQualifiers());
     assertTrue(id instanceof Constable);
     assertFalse(id.types().describeConstable().isEmpty()); // Constables.describeConstable(id.types()).isEmpty());

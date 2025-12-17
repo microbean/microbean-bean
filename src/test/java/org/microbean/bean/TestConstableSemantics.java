@@ -21,12 +21,15 @@ import java.lang.constant.MethodTypeDesc;
 import java.lang.invoke.MethodHandles;
 
 import java.util.Comparator;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
+
+import javax.lang.model.type.TypeMirror;
 
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Disabled;
@@ -37,21 +40,27 @@ import org.microbean.constant.Constables;
 import org.microbean.construct.DefaultDomain;
 import org.microbean.construct.Domain;
 
+import org.microbean.construct.type.UniversalType;
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNotSame;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import static java.lang.invoke.MethodHandles.lookup;
-import static java.lang.invoke.MethodHandles.privateLookupIn;
 
 import static org.microbean.assign.Qualifiers.anyAndDefaultQualifiers;
 
 final class TestConstableSemantics {
 
   private static Domain domain;
+
+  private static BeanTypes beanTypes;
 
   private TestConstableSemantics() {
     super();
@@ -60,6 +69,7 @@ final class TestConstableSemantics {
   @BeforeAll
   static final void initializeDomain() {
     domain = new DefaultDomain();
+    beanTypes = new BeanTypes(domain);
   }
 
   @Test
@@ -68,14 +78,68 @@ final class TestConstableSemantics {
     assertEquals(list, Constables.describeConstable(list).orElseThrow().resolveConstantDesc(MethodHandles.lookup()));
   }
 
-  @Disabled // Types are not currently Constable
+  @Test
+  final void testType() throws ReflectiveOperationException {
+    final UniversalType t = (UniversalType)domain.typeElement("java.lang.String").asType();
+    assertFalse(t.delegate() instanceof Constable);
+    final UniversalType t2 = (UniversalType)t.describeConstable()
+      .orElseThrow()
+      .resolveConstantDesc(lookup());
+
+    // This may surprise the reader. By Java Language Model contract, a TypeMirror may represent the "same type" as
+    // another TypeMirror without being equal to it. See UniversalType#equals(Object) for more. That is the case here.
+    assertNotEquals(t, t2);
+    assertTrue(domain.sameType(t, t2));
+  }
+
+  @SuppressWarnings("unchecked")
+  @Test
+  final void testListOfTypes() throws ReflectiveOperationException {
+    final List<TypeMirror> l = List.of(domain.typeElement("java.lang.String").asType(),
+                                       domain.javaLangObject().asType());
+    final List<TypeMirror> l2 = (List<TypeMirror>)Constables.describeConstable(l)
+      .orElseThrow()
+      .resolveConstantDesc(lookup());
+
+    // This may surprise the reader. By Java Language Model contract, a TypeMirror may represent the "same type" as
+    // another TypeMirror without being equal to it. See UniversalType#equals(Object) for more. That is the case here.
+    assertNotEquals(l, l2);
+    assertSameTypes(l, l2);
+  }
+  
+  // @Disabled
+  @Test
+  final void testBeanTypeList() throws ReflectiveOperationException {
+    final BeanTypeList btl = beanTypes.beanTypes(List.of(domain.typeElement("java.lang.String").asType(),
+                                                         domain.javaLangObject().asType()));
+    final BeanTypeList btl2 = (BeanTypeList)btl.describeConstable()
+      .orElseThrow()
+      .resolveConstantDesc(lookup());
+
+    // This may surprise the reader. By Java Language Model contract, a TypeMirror may represent the "same type" as
+    // another TypeMirror without being equal to it. See UniversalType#equals(Object) for more. That is the case here.
+    assertNotEquals(btl, btl2);
+    assertSameTypes(btl, btl2);
+  }
+  
+  // @Disabled // Types are not currently Constable
   @Test
   final void testId() throws ReflectiveOperationException {
     final Id id =
-      new Id(BeanTypeList.of(domain,
-                             List.of(domain.typeElement("java.lang.String").asType(), domain.javaLangObject().asType())),
+      new Id(beanTypes.beanTypes(List.of(domain.typeElement("java.lang.String").asType(),
+                                         domain.javaLangObject().asType())),
              anyAndDefaultQualifiers());
-    assertEquals(id, Constables.describeConstable(id).orElseThrow().resolveConstantDesc(lookup()));
+    final Id id2 = (Id)Constables.describeConstable(id)
+      .orElseThrow()
+      .resolveConstantDesc(lookup());
+    // This may surprise the reader. By Java Language Model contract, a TypeMirror may represent the "same type" as
+    // another TypeMirror without being equal to it. See UniversalType#equals(Object) for more. That is the case
+    // (indirectly) here.
+    assertNotEquals(id, id2);
+    assertSameTypes(id.types(), id2.types());
+    assertEquals(id.attributes(), id2.attributes());
+    assertEquals(id.alternate(), id2.alternate());
+    assertEquals(id.rank(), id2.rank());
   }
 
   @Test
@@ -86,6 +150,16 @@ final class TestConstableSemantics {
     final Constant<String> c2 = (Constant<String>)Constables.describeConstable(c).orElseThrow().resolveConstantDesc(lookup());
     assertNotSame(c, c2);
     assertSame(c.singleton(), c2.singleton());
+  }
+
+  private static final <T extends Iterable<TypeMirror>> void assertSameTypes(final T a, final T b) {
+    final Iterator<? extends TypeMirror> ai = a.iterator();
+    final Iterator<? extends TypeMirror> bi = b.iterator();
+    while (ai.hasNext()) {
+      assertTrue(bi.hasNext());
+      assertTrue(domain.sameType(ai.next(), bi.next()));
+    }
+    assertFalse(bi.hasNext());
   }
 
 }

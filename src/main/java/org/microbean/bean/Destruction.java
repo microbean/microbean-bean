@@ -34,16 +34,8 @@ public interface Destruction extends AutoCloseable, ReferencesSelector {
    * Closes this {@link Destruction} idempotently, normally thereby releasing a contextual instance's dependent objects
    * that have been stored opaquely in this {@link Destruction} by some other mechanism at {@linkplain
    * Factory#create(Creation) creation time}.
-   *
-   * <p>Many {@link Creation} implementations&mdash;and therefore {@link Destruction} implementations&mdash;are also
-   * {@link AutoCloseableRegistry} implementations, which is often how dependent objects are stored in the opaque manner
-   * mentioned above. This is not a requirement of either the {@link Creation} or {@link Destruction} contracts.</p>
-   *
-   * @see AutoCloseableRegistry
    */
   @Override // AutoCloseable
-  public default void close() {
-
-  }
+  public void close();
 
 }
