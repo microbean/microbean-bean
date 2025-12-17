@@ -35,6 +35,8 @@ final class TestBeanSelection {
 
   private static final Domain domain = new DefaultDomain();
 
+  private static final BeanTypes beanTypes = new BeanTypes(domain);
+
   private static final Matcher<AttributedType, Id> matcher =
     new IdMatcher(new BeanTypeMatcher(domain), new BeanQualifiersMatcher());
 
@@ -58,10 +60,9 @@ final class TestBeanSelection {
                                                                  domain.wildcardType(domain.javaLangObject().asType(),
                                                                                      null))));
     assertTrue(matcher.test(t,
-                            new Id(BeanTypeList.of(domain,
-                                                   List.of(domain.declaredType(domain.typeElement("java.util.List"),
-                                                                               domain.declaredType(domain.typeElement("java.util.Optional"),
-                                                                                                   domain.javaLangObject().asType())))),
+                            new Id(beanTypes.beanTypes(List.of(domain.declaredType(domain.typeElement("java.util.List"),
+                                                                                   domain.declaredType(domain.typeElement("java.util.Optional"),
+                                                                                                       domain.javaLangObject().asType())))),
                                    List.of())));
   }
 
@@ -69,8 +70,7 @@ final class TestBeanSelection {
   final void testStringSelectsString() {
     final AttributedType t = new AttributedType(domain.typeElement("java.lang.String").asType());
     assertTrue(matcher.test(t,
-                            new Id(BeanTypeList.of(domain,
-                                                   List.of(domain.typeElement("java.lang.String").asType())),
+                            new Id(beanTypes.beanTypes(List.of(domain.typeElement("java.lang.String").asType())),
                                    List.of())));
   }
 
@@ -78,7 +78,7 @@ final class TestBeanSelection {
   final void testStringDoesNotSelectObject() {
     final AttributedType t = new AttributedType(domain.typeElement("java.lang.String").asType());
     assertFalse(matcher.test(t,
-                             new Id(BeanTypeList.of(domain, List.of(domain.javaLangObject().asType())),
+                             new Id(beanTypes.beanTypes(List.of(domain.javaLangObject().asType())),
                                     List.of())));
   }
 
@@ -86,7 +86,7 @@ final class TestBeanSelection {
   final void testIntSelectsInteger() {
     final AttributedType t = new AttributedType(domain.primitiveType(TypeKind.INT));
     assertTrue(matcher.test(t,
-                            new Id(BeanTypeList.of(domain, List.of(domain.typeElement("java.lang.Integer").asType())),
+                            new Id(beanTypes.beanTypes(List.of(domain.typeElement("java.lang.Integer").asType())),
                                    List.of())));
   }
 
@@ -94,7 +94,7 @@ final class TestBeanSelection {
   final void testObjectDoesNotSelectString() {
     final AttributedType t = new AttributedType(domain.javaLangObject().asType());
     assertFalse(matcher.test(t,
-                             new Id(BeanTypeList.of(domain, List.of(domain.declaredType("java.lang.String"))),
+                             new Id(beanTypes.beanTypes(List.of(domain.declaredType("java.lang.String"))),
                                     List.of())));
   }
 
@@ -104,9 +104,8 @@ final class TestBeanSelection {
                                                                     domain.wildcardType(domain.declaredType("java.lang.String"),
                                                                                         null)));
     assertTrue(matcher.test(t,
-                            new Id(BeanTypeList.of(domain,
-                                                   List.of(domain.declaredType(domain.typeElement("java.util.List"),
-                                                                               domain.typeElement("java.lang.String").asType()))),
+                            new Id(beanTypes.beanTypes(List.of(domain.declaredType(domain.typeElement("java.util.List"),
+                                                                                   domain.typeElement("java.lang.String").asType()))),
                                    List.of())));
   }
 

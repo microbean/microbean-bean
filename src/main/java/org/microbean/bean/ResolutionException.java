@@ -14,43 +14,43 @@
 package org.microbean.bean;
 
 /**
- * A {@link BeanException} concerning problematic <dfn>reductions</dfn>.
+ * A {@link BeanException} concerning problematic <dfn>resolutions</dfn>.
  *
  * @author <a href="https://about.me/lairdnelson" target="_top">Laird Nelson</a>
  */
-public sealed class ReductionException extends BeanException permits AmbiguousReductionException, UnsatisfiedReductionException {
+public sealed class ResolutionException extends BeanException permits AmbiguousResolutionException, UnsatisfiedResolutionException {
 
   private static final long serialVersionUID = 1L;
 
   private final transient Object criteria;
 
   /**
-   * Creates a new {@link ReductionException}.
+   * Creates a new {@link ResolutionException}.
    *
-   * @param criteria an {@link Object} representing reduction criteria; may be {@code null}
+   * @param criteria an {@link Object} representing resolution criteria; may be {@code null}
    *
    * @param message a detail message; may be {@code null}
    *
-   * @param cause a {@link Throwable} that caused this {@link ReductionException} to be created; may be {@code null}
+   * @param cause a {@link Throwable} that caused this {@link ResolutionException} to be created; may be {@code null}
    */
-  public ReductionException(final Object criteria, final String message, final Throwable cause) {
+  public ResolutionException(final Object criteria, final String message, final Throwable cause) {
     super(message, cause);
     this.criteria = criteria;
   }
 
   /**
-   * Returns this {@link ReductionException}'s criteria object, which may be {@code null}.
+   * Returns this {@link ResolutionException}'s criteria object, which may be {@code null}.
    *
-   * @return this {@link ReductionException}'s criteria object, which may be {@code null}
+   * @return this {@link ResolutionException}'s criteria object, which may be {@code null}
    */
   public final Object criteria() {
     return this.criteria;
   }
 
   /**
-   * Returns a {@link String} reprsentation of this {@link ReductionException}.
+   * Returns a {@link String} reprsentation of this {@link ResolutionException}.
    *
-   * @return a {@link String} reprsentation of this {@link ReductionException}; never {@code null}
+   * @return a {@link String} reprsentation of this {@link ResolutionException}; never {@code null}
    */
   @Override
   public String toString() {

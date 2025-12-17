@@ -21,29 +21,13 @@ import java.lang.constant.MethodHandleDesc;
 import java.lang.constant.MethodTypeDesc;
 
 import java.util.AbstractList;
-import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
-import java.util.Comparator;
 import java.util.List;
-import java.util.Objects;
 import java.util.Optional;
 
-import javax.lang.model.element.Element;
-import javax.lang.model.element.ElementKind;
-import javax.lang.model.element.ExecutableElement;
-import javax.lang.model.element.Modifier;
-import javax.lang.model.element.TypeElement;
-
-import javax.lang.model.type.DeclaredType;
-import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
 
-import org.microbean.assign.ClassesThenInterfacesElementKindComparator;
-import org.microbean.assign.PrimitiveAndReferenceTypeKindComparator;
-import org.microbean.assign.SpecializationComparator;
 import org.microbean.assign.SupertypeList;
-import org.microbean.assign.Types;
 
 import org.microbean.constant.Constables;
 
@@ -51,132 +35,97 @@ import org.microbean.construct.Domain;
 
 import static java.lang.constant.ConstantDescs.BSM_INVOKE;
 import static java.lang.constant.ConstantDescs.CD_Collection;
+import static java.lang.constant.ConstantDescs.CD_boolean;
+import static java.lang.constant.ConstantDescs.CD_int;
+import static java.lang.constant.ConstantDescs.FALSE;
+import static java.lang.constant.ConstantDescs.TRUE;
 
 import static java.lang.constant.DirectMethodHandleDesc.Kind.STATIC;
+import static java.lang.constant.DirectMethodHandleDesc.Kind.VIRTUAL;
 
-import static java.util.Collections.unmodifiableList;
-
-import static org.microbean.bean.BeanTypes.legalBeanType;
-import static org.microbean.bean.BeanTypes.proxiableElement;
+import static java.util.Objects.requireNonNull;
 
 /**
  * An immutable {@link AbstractList} of {@link TypeMirror}s that contains only {@linkplain
  * BeanTypes#legalBeanType(TypeMirror) legal bean types}, sorted in a specific manner.
  *
+ * <p><strong>Note:</strong> Two {@link TypeMirror} instances may represent the {@linkplain
+ * org.microbean.construct.Domain#sameType(TypeMirror, TypeMirror) same type} while not being {@linkplain
+ * TypeMirror#equals(Object) equal to} one another. {@link List} implementations such as this one that contain {@link
+ * TypeMirror} elements may also represent the same types without being equal to each other.</p>
+ *
  * @author <a href="https://about.me/lairdnelson" target="_top">Laird Nelson</a>
  *
- * @see #of(Domain, Collection)
+ * @see BeanTypes#beanTypes(TypeMirror)
+ *
+ * @see TypeMirror#equals(Object)
+ *
+ * @see org.microbean.construct.Domain#sameType(TypeMirror, TypeMirror)
  */
 public final class BeanTypeList extends AbstractList<TypeMirror> implements Constable {
 
-  private final Domain domain; // for Constable only; used by elementKind()
+  private static final BeanTypeList EMPTY_LIST = new BeanTypeList();
 
+  private final BeanTypes beanTypes; // needed only for Constable purposes. This is dumb.
+  
   private final List<TypeMirror> types;
 
   private final int interfaceIndex;
 
   private final boolean proxiable;
 
-  private BeanTypeList(final Domain domain, final Collection<? extends TypeMirror> types) {
+  private BeanTypeList() {
+    this.beanTypes = null;
+    this.types = List.of();
+    this.interfaceIndex = -1;
+    this.proxiable = false;
+  }
+
+  private BeanTypeList(final BeanTypes beanTypes,
+                       final Collection<? extends TypeMirror> types,
+                       final int interfaceIndex,
+                       final boolean proxiable) {
     super();
-    Objects.requireNonNull(types, "types");
-    if (types instanceof BeanTypeList btl) {
-      this.domain = btl.domain;
-      this.types = btl.types;
+    this.beanTypes = requireNonNull(beanTypes, "beanTypes");
+    if (types.isEmpty()) {
+      this.types = List.of();
+      this.interfaceIndex = -1;
+      this.proxiable = proxiable;
+    } else if (types instanceof BeanTypeList btl) {
+      this.types = btl;
       this.interfaceIndex = btl.interfaceIndex;
       this.proxiable = btl.proxiable;
+    } else if (types instanceof SupertypeList stl) {
+      this.types = stl;
+      this.interfaceIndex = stl.interfaceIndex();
+      this.proxiable = proxiable;
     } else {
-      this.domain = domain;
-      int size = types.size();
-      if (size == 0) {
-        this.types = List.of();
-        this.interfaceIndex = -1;
-        this.proxiable = false;
-      } else {
-        final ArrayList<TypeMirror> newTypes;
-        if (types instanceof SupertypeList stl) {
-          // SupertypeList instances are already sorted, which is why we check here. Now we can (potentially) avoid
-          // copying, too, since we can use List#copyOf() in the sunny-day case, which itself tries very hard not to
-          // copy.
-          int i = 0;
-          for (; i < size; i++) {
-            if (!legalBeanType(stl.get(i))) {
-              break;
-            }
-          }
-          if (i == size) {
-            // All types were legal, everything is sorted
-            newTypes = null;
-            this.types = List.copyOf(types);
-            this.interfaceIndex = stl.interfaceIndex();
-            this.proxiable = proxiable(this.types.get(0), size);
-          } else {
-            newTypes = new ArrayList<>(size);
-            for (int j = 0; j < i; j++) {
-              newTypes.add(stl.get(j)); // the type is known to be legal
-            }
-            ++i; // skip past the illegal type that was encountered
-            for (; i < size; i++) {
-              final TypeMirror t = stl.get(i);
-              if (legalBeanType(t)) {
-                newTypes.add(t);
-              }
-            }
-            newTypes.trimToSize();
-            size = newTypes.size();
-            if (newTypes.isEmpty()) {
-              this.types = List.of();
-              this.interfaceIndex = -1;
-              this.proxiable = false;
-            } else {
-              this.types = unmodifiableList(newTypes);
-              this.interfaceIndex = stl.interfaceIndex() >= size ? -1 : stl.interfaceIndex();
-              this.proxiable = proxiable(newTypes.get(0), size);
-            }
-          }
-        } else {
-          newTypes = new ArrayList<>(size);
-          for (final TypeMirror t : types) {
-            if (legalBeanType(t)) {
-              newTypes.add(t);
-            }
-          }
-          if (newTypes.isEmpty()) {
-            this.types = List.of();
-            this.interfaceIndex = -1;
-            this.proxiable = false;
-          } else {            
-            newTypes.trimToSize();
-            size = newTypes.size();
-            if (size > 1) {
-              Collections.sort(newTypes,
-                               Comparator.comparing(TypeMirror::getKind,
-                                                    PrimitiveAndReferenceTypeKindComparator.INSTANCE)
-                               .thenComparing(new SpecializationComparator(domain))
-                               .thenComparing(this::elementKind,
-                                              ClassesThenInterfacesElementKindComparator.INSTANCE)
-                               .thenComparing(Types::erasedName));
-            }
-            this.types = unmodifiableList(newTypes);
-            int interfaceIndex = -1;
-            for (int i = 0; i < size; i++) {
-              final ElementKind k = this.elementKind(newTypes.get(i));
-              if (k != null && k.isInterface()) {
-                interfaceIndex = i;
-                break;
-              }
-            }
-            this.interfaceIndex = interfaceIndex;
-            this.proxiable = proxiable(newTypes.get(0), size);
-          }
-        }
-      }
+      this.types = List.copyOf(types);
+      this.interfaceIndex = interfaceIndex;
+      this.proxiable = proxiable;
     }
   }
 
-  private ElementKind elementKind(final TypeMirror t) {
-    final Element e = this.domain.element(t);
-    return e == null ? null : e.getKind();
+  @Override // Constable
+  public final Optional<? extends ConstantDesc> describeConstable() {
+    if (this.beanTypes == null) {
+      assert this.isEmpty();
+      return Optional.of(DynamicConstantDesc.of(BSM_INVOKE,
+                                                MethodHandleDesc.ofMethod(STATIC,
+                                                                          ClassDesc.of(this.getClass().getName()),
+                                                                          "of",
+                                                                          MethodTypeDesc.of(ClassDesc.of(this.getClass().getName())))));
+    }
+    return Constables.describeConstable(this.types)
+      .flatMap(typesDesc -> this.beanTypes.describeConstable()
+               .map(beanTypesDesc -> DynamicConstantDesc.of(BSM_INVOKE,
+                                                            MethodHandleDesc.ofMethod(VIRTUAL,
+                                                                                      ClassDesc.of(this.beanTypes.getClass().getName()),
+                                                                                      "beanTypes",
+                                                                                      MethodTypeDesc.of(ClassDesc.of(this.getClass().getName()),
+                                                                                                        CD_Collection)),
+                                                            beanTypesDesc,
+                                                            typesDesc)));
   }
 
   @Override // AbstractList<TypeMirror>
@@ -185,34 +134,15 @@ public final class BeanTypeList extends AbstractList<TypeMirror> implements Cons
   }
 
   /**
-   * Returns the index of the first interface type this {@link BeanTypeList} contains, or a negative value if it
-   * contains no interface types.
+   * Returns a non-{@code null}, immutable {@link List} containing only interface types.
    *
-   * @return the index of the first interface type this {@link BeanTypeList} contains, or a negative value if it
-   * contains no interface types
+   * <p>The returned {@link List} may be {@linkplain List#isEmpty() empty}.</p>
+   *
+   * @return a non-{@code null}, immutable {@link List} containing only interface types
    */
-  public final int interfaceIndex() {
-    return this.interfaceIndex;
-  }
-
-  @Override // AbstractList<TypeMirror>
-  public final boolean isEmpty() {
-    return this.types.isEmpty();
-  }
-
-  @Override // Constable
-  public final Optional<? extends ConstantDesc> describeConstable() {
-    return (this.domain instanceof Constable c ? c.describeConstable() : Optional.<ConstantDesc>empty())
-      .flatMap(domainDesc -> Constables.describeConstable(this.types)
-               .map(typesDesc -> DynamicConstantDesc.of(BSM_INVOKE,
-                                                        MethodHandleDesc.ofMethod(STATIC,
-                                                                                  ClassDesc.of(this.getClass().getName()),
-                                                                                  "of",
-                                                                                  MethodTypeDesc.of(ClassDesc.of(BeanTypeList.class.getName()),
-                                                                                                    ClassDesc.of(Domain.class.getName()),
-                                                                                                    CD_Collection)),
-                                                        domainDesc,
-                                                        typesDesc)));
+  public final List<TypeMirror> interfaces() {
+    final int i = this.interfaceIndex;
+    return i < 0 ? List.of() : this.subList(i, this.size());
   }
 
   /**
@@ -241,32 +171,36 @@ public final class BeanTypeList extends AbstractList<TypeMirror> implements Cons
 
 
   /**
-   * Returns a non-{@code null} {@link BeanTypeList} suitable for the supplied arguments.
+   * Returns a non-{@code null} {@link BeanTypeList} that {@linkplain #isEmpty() is empty}.
    *
-   * @param domain a {@link Domain} that may be used to determine {@linkplain Domain#subtype(TypeMirror, TypeMirror)
-   * subtype relationships}; may be {@code null} if {@code types} is itself a {@link BeanTypeList}
+   * @return a non-{@code null} {@link BeanTypeList} that {@linkplain #isEmpty() is empty}
    *
-   * @param types a non-{@code null} {@link Collection} of {@link TypeMirror}s; must not be {@code null}
-   *
-   * @return a non-{@code null} {@link BeanTypeList}
-   *
-   * @exception NullPointerException if {@code types} is {@code null}, or if {@code types} is not a {@link BeanTypeList}
-   * and {@code domain} is {@code null}
+   * @see BeanTypes#beanTypes(Collection)
    */
-  // Called by describeConstable()
-  public static final BeanTypeList of(final Domain domain, final Collection<? extends TypeMirror> types) {
-    return types instanceof BeanTypeList btl ? btl : new BeanTypeList(domain, types);
+  public static final BeanTypeList of() {
+    return EMPTY_LIST;
   }
 
-  private static final boolean proxiable(final TypeMirror firstLegalBeanType, final int size) {
-    return
-      // Non-declared otherwise legal bean types cannot be proxied.
-      firstLegalBeanType.getKind() == TypeKind.DECLARED &&
-      ((DeclaredType)firstLegalBeanType).asElement() instanceof TypeElement e &&
-      // This BeanTypeList is still potentially proxiable if the reason the first legal bean type's element failed the
-      // BeanTypes#proxiableElement(Element) test was because the first non-interface bean type was java.lang.Object but we
-      // know that there are interfaces in this list.
-      (proxiableElement(e) || e.getQualifiedName().contentEquals("java.lang.Object") && size > 1);
+  static final BeanTypeList of(final BeanTypes beanTypes, final Collection<? extends TypeMirror> types) {
+    return of(beanTypes, types, -1, false);
+  }
+
+  static final BeanTypeList of(final BeanTypes beanTypes, final Collection<? extends TypeMirror> types, final boolean proxiable) {
+    return of(beanTypes, types, -1, proxiable);
+  }
+
+  // Called only by BeanTypes. No validation is performed.
+  static final BeanTypeList of(final BeanTypes beanTypes,
+                               final Collection<? extends TypeMirror> types,
+                               final int interfaceIndex,
+                               final boolean proxiable) {
+    return switch (types) {
+    case null -> throw new NullPointerException("types");
+    case Collection<?> c when c.isEmpty() -> EMPTY_LIST;
+    case BeanTypeList btl -> btl;
+    case SupertypeList stl -> new BeanTypeList(beanTypes, stl, stl.interfaceIndex(), proxiable);
+    default -> new BeanTypeList(beanTypes, types, interfaceIndex, proxiable);
+    };
   }
 
 }

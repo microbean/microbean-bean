@@ -12,18 +12,18 @@ jobs:
     steps:
       - id: 'checkout'
         name: 'Step: Checkout'
-        uses: 'actions/checkout@v4'
+        uses: 'actions/checkout@v6'
         with:
           fetch-depth: 1
           persist-credentials: false
       - id: 'setup-java'
         name: 'Step: Set Up Java and Maven'
-        uses: 'actions/setup-java@v4'
+        uses: 'actions/setup-java@v5'
         with:
           cache: 'maven'
           distribution: 'temurin'
-          java-version: '23'
-          mvn-toolchain-id: 'Temurin 23'
+          java-version: '25'
+          mvn-toolchain-id: 'Temurin 25'
           mvn-toolchain-vendor: 'openjdk' # see ../../pom.xml
       - id: 'mvn-verify'
         name: 'Step: Maven Verify'

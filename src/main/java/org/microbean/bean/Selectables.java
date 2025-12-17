@@ -17,19 +17,17 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 
 import java.util.concurrent.ConcurrentHashMap;
 
-import java.util.function.BiFunction;
-import java.util.function.BiPredicate;
-import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.function.ToIntFunction;
 
 import org.microbean.assign.AttributedType;
 import org.microbean.assign.Matcher;
 import org.microbean.assign.Selectable;
+
+import static java.util.Objects.requireNonNull;
 
 import static org.microbean.bean.Beans.normalize;
 
@@ -58,33 +56,6 @@ public final class Selectables {
    *
    * @param s a {@link Selectable}; must not be {@code null}
    *
-   * @return a non-{@code null} {@link Selectable}
-   *
-   * @exception NullPointerException if {@code s} is {@code null}
-   *
-   * @see Ranked#rank()
-   *
-   * @see Ranked#alternate()
-   *
-   * @see #ambiguityReducing(Selectable, Predicate, ToIntFunction)
-   *
-   * @deprecated Please use the {@link #ambiguityReducing(Selectable, Predicate, ToIntFunction)} method instead.
-   */
-  @Deprecated(forRemoval = true, since = "0.0.19")
-  public static final <C, E extends Ranked> Selectable<C, E> ambiguityReducing(final Selectable<C, E> s) {
-    return ambiguityReducing(s, Ranked::alternate, Ranked::rank);
-  }
-
-  /**
-   * Returns a {@link Selectable} that reduces any ambiguity in the results returned by another {@link Selectable},
-   * considering alternate status and rank.
-   *
-   * @param <C> the criteria type
-   *
-   * @param <E> the element type
-   *
-   * @param s a {@link Selectable}; must not be {@code null}
-   *
    * @param p a {@link Predicate} that tests whether an element is an <dfn>alternate</dfn>; must not be {@code null}
    *
    * @param ranker a {@link ToIntFunction} that returns a <dfn>rank</dfn> for an alternate; a rank of {@code 0}
@@ -97,30 +68,35 @@ public final class Selectables {
   public static final <C, E> Selectable<C, E> ambiguityReducing(final Selectable<C, E> s,
                                                                 final Predicate<? super E> p,
                                                                 final ToIntFunction<? super E> ranker) {
-    Objects.requireNonNull(s, "s");
-    Objects.requireNonNull(p, "p");
-    Objects.requireNonNull(ranker, "ranker");
+    requireNonNull(s, "s");
+    requireNonNull(p, "p");
+    requireNonNull(ranker, "ranker");
 
     // Relevant bits:
     //
     // https://jakarta.ee/specifications/cdi/4.1/jakarta-cdi-spec-4.1#unsatisfied_and_ambig_dependencies
     // https://jakarta.ee/specifications/cdi/4.1/jakarta-cdi-spec-4.1#dynamic_lookup (Search for "The iterator() method
     // must")
+    //
+    // In CDI 5 @Reserve will also enter the chat.
     return c -> {
       final List<E> elements = s.select(c);
       final int size = elements.size();
       switch (size) {
-      case 0 -> List.of();
-      case 1 -> List.of(elements.get(0));
-      default -> {}
-      };
+      case 0:
+        return List.of();
+      case 1:
+        return List.of(elements.get(0));
+      default:
+        break;
+      }
 
       int maxRank = Integer.MIN_VALUE;
       final List<E> reductionList = new ArrayList<>(size); // will never be larger, only smaller
       boolean reductionListContainsOnlyRankedAlternates = false;
 
       for (final E element : elements) {
-        if (!p.test(element)) { // TODO: eventually this method will go away
+        if (!p.test(element)) {
           // The element is not an alternate. We skip it.
           continue;
         }
@@ -168,46 +144,45 @@ public final class Selectables {
       }
 
       assert reductionListContainsOnlyRankedAlternates ? reductionList.size() == 1 : true : "Unexpected reductionList size: " + reductionList;
-      if (reductionList.isEmpty()) {
+
+      return switch (reductionList.size()) {
         // No reduction at all took place. "If typesafe resolution results in an ambiguous dependency and the set of
         // candidate beans contains no alternative, the set of resulting beans contains all candidate beans."
-        return elements;
-      } else if (reductionList.size() == 1) {
-        return List.of(reductionList.get(0));
-      }
-      return List.copyOf(reductionList);
+      case 0 -> elements;
+      case 1 -> List.of(reductionList.get(0)); // Optimization for the common case
+      default -> List.copyOf(reductionList);
+      };
     };
   }
 
   /**
    * {@linkplain Beans#normalize(Collection) Normalizes} the supplied {@link Collection} of {@link Bean}s and returns a
-   * {@link Selectable} for it and the supplied {@link Matcher}.
+   * {@link Selectable} suitable for it and the supplied {@link Matcher}.
    *
-   * <p>The {@link Selectable} does not cache its results.</p>
+   * <p>The returned {@link Selectable} does not cache its results.</p>
    *
    * @param beans a {@link Collection} of {@link Bean}s; must not be {@code null}
    *
-   * @param m an {@link IdMatcher}; must not be {@code null}
+   * @param m a {@link Matcher}; must not be {@code null}
    *
    * @return a non-{@code null} {@link Selectable}
    *
    * @exception NullPointerException if any argument is {@code null}
    *
-   * @see org.microbean.assign.Selectables#filtering(Collection, BiPredicate)
+   * @see org.microbean.assign.Selectables#filtering(Collection, java.util.function.BiPredicate)
    *
-   * @see #ambiguityReducing(Selectable)
-   *
-   * @see org.microbean.assign.Selectables#caching(Selectable)
+   * @see #ambiguityReducing(Selectable, Predicate, ToIntFunction)
    *
    * @see Beans#normalize(Collection)
    */
-  public static final Selectable<AttributedType, Bean<?>> typesafeReducing(final Collection<? extends Bean<?>> beans,
-                                                                           final Matcher<? super AttributedType, ? super Id> m) {
-    Objects.requireNonNull(m, "m");
+  public static final Selectable<AttributedType, Bean<?>> typesafeFiltering(final Collection<? extends Bean<?>> beans,
+                                                                            final Matcher<? super AttributedType, ? super Id> m) {
+    requireNonNull(m, "m");
+    if (beans.isEmpty()) {
+      return org.microbean.assign.Selectables.empty();
+    }
     final List<Bean<?>> normalizedBeans = normalize(beans);
     return
-      normalizedBeans.isEmpty() ?
-      org.microbean.assign.Selectables.empty() :
       org.microbean.assign.Selectables.filtering(normalizedBeans, (b, c) -> m.test(c, b.id()));
   }
 

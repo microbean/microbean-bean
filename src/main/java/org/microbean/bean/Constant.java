@@ -16,15 +16,17 @@ package org.microbean.bean;
 import java.lang.constant.ClassDesc;
 import java.lang.constant.Constable;
 import java.lang.constant.DynamicConstantDesc;
-import java.lang.constant.MethodHandleDesc;
 
-import java.util.Objects;
 import java.util.Optional;
 
 import org.microbean.constant.Constables;
 
 import static java.lang.constant.ConstantDescs.BSM_INVOKE;
 import static java.lang.constant.ConstantDescs.CD_Object;
+
+import static java.lang.constant.MethodHandleDesc.ofConstructor;
+
+import static java.util.Objects.requireNonNull;
 
 /**
  * A {@link Factory} that returns its singleton from its {@link #create(Request)} method.
@@ -49,7 +51,7 @@ public final record Constant<I>(I singleton) implements Constable, Factory<I> {
    * @exception NullPointerException if {@code singleton} is {@code null}
    */
   public Constant {
-    Objects.requireNonNull(singleton, "singleton");
+    requireNonNull(singleton, "singleton");
   }
 
   /**
@@ -63,7 +65,7 @@ public final record Constant<I>(I singleton) implements Constable, Factory<I> {
    */
   @Override // Factory<I>
   public final I create(final Creation<I> creation) {
-    return this.singleton();
+    return this.singleton;
   }
 
   /**
@@ -75,7 +77,7 @@ public final record Constant<I>(I singleton) implements Constable, Factory<I> {
    */
   @Override // Factory<I>
   public final boolean destroys() {
-    return this.singleton() instanceof AutoCloseable;
+    return this.singleton instanceof AutoCloseable;
   }
 
   @Override // Factory<I>
@@ -87,8 +89,8 @@ public final record Constant<I>(I singleton) implements Constable, Factory<I> {
   public final Optional<DynamicConstantDesc<I>> describeConstable() {
     return Constables.describeConstable(this.singleton())
       .map(iDesc -> DynamicConstantDesc.of(BSM_INVOKE,
-                                           MethodHandleDesc.ofConstructor(this.getClass().describeConstable().orElseThrow(),
-                                                                          CD_Object),
+                                           ofConstructor(this.getClass().describeConstable().orElseThrow(),
+                                                         CD_Object),
                                            iDesc));
   }
 

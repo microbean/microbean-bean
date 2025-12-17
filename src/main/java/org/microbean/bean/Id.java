@@ -13,6 +13,7 @@
  */
 package org.microbean.bean;
 
+import java.lang.constant.ClassDesc;
 import java.lang.constant.Constable;
 import java.lang.constant.DynamicConstantDesc;
 import java.lang.constant.MethodHandleDesc;
@@ -43,6 +44,10 @@ import static org.microbean.bean.BeanTypes.legalBeanType;
 /**
  * An identifier for a {@link Bean}.
  *
+ * <p>Note that because an {@link Id} houses a {@link BeanTypeList}, and because a {@link BeanTypeList} houses {@link
+ * TypeMirror} instances, and because many {@link TypeMirror} instances may model the same type, two {@link Id}s that
+ * might appear as equal at first glance may not be.</p>
+ *
  * @param types a {@link BeanTypeList}
  *
  * @param attributes a {@link List} of {@link Attributes}s
@@ -55,6 +60,8 @@ import static org.microbean.bean.BeanTypes.legalBeanType;
  * @author <a href="https://about.me/lairdnelson" target="_top">Laird Nelson</a>
  *
  * @see Ranked
+ *
+ * @see TypeMirror#equals(Object)
  */
 public final record Id(BeanTypeList types,
                        List<Attributes> attributes,
@@ -116,10 +123,8 @@ public final record Id(BeanTypeList types,
     return Constables.describeConstable(this.attributes())
       .flatMap(attributesDesc -> this.types().describeConstable()
                .map(typesDesc -> DynamicConstantDesc.of(BSM_INVOKE,
-                                                        MethodHandleDesc.ofConstructor(this.getClass()
-                                                                                         .describeConstable()
-                                                                                         .orElseThrow(),
-                                                                                       CD_List,
+                                                        MethodHandleDesc.ofConstructor(this.getClass().describeConstable().orElseThrow(),
+                                                                                       BeanTypeList.class.describeConstable().orElseThrow(),
                                                                                        CD_List,
                                                                                        CD_boolean,
                                                                                        CD_int),
@@ -128,5 +133,7 @@ public final record Id(BeanTypeList types,
                                                         this.alternate() ? TRUE : FALSE,
                                                         this.rank())));
   }
+
+  
 
 }

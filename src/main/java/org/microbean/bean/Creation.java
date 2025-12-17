@@ -16,19 +16,14 @@ package org.microbean.bean;
 /**
  * A representation of a {@link Factory}'s {@linkplain Factory#create(Creation) creation activity}.
  *
- * <p>Any {@link Creation} implementation must also be a {@link Destruction} implementation, or undefined behavior and
- * errors may occur.</p>
- *
- * <p>Many {@link Creation} implementations are also {@link AutoCloseableRegistry} implementations. This is not a
- * requirement of the {@link Creation} or {@link Destruction} contracts.</p>
+ * <p>Any {@link Creation} implementation <strong>must</strong> also be a {@link Destruction} implementation, or
+ * undefined behavior and errors may occur.</p>
  *
  * @param <I> the type of instance being created
  *
  * @author <a href="https://about.me/lairdnelson" target="_parent">Laird Nelson</a>
  *
  * @see #creating(Object)
- *
- * @see AutoCloseableRegistry
  *
  * @see Destruction
  *

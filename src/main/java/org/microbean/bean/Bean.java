@@ -17,20 +17,22 @@ import java.lang.constant.ClassDesc;
 import java.lang.constant.Constable;
 import java.lang.constant.ConstantDesc;
 import java.lang.constant.DynamicConstantDesc;
-import java.lang.constant.MethodHandleDesc;
 
-import java.util.Objects;
 import java.util.Optional;
 import java.util.SequencedSet;
 
 import java.util.function.Function;
 
-import org.microbean.assign.Aggregate;
 import org.microbean.assign.Assignment;
 import org.microbean.assign.AttributedElement;
 import org.microbean.assign.AttributedType;
+import org.microbean.assign.AttributedTypedAggregate;
 
 import static java.lang.constant.ConstantDescs.BSM_INVOKE;
+
+import static java.lang.constant.MethodHandleDesc.ofConstructor;
+
+import static java.util.Objects.requireNonNull;
 
 /**
  * A ({@link Constable}) pairing of an {@link Id} with a {@link Factory}.
@@ -47,7 +49,7 @@ import static java.lang.constant.ConstantDescs.BSM_INVOKE;
  *
  * @see Id
  */
-public final record Bean<I>(Id id, Factory<I> factory) implements Aggregate, Constable, Ranked {
+public final record Bean<I>(Id id, Factory<I> factory) implements AttributedTypedAggregate, Constable, Ranked {
 
   /**
    * Creates a new {@link Bean}.
@@ -59,18 +61,18 @@ public final record Bean<I>(Id id, Factory<I> factory) implements Aggregate, Con
    * @exception NullPointerException if either argument is {@code null}
    */
   public Bean {
-    Objects.requireNonNull(id, "id");
-    Objects.requireNonNull(factory, "factory");
+    requireNonNull(id, "id");
+    requireNonNull(factory, "factory");
   }
 
   @Override // Ranked
   public final boolean alternate() {
-    return this.id().alternate();
+    return this.id.alternate();
   }
 
-  @Override // Aggregate
+  @Override // AttributedTypedAggregate (Aggregate)
   public final SequencedSet<? extends Assignment<?>> assign(final Function<? super AttributedType, ?> r) {
-    return this.factory().assign(r);
+    return this.factory.assign(r);
   }
 
   /**
@@ -89,34 +91,43 @@ public final record Bean<I>(Id id, Factory<I> factory) implements Aggregate, Con
 
   @Override // Aggregate
   public final SequencedSet<AttributedElement> dependencies() {
-    return this.factory().dependencies();
+    return this.factory.dependencies();
   }
 
   @Override // Constable
   public final Optional<DynamicConstantDesc<Bean<I>>> describeConstable() {
-    return (this.factory() instanceof Constable c ? c.describeConstable() : Optional.<ConstantDesc>empty())
-      .flatMap(factoryDesc -> this.id().describeConstable()
+    return (this.factory instanceof Constable c ? c.describeConstable() : Optional.<ConstantDesc>empty())
+      .flatMap(factoryDesc -> this.id.describeConstable()
                .map(idDesc -> DynamicConstantDesc.of(BSM_INVOKE,
-                                                     MethodHandleDesc.ofConstructor(ClassDesc.of(Bean.class.getName()),
-                                                                                    ClassDesc.of(Id.class.getName()),
-                                                                                    ClassDesc.of(Factory.class.getName())),
+                                                     ofConstructor(ClassDesc.of(Bean.class.getName()),
+                                                                   ClassDesc.of(Id.class.getName()),
+                                                                   ClassDesc.of(Factory.class.getName())),
                                                      idDesc,
                                                      factoryDesc)));
   }
 
   @Override // Record (Object)
   public final boolean equals(final Object other) {
-    return this == other || other != null && this.getClass() == other.getClass() && this.id().equals(((Bean<?>)other).id());
+    return this == other || switch (other) {
+    case null -> false;
+    case Bean<?> b when this.getClass() == b.getClass() -> this.id.equals(b.id);
+    default -> false;
+    };
   }
 
   @Override // Record (Object)
   public final int hashCode() {
-    return this.id().hashCode();
+    return this.id.hashCode();
   }
 
   @Override // Ranked
   public final int rank() {
-    return this.id().rank();
+    return this.id.rank();
+  }
+
+  @Override // AttributedTypedAggregate (AttributedTyped)
+  public final AttributedType attributedType() {
+    return new AttributedType(this.id.types().get(0), this.id.attributes());
   }
 
 }
