@@ -4,7 +4,7 @@
 
   <groupId>org.microbean</groupId>
   <artifactId>microbean-bean</artifactId>
-  <version>0.0.21-SNAPSHOT</version>
+  <version>0.0.21</version>
 
   <name>microBean™ Bean</name>
   <description>microBean™ Bean: Utility classes for implementing beans.</description>
@@ -43,7 +43,7 @@
     <connection>${scm.url}</connection>
     <developerConnection>${scm.url}</developerConnection>
     <url>https://github.com/microbean/microbean-bean/</url>
-    <tag>HEAD</tag>
+    <tag>v0.0.21</tag>
   </scm>
 
   <issueManagement>
