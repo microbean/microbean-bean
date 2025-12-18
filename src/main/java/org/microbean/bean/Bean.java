@@ -23,10 +23,10 @@ import java.util.SequencedSet;
 
 import java.util.function.Function;
 
+import org.microbean.assign.Aggregate;
 import org.microbean.assign.Assignment;
 import org.microbean.assign.AttributedElement;
 import org.microbean.assign.AttributedType;
-import org.microbean.assign.AttributedTypedAggregate;
 
 import static java.lang.constant.ConstantDescs.BSM_INVOKE;
 
@@ -49,7 +49,7 @@ import static java.util.Objects.requireNonNull;
  *
  * @see Id
  */
-public final record Bean<I>(Id id, Factory<I> factory) implements AttributedTypedAggregate, Constable, Ranked {
+public final record Bean<I>(Id id, Factory<I> factory) implements Aggregate, Constable, Ranked {
 
   /**
    * Creates a new {@link Bean}.
@@ -70,7 +70,7 @@ public final record Bean<I>(Id id, Factory<I> factory) implements AttributedType
     return this.id.alternate();
   }
 
-  @Override // AttributedTypedAggregate (Aggregate)
+  @Override // Aggregate
   public final SequencedSet<? extends Assignment<?>> assign(final Function<? super AttributedType, ?> r) {
     return this.factory.assign(r);
   }
@@ -123,11 +123,6 @@ public final record Bean<I>(Id id, Factory<I> factory) implements AttributedType
   @Override // Ranked
   public final int rank() {
     return this.id.rank();
-  }
-
-  @Override // AttributedTypedAggregate (AttributedTyped)
-  public final AttributedType attributedType() {
-    return new AttributedType(this.id.types().get(0), this.id.attributes());
   }
 
 }
