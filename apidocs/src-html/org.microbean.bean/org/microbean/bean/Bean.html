@@ -36,10 +36,10 @@
 <span class="source-line-no">023</span><span id="line-23"></span>
 <span class="source-line-no">024</span><span id="line-24">import java.util.function.Function;</span>
 <span class="source-line-no">025</span><span id="line-25"></span>
-<span class="source-line-no">026</span><span id="line-26">import org.microbean.assign.Assignment;</span>
-<span class="source-line-no">027</span><span id="line-27">import org.microbean.assign.AttributedElement;</span>
-<span class="source-line-no">028</span><span id="line-28">import org.microbean.assign.AttributedType;</span>
-<span class="source-line-no">029</span><span id="line-29">import org.microbean.assign.AttributedTypedAggregate;</span>
+<span class="source-line-no">026</span><span id="line-26">import org.microbean.assign.Aggregate;</span>
+<span class="source-line-no">027</span><span id="line-27">import org.microbean.assign.Assignment;</span>
+<span class="source-line-no">028</span><span id="line-28">import org.microbean.assign.AttributedElement;</span>
+<span class="source-line-no">029</span><span id="line-29">import org.microbean.assign.AttributedType;</span>
 <span class="source-line-no">030</span><span id="line-30"></span>
 <span class="source-line-no">031</span><span id="line-31">import static java.lang.constant.ConstantDescs.BSM_INVOKE;</span>
 <span class="source-line-no">032</span><span id="line-32"></span>
@@ -62,7 +62,7 @@
 <span class="source-line-no">049</span><span id="line-49"> *</span>
 <span class="source-line-no">050</span><span id="line-50"> * @see Id</span>
 <span class="source-line-no">051</span><span id="line-51"> */</span>
-<span class="source-line-no">052</span><span id="line-52">public final record Bean&lt;I&gt;(Id id, Factory&lt;I&gt; factory) implements AttributedTypedAggregate, Constable, Ranked {</span>
+<span class="source-line-no">052</span><span id="line-52">public final record Bean&lt;I&gt;(Id id, Factory&lt;I&gt; factory) implements Aggregate, Constable, Ranked {</span>
 <span class="source-line-no">053</span><span id="line-53"></span>
 <span class="source-line-no">054</span><span id="line-54">  /**</span>
 <span class="source-line-no">055</span><span id="line-55">   * Creates a new {@link Bean}.</span>
@@ -83,7 +83,7 @@
 <span class="source-line-no">070</span><span id="line-70">    return this.id.alternate();</span>
 <span class="source-line-no">071</span><span id="line-71">  }</span>
 <span class="source-line-no">072</span><span id="line-72"></span>
-<span class="source-line-no">073</span><span id="line-73">  @Override // AttributedTypedAggregate (Aggregate)</span>
+<span class="source-line-no">073</span><span id="line-73">  @Override // Aggregate</span>
 <span class="source-line-no">074</span><span id="line-74">  public final SequencedSet&lt;? extends Assignment&lt;?&gt;&gt; assign(final Function&lt;? super AttributedType, ?&gt; r) {</span>
 <span class="source-line-no">075</span><span id="line-75">    return this.factory.assign(r);</span>
 <span class="source-line-no">076</span><span id="line-76">  }</span>
@@ -138,12 +138,7 @@
 <span class="source-line-no">125</span><span id="line-125">    return this.id.rank();</span>
 <span class="source-line-no">126</span><span id="line-126">  }</span>
 <span class="source-line-no">127</span><span id="line-127"></span>
-<span class="source-line-no">128</span><span id="line-128">  @Override // AttributedTypedAggregate (AttributedTyped)</span>
-<span class="source-line-no">129</span><span id="line-129">  public final AttributedType attributedType() {</span>
-<span class="source-line-no">130</span><span id="line-130">    return new AttributedType(this.id.types().get(0), this.id.attributes());</span>
-<span class="source-line-no">131</span><span id="line-131">  }</span>
-<span class="source-line-no">132</span><span id="line-132"></span>
-<span class="source-line-no">133</span><span id="line-133">}</span>
+<span class="source-line-no">128</span><span id="line-128">}</span>
 
 
 
