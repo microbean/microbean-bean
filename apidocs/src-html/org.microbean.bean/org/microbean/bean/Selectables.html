@@ -79,8 +79,8 @@
 <span class="source-line-no">066</span><span id="line-66">   * @exception NullPointerException if any argument is {@code null}</span>
 <span class="source-line-no">067</span><span id="line-67">   */</span>
 <span class="source-line-no">068</span><span id="line-68">  public static final &lt;C, E&gt; Selectable&lt;C, E&gt; ambiguityReducing(final Selectable&lt;C, E&gt; s,</span>
-<span class="source-line-no">069</span><span id="line-69">                                                                final Predicate&lt;? super E&gt; p,</span>
-<span class="source-line-no">070</span><span id="line-70">                                                                final ToIntFunction&lt;? super E&gt; ranker) {</span>
+<span class="source-line-no">069</span><span id="line-69">                                                                final Predicate&lt;? super E&gt; p, // are you an alternate?</span>
+<span class="source-line-no">070</span><span id="line-70">                                                                final ToIntFunction&lt;? super E&gt; ranker) { // rank?</span>
 <span class="source-line-no">071</span><span id="line-71">    requireNonNull(s, "s");</span>
 <span class="source-line-no">072</span><span id="line-72">    requireNonNull(p, "p");</span>
 <span class="source-line-no">073</span><span id="line-73">    requireNonNull(ranker, "ranker");</span>
@@ -93,7 +93,7 @@
 <span class="source-line-no">080</span><span id="line-80">    //</span>
 <span class="source-line-no">081</span><span id="line-81">    // In CDI 5 @Reserve will also enter the chat.</span>
 <span class="source-line-no">082</span><span id="line-82">    return c -&gt; {</span>
-<span class="source-line-no">083</span><span id="line-83">      final List&lt;E&gt; elements = s.select(c);</span>
+<span class="source-line-no">083</span><span id="line-83">      final List&lt;E&gt; elements = s.select(c); // remember: c could be null; the result could be everything</span>
 <span class="source-line-no">084</span><span id="line-84">      final int size = elements.size();</span>
 <span class="source-line-no">085</span><span id="line-85">      switch (size) {</span>
 <span class="source-line-no">086</span><span id="line-86">      case 0:</span>
