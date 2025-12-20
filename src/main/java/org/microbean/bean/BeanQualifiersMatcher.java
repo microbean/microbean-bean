@@ -16,12 +16,10 @@ package org.microbean.bean;
 import java.util.Collection;
 
 import org.microbean.assign.Matcher;
-import org.microbean.assign.Qualifiers;
 
 import org.microbean.attributes.Attributes;
 
-import static org.microbean.assign.Qualifiers.anyAndDefaultQualifiers;
-import static org.microbean.assign.Qualifiers.defaultQualifier;
+import static java.util.Objects.requireNonNull;
 
 /**
  * A {@link Matcher} encapsulating <a
@@ -36,15 +34,28 @@ public class BeanQualifiersMatcher implements Matcher<Collection<? extends Attri
 
 
   /*
+   * Instance fields.
+   */
+
+
+  private final Qualifiers qualifiers;
+  
+  
+  /*
    * Constructors.
    */
 
 
   /**
    * Creates a new {@link BeanQualifiersMatcher}.
+   *
+   * @param qualifiers a {@link Qualifiers}; must not be {@code null}
+   *
+   * @exception NullPointerException if {@code qualifiers} is {@code null}
    */
-  public BeanQualifiersMatcher() {
+  public BeanQualifiersMatcher(final Qualifiers qualifiers) {
     super();
+    this.qualifiers = requireNonNull(qualifiers, "qualifiers");
   }
 
 
@@ -58,10 +69,10 @@ public class BeanQualifiersMatcher implements Matcher<Collection<? extends Attri
    * org.microbean.assign.Qualifiers#qualifiers(Collection) qualifiers present} in {@code receiverAttributes} is
    * {@linkplain Collection#isEmpty() empty} and either the collection of {@linkplain
    * org.microbean.assign.Qualifiers#qualifiers(Collection) qualifiers present} in {@code payloadAttributes} is also
-   * empty or contains the {@linkplain org.microbean.assign.Qualifiers#defaultQualifier() default qualifier}, or (b) if
+   * empty or contains the {@linkplain org.microbean.bean.Qualifiers#defaultQualifier() default qualifier}, or (b) if
    * the collection of {@linkplain org.microbean.assign.Qualifiers#qualifiers(Collection) qualifiers present} in {@code
    * payloadAttributes} {@linkplain Collection#isEmpty() is empty} or the return value of {@link
-   * org.microbean.assign.Qualifiers#anyAndDefaultQualifiers()} {@linkplain Collection#containsAll(Collection) contains
+   * org.microbean.bean.Qualifiers#anyAndDefaultQualifiers()} {@linkplain Collection#containsAll(Collection) contains
    * all} of the {@linkplain org.microbean.assign.Qualifiers#qualifiers(Collection) qualifiers present} in {@code
    * receiverAttributes}, or (c) if the collection of {@linkplain org.microbean.assign.Qualifiers#qualifiers(Collection)
    * qualifiers present} in {@code payloadAttributes} {@linkplain Collection#containsAll(Collection) contains all} of
@@ -76,10 +87,10 @@ public class BeanQualifiersMatcher implements Matcher<Collection<? extends Attri
    * org.microbean.assign.Qualifiers#qualifiers(Collection) qualifiers present} in {@code receiverAttributes} is
    * {@linkplain Collection#isEmpty() empty} and either the collection of {@linkplain
    * org.microbean.assign.Qualifiers#qualifiers(Collection) qualifiers present} in {@code payloadAttributes} is also
-   * empty or contains the {@linkplain org.microbean.assign.Qualifiers#defaultQualifier() default qualifier}, or (b) if
-   * the collection of {@linkplain org.microbean.assign.Qualifiers#qualifiers(Collection) qualifiers present} in {@code
+   * empty or contains the {@linkplain org.microbean.bean.Qualifiers#defaultQualifier() default qualifier}, or (b) if
+   * the collection of {@linkplain org.microbean.bean.Qualifiers#qualifiers(Collection) qualifiers present} in {@code
    * payloadAttributes} {@linkplain Collection#isEmpty() is empty} or the return value of {@link
-   * org.microbean.assign.Qualifiers#anyAndDefaultQualifiers()} {@linkplain Collection#containsAll(Collection) contains
+   * org.microbean.bean.Qualifiers#anyAndDefaultQualifiers()} {@linkplain Collection#containsAll(Collection) contains
    * all} of the {@linkplain org.microbean.assign.Qualifiers#qualifiers(Collection) qualifiers present} in {@code
    * receiverAttributes}, or (c) if the collection of {@linkplain org.microbean.assign.Qualifiers#qualifiers(Collection)
    * qualifiers present} in {@code payloadAttributes} {@linkplain Collection#containsAll(Collection) contains all} of
@@ -106,8 +117,8 @@ public class BeanQualifiersMatcher implements Matcher<Collection<? extends Attri
     // "If an injection point declares no qualifier, the injection point has exactly one qualifier, the default
     // qualifier @Default."
     return
-      receiverQualifiers.isEmpty() ? payloadQualifiers.isEmpty() || payloadQualifiers.contains(defaultQualifier()) :
-      (payloadQualifiers.isEmpty() ? anyAndDefaultQualifiers() : payloadQualifiers).containsAll(receiverQualifiers);
+      receiverQualifiers.isEmpty() ? payloadQualifiers.isEmpty() || payloadQualifiers.contains(this.qualifiers.defaultQualifier()) :
+      (payloadQualifiers.isEmpty() ? this.qualifiers.anyAndDefaultQualifiers() : payloadQualifiers).containsAll(receiverQualifiers);
   }
 
   /**
@@ -125,9 +136,12 @@ public class BeanQualifiersMatcher implements Matcher<Collection<? extends Attri
    * Collection} that are deemed to be qualifiers; never {@code null}
    *
    * @exception NullPointerException if {@code as} is {@code null}
+   *
+   * @deprecated Pass a different {@link Qualifiers} to the {@link #BeanQualifiersMatcher(Qualifiers)} constructor.
    */
+  @Deprecated(forRemoval = true)
   protected Collection<? extends Attributes> qualifiers(final Collection<? extends Attributes> as) {
-    return Qualifiers.qualifiers(as);
+    return this.qualifiers.qualifiers(as);
   }
 
 }

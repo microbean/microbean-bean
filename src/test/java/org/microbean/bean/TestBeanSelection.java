@@ -37,8 +37,10 @@ final class TestBeanSelection {
 
   private static final BeanTypes beanTypes = new BeanTypes(domain);
 
+  private static final Qualifiers qualifiers = new Qualifiers();
+
   private static final Matcher<AttributedType, Id> matcher =
-    new IdMatcher(new BeanTypeMatcher(domain), new BeanQualifiersMatcher());
+    new IdMatcher(new BeanTypeMatcher(domain), new BeanQualifiersMatcher(qualifiers));
 
   private TestBeanSelection() {
     super();

@@ -20,6 +20,7 @@
 module org.microbean.bean {
 
   exports org.microbean.bean;
+  exports org.microbean.bean.model;
 
   requires transitive java.compiler;
   requires transitive org.microbean.assign;

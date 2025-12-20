@@ -66,8 +66,8 @@ public final class Selectables {
    * @exception NullPointerException if any argument is {@code null}
    */
   public static final <C, E> Selectable<C, E> ambiguityReducing(final Selectable<C, E> s,
-                                                                final Predicate<? super E> p,
-                                                                final ToIntFunction<? super E> ranker) {
+                                                                final Predicate<? super E> p, // are you an alternate?
+                                                                final ToIntFunction<? super E> ranker) { // rank?
     requireNonNull(s, "s");
     requireNonNull(p, "p");
     requireNonNull(ranker, "ranker");
@@ -80,7 +80,7 @@ public final class Selectables {
     //
     // In CDI 5 @Reserve will also enter the chat.
     return c -> {
-      final List<E> elements = s.select(c);
+      final List<E> elements = s.select(c); // remember: c could be null; the result could be everything
       final int size = elements.size();
       switch (size) {
       case 0:
