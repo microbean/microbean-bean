@@ -38,7 +38,7 @@ package org.microbean.bean;
  *
  * @deprecated This class is deprecated for future removal.
  */
-@Deprecated
+@Deprecated(forRemoval = true)
 public interface Ranked {
 
 

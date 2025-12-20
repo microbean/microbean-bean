@@ -65,11 +65,13 @@ public final record Bean<I>(Id id, Factory<I> factory) implements Aggregate, Con
     requireNonNull(factory, "factory");
   }
 
+  @Deprecated(forRemoval = true)
   @Override // Ranked
   public final boolean alternate() {
     return this.id.alternate();
   }
 
+  // (Convenience.)
   @Override // Aggregate
   public final SequencedSet<? extends Assignment<?>> assign(final Function<? super AttributedType, ?> r) {
     return this.factory.assign(r);
@@ -89,6 +91,7 @@ public final record Bean<I>(Id id, Factory<I> factory) implements Aggregate, Con
     return (Bean<X>)this;
   }
 
+  // (Convenience.)
   @Override // Aggregate
   public final SequencedSet<AttributedElement> dependencies() {
     return this.factory.dependencies();
@@ -120,6 +123,8 @@ public final record Bean<I>(Id id, Factory<I> factory) implements Aggregate, Con
     return this.id.hashCode();
   }
 
+  // (Convenience.)
+  @Deprecated(forRemoval = true)
   @Override // Ranked
   public final int rank() {
     return this.id.rank();
