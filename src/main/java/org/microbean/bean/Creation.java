@@ -1,6 +1,6 @@
 /* -*- mode: Java; c-basic-offset: 2; indent-tabs-mode: nil; coding: utf-8-unix -*-
  *
- * Copyright © 2025 microBean™.
+ * Copyright © 2025–2026 microBean™.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
  * the License. You may obtain a copy of the License at
@@ -32,14 +32,13 @@ package org.microbean.bean;
 public interface Creation<I> extends ReferencesSelector {
 
   /**
-   * Returns the {@link Id} of the {@link Bean} {@linkplain Bean#factory() whose} {@link Factory}'s {@link
-   * Factory#create(Creation)} invocation was responsible for the existence of this {@link Creation}.
+   * Returns the determinate {@link Id} of the {@link Bean} {@linkplain Bean#factory() whose} {@link Factory}'s {@link
+   * Factory#create(Creation)} invocation was responsible for the existence of this {@link Creation}, or {@code null} if
+   * the {@link Id} is not known.
    *
    * <p>Implementations of this method may return {@code null}.</p>
    *
-   * <p>Implementations of this method must return a determinate value.</p>
-   *
-   * @return an {@link Id}, or {@code null}
+   * @return a determinate {@link Id}, or {@code null}
    *
    * @see Bean
    *

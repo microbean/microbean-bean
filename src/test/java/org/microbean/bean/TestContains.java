@@ -1,14 +1,14 @@
 /* -*- mode: Java; c-basic-offset: 2; indent-tabs-mode: nil; coding: utf-8-unix -*-
  *
- * Copyright © 2024 microBean™.
+ * Copyright © 2024–2026 microBean™.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
- * the License.  You may obtain a copy of the License at
+ * the License. You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
- * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  See the License for the
+ * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
  */
 package org.microbean.bean;
@@ -48,7 +48,6 @@ final class TestContains {
 
   @Test
   final <T extends String, S extends T> void testWildcardContains() {
-
     final ExecutableElement ee = domain.executableElement(domain.typeElement(this.getClass().getName()),
                                                           domain.noType(TypeKind.VOID),
                                                           "testWildcardContains");
@@ -73,7 +72,7 @@ final class TestContains {
     assertTrue(domain.contains(qExtendsCharSequence, s));
     assertTrue(domain.contains(qExtendsString, t));
     assertTrue(domain.contains(qExtendsString, s));
-    
+
     assertTrue(domain.contains(qSuperString, qSuperString)); // reflexive
     assertTrue(domain.contains(qSuperString, string));
     assertTrue(domain.contains(qSuperString, charSequence));
@@ -102,7 +101,7 @@ final class TestContains {
     final DeclaredType integer = domain.declaredType("java.lang.Integer");
 
     assertTrue(domain.contains(t, t));
-    
+
     assertFalse(domain.contains(t, integer));
     assertFalse(domain.contains(integer, t));
     assertFalse(domain.contains(s, s.getUpperBound()));

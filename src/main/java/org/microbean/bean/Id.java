@@ -1,139 +1,127 @@
 /* -*- mode: Java; c-basic-offset: 2; indent-tabs-mode: nil; coding: utf-8-unix -*-
  *
- * Copyright © 2023–2025 microBean™.
+ * Copyright © 2026 microBean™.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
- * the License.  You may obtain a copy of the License at
+ * the License. You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
- * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  See the License for the
+ * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
  */
 package org.microbean.bean;
 
-import java.lang.constant.ClassDesc;
 import java.lang.constant.Constable;
 import java.lang.constant.DynamicConstantDesc;
-import java.lang.constant.MethodHandleDesc;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
-import java.util.Objects;
 import java.util.Optional;
 
-import javax.lang.model.type.TypeMirror;
-
-import org.microbean.attributes.Attributed;
-import org.microbean.attributes.Attributes;
+import javax.lang.model.element.AnnotationMirror;
 
 import org.microbean.constant.Constables;
 
 import static java.lang.constant.ConstantDescs.BSM_INVOKE;
-import static java.lang.constant.ConstantDescs.CD_boolean;
-import static java.lang.constant.ConstantDescs.CD_int;
 import static java.lang.constant.ConstantDescs.CD_List;
-import static java.lang.constant.ConstantDescs.FALSE;
-import static java.lang.constant.ConstantDescs.TRUE;
 
-import static org.microbean.bean.BeanTypes.legalBeanType;
+import static java.lang.constant.MethodHandleDesc.ofConstructor;
+
+import static java.util.Objects.requireNonNull;
 
 /**
  * An identifier for a {@link Bean}.
  *
  * <p>Note that because an {@link Id} houses a {@link BeanTypeList}, and because a {@link BeanTypeList} houses {@link
- * TypeMirror} instances, and because many {@link TypeMirror} instances may model the same type, two {@link Id}s that
- * might appear as equal at first glance may not be.</p>
- *
- * @param types a {@link BeanTypeList}
- *
- * @param attributes a {@link List} of {@link Attributes}s
- *
- * @param alternate whether this {@link Id} is to be considered an <dfn>alternate</dfn>
- *
- * @param rank the {@linkplain Ranked#rank() rank} of this {@link Id}; often {@link Ranked#DEFAULT_RANK} to indicate no
- * particular rank; <strong>always {@link Ranked#DEFAULT_RANK} if {@code alternate} is {@code false}</strong>
+ * javax.lang.model.type.TypeMirror} instances, and because many {@link javax.lang.model.type.TypeMirror} instances may
+ * model the same type, two {@link Id}s that might appear as equal at first glance may not be.</p>
  *
  * @author <a href="https://about.me/lairdnelson" target="_top">Laird Nelson</a>
  *
- * @see Ranked
- *
- * @see TypeMirror#equals(Object)
+ * @see javax.lang.model.type.TypeMirror#equals(Object)
  */
-public final record Id(BeanTypeList types,
-                       List<Attributes> attributes,
-                       boolean alternate,
-                       int rank)
-  implements Attributed, Constable, Ranked {
+public final class Id implements Constable {
 
+  private final BeanTypeList types;
 
-  /*
-   * Constructors.
-   */
-
-
-  /**
-   * Creates a new {@link Id} that is not an alternate and that therefore has a {@linkplain Ranked#DEFAULT_RANK default
-   * rank}.
-   *
-   * @param types a {@link BeanTypeList}; must not be {@code null}; must not be {@linkplain List#isEmpty() empty}
-   *
-   * @param attributes a {@link List} of {@link Attributes}s; must not be {@code null}
-   *
-   * @exception NullPointerException if {@code types} or {@code attributes} is {@code null}
-   */
-  public Id(final BeanTypeList types,
-            final List<Attributes> attributes) {
-    this(types, attributes, false, DEFAULT_RANK);
-  }
+  private final List<AnnotationMirror> annotations;
 
   /**
    * Creates a new {@link Id}.
    *
-   * @param types a {@link BeanTypeList}; must not be {@code null}; must not be {@linkplain List#isEmpty() empty}
+   * @param types a non-{@code null} {@link BeanTypeList}
    *
-   * @param attributes a {@link List} of {@link Attributes}s; must not be {@code null}
+   * @param annotations a non-{@code null} {@link List} of {@link AnnotationMirror}s further describing the supplied
+   * {@code types}
    *
-   * @param alternate whether this {@link Id} is to be considered an <dfn>alternate</dfn>
+   * @see BeanTypeList
    *
-   * @param rank the {@linkplain Ranked#rank() rank} of this {@link Id}; often {@link Ranked#DEFAULT_RANK} to indicate
-   * no particular rank; <strong>always {@link Ranked#DEFAULT_RANK} if {@code alternate} is {@code false}</strong>
-   *
-   * @exception NullPointerException if {@code types} or {@code attributes} is {@code null}
+   * @see BeanTypes#beanTypes(java.util.Collection)
    */
-  public Id {
-    Objects.requireNonNull(types, "types");
-    attributes = List.copyOf(attributes);
-    if (!alternate) {
-      rank = DEFAULT_RANK;
-    }
+  public Id(final BeanTypeList types, final List<AnnotationMirror> annotations) {
+    super();
+    this.types = requireNonNull(types, "types");
+    this.annotations = List.copyOf(annotations);
   }
 
-
-  /*
-   * Instance methods.
+  /**
+   * Returns a non-{@code null}, immutable, determinate {@link List} of {@link AnnotationMirror}s describing this {@link
+   * Id}.
+   *
+   * @return a non-{@code null}, immutable, determinate {@link List} of {@link AnnotationMirror}s describing this {@link
+   * Id}
+   *
+   * @see #Id(BeanTypeList, List)
    */
-
+  public final List<AnnotationMirror> annotations() {
+    return this.annotations;
+  }
 
   @Override // Constable
   public final Optional<DynamicConstantDesc<Id>> describeConstable() {
-    return Constables.describeConstable(this.attributes())
-      .flatMap(attributesDesc -> this.types().describeConstable()
+    return Constables.describeConstable(this.annotations)
+      .flatMap(annotationsDesc -> this.types.describeConstable()
                .map(typesDesc -> DynamicConstantDesc.of(BSM_INVOKE,
-                                                        MethodHandleDesc.ofConstructor(this.getClass().describeConstable().orElseThrow(),
-                                                                                       BeanTypeList.class.describeConstable().orElseThrow(),
-                                                                                       CD_List,
-                                                                                       CD_boolean,
-                                                                                       CD_int),
+                                                        ofConstructor(this.getClass().describeConstable().orElseThrow(),
+                                                                      BeanTypeList.class.describeConstable().orElseThrow(),
+                                                                      CD_List),
                                                         typesDesc,
-                                                        attributesDesc,
-                                                        this.alternate() ? TRUE : FALSE,
-                                                        this.rank())));
+                                                        annotationsDesc)));
   }
 
-  
+  @Override // Object
+  public final boolean equals(final Object other) {
+    return this == other || switch (other) {
+    case null -> false;
+    case Id i when this.getClass() == i.getClass() -> this.types.equals(i.types) && this.annotations.equals(i.annotations());
+    default -> false;
+    };
+  }
 
+  @Override // Object
+  public final int hashCode() {
+    return this.types.hashCode() ^ this.annotations.hashCode();
+  }
+
+  @Override // Object
+  public final String toString() {
+    return this.annotations.toString() + " " + this.types.toString(); // TODO: improve
+  }
+
+  /**
+   * Returns a non-{@code null} determinate {@link BeanTypeList} describing this {@link Id}.
+   *
+   * @return a non-{@code null} determinate {@link BeanTypeList} describing this {@link Id}
+   *
+   * @see #Id(BeanTypeList, List)
+   *
+   * @see BeanTypeList
+   *
+   * @see BeanTypes#beanTypes(java.util.Collection)
+   */
+  public final BeanTypeList types() {
+    return this.types;
+  }
+  
 }

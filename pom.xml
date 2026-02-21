@@ -71,7 +71,7 @@
     <!-- maven-javadoc-plugin properties -->
     <bottom><![CDATA[Copyright &copy; ${project.inceptionYear}&ndash;{currentYear}, <a href="${project.organization.url}" target="_top">${project.organization.name}</a>. All rights reserved.]]></bottom>
     <doctitle>&lt;a href="${project.url}" target="_top"&gt;&lt;span style="font-family:Lobster, cursive;"&gt;µb&lt;/span&gt; ${project.artifactId}&lt;/a&gt; ${project.version}</doctitle>
-    <links>https://microbean.github.io/microbean-assign/apidocs/,https://microbean.github.io/microbean-attributes/apidocs/,https://microbean.github.io/microbean-construct/apidocs/</links>
+    <links>https://microbean.github.io/microbean-assign/apidocs/,https://microbean.github.io/microbean-construct/apidocs/</links>
     <sourcetab>2</sourcetab>
 
     <!-- maven-release-plugin properties -->
@@ -130,13 +130,7 @@
       <dependency>
         <groupId>org.microbean</groupId>
         <artifactId>microbean-assign</artifactId>
-        <version>0.0.11</version>
-      </dependency>
-
-      <dependency>
-        <groupId>org.microbean</groupId>
-        <artifactId>microbean-attributes</artifactId>
-        <version>0.0.5</version>
+        <version>0.0.14</version>
       </dependency>
 
       <dependency>
@@ -148,7 +142,7 @@
       <dependency>
         <groupId>org.microbean</groupId>
         <artifactId>microbean-construct</artifactId>
-        <version>0.0.18</version>
+        <version>0.0.24</version>
       </dependency>
 
     </dependencies>
@@ -159,12 +153,6 @@
     <dependency>
       <groupId>org.microbean</groupId>
       <artifactId>microbean-assign</artifactId>
-      <scope>compile</scope>
-    </dependency>
-
-    <dependency>
-      <groupId>org.microbean</groupId>
-      <artifactId>microbean-attributes</artifactId>
       <scope>compile</scope>
     </dependency>
 
@@ -470,7 +458,7 @@
         <plugin>
           <groupId>org.sonatype.central</groupId>
           <artifactId>central-publishing-maven-plugin</artifactId>
-          <version>0.9.0</version>
+          <version>0.10.0</version>
           <extensions>true</extensions>
           <configuration>
             <publishingServerId>central.sonatype.com</publishingServerId>

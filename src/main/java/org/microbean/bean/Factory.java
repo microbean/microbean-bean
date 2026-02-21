@@ -1,6 +1,6 @@
 /* -*- mode: Java; c-basic-offset: 2; indent-tabs-mode: nil; coding: utf-8-unix -*-
  *
- * Copyright © 2025 microBean™.
+ * Copyright © 2025–2026 microBean™.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
  * the License. You may obtain a copy of the License at
@@ -13,17 +13,17 @@
  */
 package org.microbean.bean;
 
-import java.lang.constant.ClassDesc;
 import java.lang.constant.Constable;
 import java.lang.constant.ConstantDesc;
 import java.lang.constant.DynamicConstantDesc;
-import java.lang.constant.MethodHandleDesc;
 
 import java.util.Optional;
 
 import org.microbean.assign.Aggregate;
 
 import static java.lang.constant.ConstantDescs.BSM_INVOKE;
+
+import static java.lang.constant.MethodHandleDesc.ofConstructor;
 
 /**
  * A source of (normally new) contextual instances.
@@ -41,7 +41,7 @@ public interface Factory<I> extends Aggregate, Constable {
   /**
    * Returns a (normally new) contextual instance, which may be {@code null}.
    *
-   * @param creation a {@link Creation}; may be {@code null}
+   * @param creation a {@link Creation}; may be {@code null} in certain primordial situations
    *
    * @return a contextual instance, which may be {@code null}
    *
@@ -67,8 +67,7 @@ public interface Factory<I> extends Aggregate, Constable {
   @Override // Constable
   public default Optional<? extends ConstantDesc> describeConstable() {
     return
-      Optional.of(DynamicConstantDesc.of(BSM_INVOKE,
-                                         MethodHandleDesc.ofConstructor(ClassDesc.of(this.getClass().getCanonicalName()))));
+      Optional.of(DynamicConstantDesc.of(BSM_INVOKE, ofConstructor(this.getClass().describeConstable().orElseThrow())));
   }
 
   /**
@@ -81,13 +80,14 @@ public interface Factory<I> extends Aggregate, Constable {
    * @param i the contextual instance to destroy; may be {@code null} in which case no action must be taken
    *
    * @param creation the object supplied to the {@link #create(Creation)} method represented here as a {@link
-   * Destruction}; may be {@code null}; must have an idempotent {@link AutoCloseable#close() close()} method
+   * Destruction} (all {@link Creation} implementations must also be {@link Destruction} implementations); may be {@code
+   * null}; must have an idempotent {@link AutoCloseable#close() close()} method
    *
    * @see #create(Creation)
    *
-   * @see Destruction
-   *
    * @see Creation
+   *
+   * @see Destruction
    */
   @SuppressWarnings("try")
   public default void destroy(final I i, final Destruction creation) {
@@ -100,8 +100,8 @@ public interface Factory<I> extends Aggregate, Constable {
         } catch (final InterruptedException e) {
           Thread.currentThread().interrupt();
           throw new DestructionException(e.getMessage(), e);
-        } catch (final Exception e) {
-          throw new DestructionException(e.getMessage(), e);
+        } catch (final Throwable t) {
+          throw new DestructionException(t.getMessage(), t);
         }
       }
     } else if (!(creation instanceof Creation<I>)) {
@@ -116,8 +116,8 @@ public interface Factory<I> extends Aggregate, Constable {
       } catch (final InterruptedException e) {
         Thread.currentThread().interrupt();
         throw new DestructionException(e.getMessage(), e);
-      } catch (final Exception e) {
-        throw new DestructionException(e.getMessage(), e);
+      } catch (final Throwable t) {
+        throw new DestructionException(t.getMessage(), t);
       }
     } else if (i instanceof AutoCloseable ac) {
       try {
@@ -127,8 +127,8 @@ public interface Factory<I> extends Aggregate, Constable {
       } catch (final InterruptedException e) {
         Thread.currentThread().interrupt();
         throw new DestructionException(e.getMessage(), e);
-      } catch (final Exception e) {
-        throw new DestructionException(e.getMessage(), e);
+      } catch (final Throwable t) {
+        throw new DestructionException(t.getMessage(), t);
       }
     }
   }
@@ -158,7 +158,11 @@ public interface Factory<I> extends Aggregate, Constable {
    *
    * <p>Overrides of this method should not call {@link #create(Creation)}.</p>
    *
-   * <p>Overrides of this method must be idempotent and must return a determinate value.</p>
+   * <p>Overrides of this method must be idempotent and must return a determinate value. Notably, once an invocation of
+   * an implementation of this method returns a non-{@code null} value, all subsequent invocations must return that
+   * value.</p>
+   *
+   * <p>It follows from this that a {@code null} contextual instance cannot be represented as a singleton.</p>
    *
    * @return the sole contextual instance of this {@link Factory}'s type, or (commonly) {@code null}
    */
