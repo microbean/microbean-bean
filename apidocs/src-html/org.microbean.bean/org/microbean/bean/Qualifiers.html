@@ -13,7 +13,7 @@
 <div class="source-container">
 <pre><span class="source-line-no">001</span><span id="line-1">/* -*- mode: Java; c-basic-offset: 2; indent-tabs-mode: nil; coding: utf-8-unix -*-</span>
 <span class="source-line-no">002</span><span id="line-2"> *</span>
-<span class="source-line-no">003</span><span id="line-3"> * Copyright © 2025 microBean™.</span>
+<span class="source-line-no">003</span><span id="line-3"> * Copyright © 2025–2026 microBean™.</span>
 <span class="source-line-no">004</span><span id="line-4"> *</span>
 <span class="source-line-no">005</span><span id="line-5"> * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with</span>
 <span class="source-line-no">006</span><span id="line-6"> * the License. You may obtain a copy of the License at</span>
@@ -26,245 +26,293 @@
 <span class="source-line-no">013</span><span id="line-13"> */</span>
 <span class="source-line-no">014</span><span id="line-14">package org.microbean.bean;</span>
 <span class="source-line-no">015</span><span id="line-15"></span>
-<span class="source-line-no">016</span><span id="line-16">import java.util.ArrayList;</span>
-<span class="source-line-no">017</span><span id="line-17">import java.util.Collection;</span>
-<span class="source-line-no">018</span><span id="line-18">import java.util.Collections;</span>
-<span class="source-line-no">019</span><span id="line-19">import java.util.List;</span>
+<span class="source-line-no">016</span><span id="line-16">import java.lang.constant.ClassDesc;</span>
+<span class="source-line-no">017</span><span id="line-17">import java.lang.constant.Constable;</span>
+<span class="source-line-no">018</span><span id="line-18">import java.lang.constant.ConstantDesc;</span>
+<span class="source-line-no">019</span><span id="line-19">import java.lang.constant.DynamicConstantDesc;</span>
 <span class="source-line-no">020</span><span id="line-20"></span>
-<span class="source-line-no">021</span><span id="line-21">import org.microbean.attributes.Attributes;</span>
-<span class="source-line-no">022</span><span id="line-22"></span>
-<span class="source-line-no">023</span><span id="line-23">/**</span>
-<span class="source-line-no">024</span><span id="line-24"> * A {@link org.microbean.assign.Qualifiers} extended to work with commonly-used {@linkplain #anyQualifier() any},</span>
-<span class="source-line-no">025</span><span id="line-25"> * {@linkplain #defaultQualifier() default}, and {@linkplain #primordialQualifier() primordial} qualifiers.</span>
-<span class="source-line-no">026</span><span id="line-26"> *</span>
-<span class="source-line-no">027</span><span id="line-27"> * @author &lt;a href="https://about.me/lairdnelson" target="_top"&gt;Laird Nelson&lt;/a&gt;</span>
-<span class="source-line-no">028</span><span id="line-28"> *</span>
-<span class="source-line-no">029</span><span id="line-29"> * @see org.microbean.assign.Qualifiers</span>
-<span class="source-line-no">030</span><span id="line-30"> * </span>
-<span class="source-line-no">031</span><span id="line-31"> * @see Attributes</span>
-<span class="source-line-no">032</span><span id="line-32"> */</span>
-<span class="source-line-no">033</span><span id="line-33">public class Qualifiers extends org.microbean.assign.Qualifiers {</span>
-<span class="source-line-no">034</span><span id="line-34"></span>
-<span class="source-line-no">035</span><span id="line-35">  private final Attributes ANY_QUALIFIER;</span>
+<span class="source-line-no">021</span><span id="line-21">import java.util.ArrayList;</span>
+<span class="source-line-no">022</span><span id="line-22">import java.util.Collection;</span>
+<span class="source-line-no">023</span><span id="line-23">import java.util.List;</span>
+<span class="source-line-no">024</span><span id="line-24">import java.util.Map;</span>
+<span class="source-line-no">025</span><span id="line-25">import java.util.Optional;</span>
+<span class="source-line-no">026</span><span id="line-26"></span>
+<span class="source-line-no">027</span><span id="line-27">import java.util.function.Predicate;</span>
+<span class="source-line-no">028</span><span id="line-28"></span>
+<span class="source-line-no">029</span><span id="line-29">import javax.lang.model.element.AnnotationMirror;</span>
+<span class="source-line-no">030</span><span id="line-30">import javax.lang.model.element.Element;</span>
+<span class="source-line-no">031</span><span id="line-31">import javax.lang.model.element.ExecutableElement;</span>
+<span class="source-line-no">032</span><span id="line-32">import javax.lang.model.element.Name;</span>
+<span class="source-line-no">033</span><span id="line-33">import javax.lang.model.element.QualifiedNameable;</span>
+<span class="source-line-no">034</span><span id="line-34">import javax.lang.model.element.TypeElement;</span>
+<span class="source-line-no">035</span><span id="line-35">import javax.lang.model.element.VariableElement;</span>
 <span class="source-line-no">036</span><span id="line-36"></span>
-<span class="source-line-no">037</span><span id="line-37">  private final List&lt;Attributes&gt; ANY_QUALIFIERS;</span>
+<span class="source-line-no">037</span><span id="line-37">import org.microbean.construct.Domain;</span>
 <span class="source-line-no">038</span><span id="line-38"></span>
-<span class="source-line-no">039</span><span id="line-39">  private final Attributes DEFAULT_QUALIFIER;</span>
-<span class="source-line-no">040</span><span id="line-40"></span>
-<span class="source-line-no">041</span><span id="line-41">  private final List&lt;Attributes&gt; DEFAULT_QUALIFIERS;</span>
-<span class="source-line-no">042</span><span id="line-42"></span>
-<span class="source-line-no">043</span><span id="line-43">  private final List&lt;Attributes&gt; ANY_AND_DEFAULT_QUALIFIERS;</span>
+<span class="source-line-no">039</span><span id="line-39">import org.microbean.construct.element.SyntheticAnnotationMirror;</span>
+<span class="source-line-no">040</span><span id="line-40">import org.microbean.construct.element.SyntheticAnnotationTypeElement;</span>
+<span class="source-line-no">041</span><span id="line-41">import org.microbean.construct.element.SyntheticAnnotationValue;</span>
+<span class="source-line-no">042</span><span id="line-42">import org.microbean.construct.element.SyntheticName;</span>
+<span class="source-line-no">043</span><span id="line-43">import org.microbean.construct.element.UniversalElement;</span>
 <span class="source-line-no">044</span><span id="line-44"></span>
-<span class="source-line-no">045</span><span id="line-45">  private final Attributes PRIMORDIAL_QUALIFIER;</span>
-<span class="source-line-no">046</span><span id="line-46"></span>
-<span class="source-line-no">047</span><span id="line-47">  private final List&lt;Attributes&gt; PRIMORDIAL_QUALIFIERS;</span>
-<span class="source-line-no">048</span><span id="line-48"></span>
-<span class="source-line-no">049</span><span id="line-49">  /**</span>
-<span class="source-line-no">050</span><span id="line-50">   * Creates a new {@link Qualifiers}.</span>
-<span class="source-line-no">051</span><span id="line-51">   */</span>
-<span class="source-line-no">052</span><span id="line-52">  public Qualifiers() {</span>
-<span class="source-line-no">053</span><span id="line-53">    super();</span>
-<span class="source-line-no">054</span><span id="line-54">    this.ANY_QUALIFIER = Attributes.of("Any", this.qualifiers());</span>
-<span class="source-line-no">055</span><span id="line-55">    this.ANY_QUALIFIERS = List.of(this.ANY_QUALIFIER);</span>
+<span class="source-line-no">045</span><span id="line-45">import static java.lang.constant.ConstantDescs.BSM_INVOKE;</span>
+<span class="source-line-no">046</span><span id="line-46">import static java.lang.constant.ConstantDescs.NULL;</span>
+<span class="source-line-no">047</span><span id="line-47"></span>
+<span class="source-line-no">048</span><span id="line-48">import static java.lang.constant.MethodHandleDesc.ofConstructor;</span>
+<span class="source-line-no">049</span><span id="line-49"></span>
+<span class="source-line-no">050</span><span id="line-50">import static java.util.Collections.unmodifiableList;</span>
+<span class="source-line-no">051</span><span id="line-51"></span>
+<span class="source-line-no">052</span><span id="line-52">import static java.util.Objects.requireNonNull;</span>
+<span class="source-line-no">053</span><span id="line-53"></span>
+<span class="source-line-no">054</span><span id="line-54">import static javax.lang.model.element.ElementKind.ANNOTATION_TYPE;</span>
+<span class="source-line-no">055</span><span id="line-55">import static javax.lang.model.element.ElementKind.ENUM_CONSTANT;</span>
 <span class="source-line-no">056</span><span id="line-56"></span>
-<span class="source-line-no">057</span><span id="line-57">    this.DEFAULT_QUALIFIER = Attributes.of("Default", this.qualifiers());</span>
-<span class="source-line-no">058</span><span id="line-58">    this.DEFAULT_QUALIFIERS = List.of(this.DEFAULT_QUALIFIER);</span>
-<span class="source-line-no">059</span><span id="line-59"></span>
-<span class="source-line-no">060</span><span id="line-60">    this.ANY_AND_DEFAULT_QUALIFIERS = List.of(ANY_QUALIFIER, DEFAULT_QUALIFIER);</span>
-<span class="source-line-no">061</span><span id="line-61"></span>
-<span class="source-line-no">062</span><span id="line-62">    this.PRIMORDIAL_QUALIFIER = Attributes.of("Primordial", this.qualifiers());</span>
-<span class="source-line-no">063</span><span id="line-63">    this.PRIMORDIAL_QUALIFIERS = List.of(PRIMORDIAL_QUALIFIER);</span>
-<span class="source-line-no">064</span><span id="line-64">  }</span>
-<span class="source-line-no">065</span><span id="line-65"></span>
-<span class="source-line-no">066</span><span id="line-66">  /**</span>
-<span class="source-line-no">067</span><span id="line-67">   * Returns an unmodifiable {@link List} consisting solely of the unattributed &lt;dfn&gt;any qualifier&lt;/dfn&gt; and the</span>
-<span class="source-line-no">068</span><span id="line-68">   * &lt;dfn&gt;default qualifier&lt;/dfn&gt;.</span>
-<span class="source-line-no">069</span><span id="line-69">   *</span>
-<span class="source-line-no">070</span><span id="line-70">   * @return an unmodifiable {@link List} consisting solely of the unattributed any qualifier and the default qualifier;</span>
-<span class="source-line-no">071</span><span id="line-71">   * never {@code null}</span>
-<span class="source-line-no">072</span><span id="line-72">   *</span>
-<span class="source-line-no">073</span><span id="line-73">   * @see #anyQualifier()</span>
-<span class="source-line-no">074</span><span id="line-74">   *</span>
-<span class="source-line-no">075</span><span id="line-75">   * @see #defaultQualifier()</span>
-<span class="source-line-no">076</span><span id="line-76">   */</span>
-<span class="source-line-no">077</span><span id="line-77">  public List&lt;Attributes&gt; anyAndDefaultQualifiers() {</span>
-<span class="source-line-no">078</span><span id="line-78">    return ANY_AND_DEFAULT_QUALIFIERS;</span>
-<span class="source-line-no">079</span><span id="line-79">  }</span>
+<span class="source-line-no">057</span><span id="line-57">/**</span>
+<span class="source-line-no">058</span><span id="line-58"> * A utility class for working with &lt;dfn&gt;qualifiers&lt;/dfn&gt;.</span>
+<span class="source-line-no">059</span><span id="line-59"> *</span>
+<span class="source-line-no">060</span><span id="line-60"> * @author &lt;a href="https://about.me/lairdnelson" target="_top"&gt;Laird Nelson&lt;/a&gt;</span>
+<span class="source-line-no">061</span><span id="line-61"> *</span>
+<span class="source-line-no">062</span><span id="line-62"> * @see org.microbean.assign.Qualifiers</span>
+<span class="source-line-no">063</span><span id="line-63"> */</span>
+<span class="source-line-no">064</span><span id="line-64">// Experimental. First foray into replacing Attributes with (synthetic) AnnotationMirrors.</span>
+<span class="source-line-no">065</span><span id="line-65">public class Qualifiers implements Constable {</span>
+<span class="source-line-no">066</span><span id="line-66"></span>
+<span class="source-line-no">067</span><span id="line-67"></span>
+<span class="source-line-no">068</span><span id="line-68">  /*</span>
+<span class="source-line-no">069</span><span id="line-69">   * Instance fields.</span>
+<span class="source-line-no">070</span><span id="line-70">   */</span>
+<span class="source-line-no">071</span><span id="line-71"></span>
+<span class="source-line-no">072</span><span id="line-72"></span>
+<span class="source-line-no">073</span><span id="line-73">  private final org.microbean.assign.Qualifiers aq;</span>
+<span class="source-line-no">074</span><span id="line-74"></span>
+<span class="source-line-no">075</span><span id="line-75">  private final AnnotationMirror anyQualifier;</span>
+<span class="source-line-no">076</span><span id="line-76"></span>
+<span class="source-line-no">077</span><span id="line-77">  private final List&lt;AnnotationMirror&gt; anyQualifiers;</span>
+<span class="source-line-no">078</span><span id="line-78"></span>
+<span class="source-line-no">079</span><span id="line-79">  private final AnnotationMirror defaultQualifier;</span>
 <span class="source-line-no">080</span><span id="line-80"></span>
-<span class="source-line-no">081</span><span id="line-81">  /**</span>
-<span class="source-line-no">082</span><span id="line-82">   * Returns the unattributed &lt;dfn&gt;any qualifier&lt;/dfn&gt;.</span>
-<span class="source-line-no">083</span><span id="line-83">   *</span>
-<span class="source-line-no">084</span><span id="line-84">   * @return the &lt;dfn&gt;any qualifier&lt;/dfn&gt;; never {@code null}</span>
-<span class="source-line-no">085</span><span id="line-85">   *</span>
-<span class="source-line-no">086</span><span id="line-86">   * @see #anyQualifiers()</span>
-<span class="source-line-no">087</span><span id="line-87">   */</span>
-<span class="source-line-no">088</span><span id="line-88">  public Attributes anyQualifier() {</span>
-<span class="source-line-no">089</span><span id="line-89">    return ANY_QUALIFIER;</span>
-<span class="source-line-no">090</span><span id="line-90">  }</span>
-<span class="source-line-no">091</span><span id="line-91"></span>
-<span class="source-line-no">092</span><span id="line-92">  /**</span>
-<span class="source-line-no">093</span><span id="line-93">   * Returns {@code true} if and only if the supplied {@link Attributes} {@linkplain Attributes#equals(Object) is equal</span>
-<span class="source-line-no">094</span><span id="line-94">   * to} the unattributed {@linkplain #anyQualifier() any qualifier}.</span>
+<span class="source-line-no">081</span><span id="line-81">  private final List&lt;AnnotationMirror&gt; defaultQualifiers;</span>
+<span class="source-line-no">082</span><span id="line-82"></span>
+<span class="source-line-no">083</span><span id="line-83">  private final List&lt;AnnotationMirror&gt; anyAndDefaultQualifiers;</span>
+<span class="source-line-no">084</span><span id="line-84"></span>
+<span class="source-line-no">085</span><span id="line-85"></span>
+<span class="source-line-no">086</span><span id="line-86">  /*</span>
+<span class="source-line-no">087</span><span id="line-87">   * Constructors.</span>
+<span class="source-line-no">088</span><span id="line-88">   */</span>
+<span class="source-line-no">089</span><span id="line-89"></span>
+<span class="source-line-no">090</span><span id="line-90"></span>
+<span class="source-line-no">091</span><span id="line-91">  /**</span>
+<span class="source-line-no">092</span><span id="line-92">   * Creates a new {@link Qualifiers}.</span>
+<span class="source-line-no">093</span><span id="line-93">   *</span>
+<span class="source-line-no">094</span><span id="line-94">   * @param d a non-{@code null} {@link Domain}</span>
 <span class="source-line-no">095</span><span id="line-95">   *</span>
-<span class="source-line-no">096</span><span id="line-96">   * @param a an {@link Attributes}; must not be {@code null}</span>
+<span class="source-line-no">096</span><span id="line-96">   * @param aq a non-{@code null} {@link org.microbean.assign.Qualifiers}</span>
 <span class="source-line-no">097</span><span id="line-97">   *</span>
-<span class="source-line-no">098</span><span id="line-98">   * @return {@code true} if and only if the supplied {@link Attributes} {@linkplain Attributes#equals(Object) is equal</span>
-<span class="source-line-no">099</span><span id="line-99">   * to} the unattributed {@linkplain #anyQualifier() any qualifier}</span>
-<span class="source-line-no">100</span><span id="line-100">   *</span>
-<span class="source-line-no">101</span><span id="line-101">   * @exception NullPointerException if {@code a} is {@code null}</span>
-<span class="source-line-no">102</span><span id="line-102">   */</span>
-<span class="source-line-no">103</span><span id="line-103">  public boolean anyQualifier(final Attributes a) {</span>
-<span class="source-line-no">104</span><span id="line-104">    return this.anyQualifier() == a || this.anyQualifier().equals(a) &amp;&amp; this.qualifier(a);</span>
-<span class="source-line-no">105</span><span id="line-105">  }</span>
-<span class="source-line-no">106</span><span id="line-106"></span>
-<span class="source-line-no">107</span><span id="line-107">  /**</span>
-<span class="source-line-no">108</span><span id="line-108">   * Returns an immutable {@link List} consisting solely of the unattributed &lt;dfn&gt;any qualifier&lt;/dfn&gt;.</span>
-<span class="source-line-no">109</span><span id="line-109">   *</span>
-<span class="source-line-no">110</span><span id="line-110">   * @return an immutable {@link List}; never {@code null}</span>
-<span class="source-line-no">111</span><span id="line-111">   *</span>
-<span class="source-line-no">112</span><span id="line-112">   * @see #anyQualifier()</span>
-<span class="source-line-no">113</span><span id="line-113">   */</span>
-<span class="source-line-no">114</span><span id="line-114">  public List&lt;Attributes&gt; anyQualifiers() {</span>
-<span class="source-line-no">115</span><span id="line-115">    return ANY_QUALIFIERS;</span>
-<span class="source-line-no">116</span><span id="line-116">  }</span>
-<span class="source-line-no">117</span><span id="line-117"></span>
-<span class="source-line-no">118</span><span id="line-118">  /**</span>
-<span class="source-line-no">119</span><span id="line-119">   * Returns the &lt;dfn&gt;default qualifier&lt;/dfn&gt;.</span>
-<span class="source-line-no">120</span><span id="line-120">   *</span>
-<span class="source-line-no">121</span><span id="line-121">   * @return the &lt;dfn&gt;default qualifier&lt;/dfn&gt;; never {@code null}</span>
-<span class="source-line-no">122</span><span id="line-122">   *</span>
-<span class="source-line-no">123</span><span id="line-123">   * @see #defaultQualifiers()</span>
-<span class="source-line-no">124</span><span id="line-124">   */</span>
-<span class="source-line-no">125</span><span id="line-125">  public Attributes defaultQualifier() {</span>
-<span class="source-line-no">126</span><span id="line-126">    return DEFAULT_QUALIFIER;</span>
-<span class="source-line-no">127</span><span id="line-127">  }</span>
-<span class="source-line-no">128</span><span id="line-128"></span>
-<span class="source-line-no">129</span><span id="line-129">  /**</span>
-<span class="source-line-no">130</span><span id="line-130">   * Returns {@code true} if and only if the supplied {@link Attributes} {@linkplain</span>
-<span class="source-line-no">131</span><span id="line-131">   * Attributes#equals(Object) is equal to} the {@linkplain #defaultQualifier() default qualifier}.</span>
+<span class="source-line-no">098</span><span id="line-98">   * @exception NullPointerException if {@code aq} is {@code null}</span>
+<span class="source-line-no">099</span><span id="line-99">   *</span>
+<span class="source-line-no">100</span><span id="line-100">   * @see #Qualifiers(Domain, org.microbean.assign.Qualifiers, AnnotationMirror, AnnotationMirror)</span>
+<span class="source-line-no">101</span><span id="line-101">   */</span>
+<span class="source-line-no">102</span><span id="line-102">  public Qualifiers(final Domain d, final org.microbean.assign.Qualifiers aq) {</span>
+<span class="source-line-no">103</span><span id="line-103">    this(d, aq, null, null);</span>
+<span class="source-line-no">104</span><span id="line-104">  }</span>
+<span class="source-line-no">105</span><span id="line-105"></span>
+<span class="source-line-no">106</span><span id="line-106">  /**</span>
+<span class="source-line-no">107</span><span id="line-107">   * Creates a new {@link Qualifiers}.</span>
+<span class="source-line-no">108</span><span id="line-108">   *</span>
+<span class="source-line-no">109</span><span id="line-109">   * @param aq a non-{@code null} {@link org.microbean.assign.Qualifiers}</span>
+<span class="source-line-no">110</span><span id="line-110">   *</span>
+<span class="source-line-no">111</span><span id="line-111">   * @param anyQualifier a non-{@code null} {@link AnnotationMirror} representing the &lt;dfn&gt;any qualifier&lt;/dfn&gt;</span>
+<span class="source-line-no">112</span><span id="line-112">   *</span>
+<span class="source-line-no">113</span><span id="line-113">   * @param defaultQualifier a non-{@code null} {@link AnnotationMirror} representing the &lt;dfn&gt;default qualifier&lt;/dfn&gt;</span>
+<span class="source-line-no">114</span><span id="line-114">   *</span>
+<span class="source-line-no">115</span><span id="line-115">   * @exception NullPointerException if any argument is {@code null}</span>
+<span class="source-line-no">116</span><span id="line-116">   *</span>
+<span class="source-line-no">117</span><span id="line-117">   * @see org.microbean.assign.Qualifiers</span>
+<span class="source-line-no">118</span><span id="line-118">   */</span>
+<span class="source-line-no">119</span><span id="line-119">  public Qualifiers(final org.microbean.assign.Qualifiers aq,</span>
+<span class="source-line-no">120</span><span id="line-120">                    final AnnotationMirror anyQualifier,</span>
+<span class="source-line-no">121</span><span id="line-121">                    final AnnotationMirror defaultQualifier) {</span>
+<span class="source-line-no">122</span><span id="line-122">    this(null, aq, requireNonNull(anyQualifier, "anyQualifier"), requireNonNull(defaultQualifier, "defaultQualifier"));</span>
+<span class="source-line-no">123</span><span id="line-123">  }</span>
+<span class="source-line-no">124</span><span id="line-124"></span>
+<span class="source-line-no">125</span><span id="line-125">  /**</span>
+<span class="source-line-no">126</span><span id="line-126">   * Creates a new {@link Qualifiers}.</span>
+<span class="source-line-no">127</span><span id="line-127">   *</span>
+<span class="source-line-no">128</span><span id="line-128">   * @param d a {@link Domain}; may be {@code null} if both {@code anyQualifier} and {@code defaultQualifier} are</span>
+<span class="source-line-no">129</span><span id="line-129">   * non-{@code null}</span>
+<span class="source-line-no">130</span><span id="line-130">   *</span>
+<span class="source-line-no">131</span><span id="line-131">   * @param aq a non-{@code null} {@link org.microbean.assign.Qualifiers}</span>
 <span class="source-line-no">132</span><span id="line-132">   *</span>
-<span class="source-line-no">133</span><span id="line-133">   * @param a an {@link Attributes}; must not be {@code null}</span>
-<span class="source-line-no">134</span><span id="line-134">   *</span>
-<span class="source-line-no">135</span><span id="line-135">   * @return {@code true} if and only if the supplied {@link Attributes} {@linkplain</span>
-<span class="source-line-no">136</span><span id="line-136">   * Attributes#equals(Object) is equal to} the {@linkplain #defaultQualifier() default qualifier}</span>
-<span class="source-line-no">137</span><span id="line-137">   *</span>
-<span class="source-line-no">138</span><span id="line-138">   * @exception NullPointerException if {@code a} is {@code null}</span>
-<span class="source-line-no">139</span><span id="line-139">   */</span>
-<span class="source-line-no">140</span><span id="line-140">  public boolean defaultQualifier(final Attributes a) {</span>
-<span class="source-line-no">141</span><span id="line-141">    return this.defaultQualifier() == a || this.defaultQualifier().equals(a) &amp;&amp; qualifier(a);</span>
-<span class="source-line-no">142</span><span id="line-142">  }</span>
-<span class="source-line-no">143</span><span id="line-143"></span>
-<span class="source-line-no">144</span><span id="line-144">  /**</span>
-<span class="source-line-no">145</span><span id="line-145">   * Returns an immutable {@link List} consisting solely of the &lt;dfn&gt;default qualifier&lt;/dfn&gt;.</span>
-<span class="source-line-no">146</span><span id="line-146">   *</span>
-<span class="source-line-no">147</span><span id="line-147">   * @return an immutable {@link List}; never {@code null}</span>
-<span class="source-line-no">148</span><span id="line-148">   *</span>
-<span class="source-line-no">149</span><span id="line-149">   * @see #defaultQualifier()</span>
-<span class="source-line-no">150</span><span id="line-150">   */</span>
-<span class="source-line-no">151</span><span id="line-151">  public List&lt;Attributes&gt; defaultQualifiers() {</span>
-<span class="source-line-no">152</span><span id="line-152">    return DEFAULT_QUALIFIERS;</span>
-<span class="source-line-no">153</span><span id="line-153">  }</span>
-<span class="source-line-no">154</span><span id="line-154"></span>
-<span class="source-line-no">155</span><span id="line-155">  /**</span>
-<span class="source-line-no">156</span><span id="line-156">   * Returns an {@link Attributes} that is {@linkplain Attributes#equals(Object) equal to} the supplied {@link</span>
-<span class="source-line-no">157</span><span id="line-157">   * Attributes}.</span>
-<span class="source-line-no">158</span><span id="line-158">   *</span>
-<span class="source-line-no">159</span><span id="line-159">   * &lt;p&gt;The returned {@link Attributes} may be the supplied {@link Attributes} or a different instance.&lt;/p&gt;</span>
-<span class="source-line-no">160</span><span id="line-160">   *</span>
-<span class="source-line-no">161</span><span id="line-161">   * @param a an {@link Attributes}; must not be {@code null}</span>
-<span class="source-line-no">162</span><span id="line-162">   *</span>
-<span class="source-line-no">163</span><span id="line-163">   * @return an {@link Attributes} that is {@linkplain Attributes#equals(Object) equal to} the supplied {@link</span>
-<span class="source-line-no">164</span><span id="line-164">   * Attributes}; never {@code null}</span>
-<span class="source-line-no">165</span><span id="line-165">   *</span>
-<span class="source-line-no">166</span><span id="line-166">   * @exception NullPointerException if {@code a} is {@code null}</span>
-<span class="source-line-no">167</span><span id="line-167">   */</span>
-<span class="source-line-no">168</span><span id="line-168">  public Attributes normalize(final Attributes a) {</span>
-<span class="source-line-no">169</span><span id="line-169">    return switch (a) {</span>
-<span class="source-line-no">170</span><span id="line-170">    case null -&gt; throw new NullPointerException("a");</span>
-<span class="source-line-no">171</span><span id="line-171">    case Attributes q when this.defaultQualifier(q) -&gt; this.defaultQualifier();</span>
-<span class="source-line-no">172</span><span id="line-172">    default -&gt; super.normalize(a);</span>
-<span class="source-line-no">173</span><span id="line-173">    };</span>
-<span class="source-line-no">174</span><span id="line-174">  }</span>
-<span class="source-line-no">175</span><span id="line-175"></span>
-<span class="source-line-no">176</span><span id="line-176">  /**</span>
-<span class="source-line-no">177</span><span id="line-177">   * Returns an immutable {@link List} of {@link Attributes}s that is {@linkplain List#equals(Object) equal to} the</span>
-<span class="source-line-no">178</span><span id="line-178">   * supplied {@link List}.</span>
-<span class="source-line-no">179</span><span id="line-179">   *</span>
-<span class="source-line-no">180</span><span id="line-180">   * &lt;p&gt;The returned {@link List} may be the supplied {@link List} or a different instance.&lt;/p&gt;</span>
-<span class="source-line-no">181</span><span id="line-181">   *</span>
-<span class="source-line-no">182</span><span id="line-182">   * @param list a {@link List} of {@link Attributes}s; must not be {@code null}</span>
-<span class="source-line-no">183</span><span id="line-183">   *</span>
-<span class="source-line-no">184</span><span id="line-184">   * @return an immutable {@link List} of {@link Attributes}s that is {@linkplain List#equals(Object) equal to} the</span>
-<span class="source-line-no">185</span><span id="line-185">   * supplied {@link List}; never {@code null}</span>
-<span class="source-line-no">186</span><span id="line-186">   *</span>
-<span class="source-line-no">187</span><span id="line-187">   * @exception NullPointerException if {@code list} is {@code null}</span>
+<span class="source-line-no">133</span><span id="line-133">   * @param anyQualifier a (possibly {@code null}) {@link AnnotationMirror} representing the &lt;dfn&gt;any qualifier&lt;/dfn&gt;;</span>
+<span class="source-line-no">134</span><span id="line-134">   * if {@code null}, then {@code d} must be non-{@code null}</span>
+<span class="source-line-no">135</span><span id="line-135">   *</span>
+<span class="source-line-no">136</span><span id="line-136">   * @param defaultQualifier a (possibly {@code null}) {@link AnnotationMirror} representing the &lt;dfn&gt;default</span>
+<span class="source-line-no">137</span><span id="line-137">   * qualifier&lt;/dfn&gt;; if {@code null}, then {@code d} must be non-{@code null}</span>
+<span class="source-line-no">138</span><span id="line-138">   *</span>
+<span class="source-line-no">139</span><span id="line-139">   * @exception NullPointerException if {@code aq} is {@code null} or if {@code d} is {@code null} in certain situations</span>
+<span class="source-line-no">140</span><span id="line-140">   *</span>
+<span class="source-line-no">141</span><span id="line-141">   * @see org.microbean.assign.Qualifiers</span>
+<span class="source-line-no">142</span><span id="line-142">   */</span>
+<span class="source-line-no">143</span><span id="line-143">  public Qualifiers(final Domain d,</span>
+<span class="source-line-no">144</span><span id="line-144">                    final org.microbean.assign.Qualifiers aq,</span>
+<span class="source-line-no">145</span><span id="line-145">                    final AnnotationMirror anyQualifier,</span>
+<span class="source-line-no">146</span><span id="line-146">                    final AnnotationMirror defaultQualifier) {</span>
+<span class="source-line-no">147</span><span id="line-147">    super();</span>
+<span class="source-line-no">148</span><span id="line-148">    this.aq = requireNonNull(aq, "aq");</span>
+<span class="source-line-no">149</span><span id="line-149">    if (anyQualifier == null || defaultQualifier == null) {</span>
+<span class="source-line-no">150</span><span id="line-150">      final List&lt;? extends AnnotationMirror&gt; as = d.typeElement("java.lang.annotation.Documented").getAnnotationMirrors();</span>
+<span class="source-line-no">151</span><span id="line-151">      assert as.size() == 3; // @Documented, @Retention, @Target, in that order, all annotated in turn with each other</span>
+<span class="source-line-no">152</span><span id="line-152">      final List&lt;SyntheticAnnotationValue&gt; savs = new ArrayList&lt;&gt;(4);</span>
+<span class="source-line-no">153</span><span id="line-153">      for (final Element e : d.typeElement("java.lang.annotation.ElementType").getEnclosedElements()) {</span>
+<span class="source-line-no">154</span><span id="line-154">        if (e.getKind() == ENUM_CONSTANT &amp;&amp; e instanceof VariableElement ve) {</span>
+<span class="source-line-no">155</span><span id="line-155">          final Name n = e.getSimpleName();</span>
+<span class="source-line-no">156</span><span id="line-156">          if (n.contentEquals("TYPE") || n.contentEquals("METHOD") || n.contentEquals("FIELD") || n.contentEquals("PARAMETER")) {</span>
+<span class="source-line-no">157</span><span id="line-157">            savs.add(new SyntheticAnnotationValue(ve));</span>
+<span class="source-line-no">158</span><span id="line-158">          }</span>
+<span class="source-line-no">159</span><span id="line-159">        }</span>
+<span class="source-line-no">160</span><span id="line-160">      }</span>
+<span class="source-line-no">161</span><span id="line-161">      final AnnotationMirror targetAnnotation =</span>
+<span class="source-line-no">162</span><span id="line-162">        new SyntheticAnnotationMirror(d.typeElement("java.lang.annotation.Target"), Map.of("value", savs));</span>
+<span class="source-line-no">163</span><span id="line-163">      final List&lt;AnnotationMirror&gt; metaAnnotations =</span>
+<span class="source-line-no">164</span><span id="line-164">        List.of(aq.metaQualifier(),</span>
+<span class="source-line-no">165</span><span id="line-165">                as.get(1), // @Retention</span>
+<span class="source-line-no">166</span><span id="line-166">                targetAnnotation, // @Target</span>
+<span class="source-line-no">167</span><span id="line-167">                as.get(0)); // @Documented</span>
+<span class="source-line-no">168</span><span id="line-168">      this.anyQualifier =</span>
+<span class="source-line-no">169</span><span id="line-169">        anyQualifier == null ?</span>
+<span class="source-line-no">170</span><span id="line-170">        new SyntheticAnnotationMirror(new SyntheticAnnotationTypeElement(metaAnnotations, "Any")) :</span>
+<span class="source-line-no">171</span><span id="line-171">        anyQualifier;</span>
+<span class="source-line-no">172</span><span id="line-172">      this.defaultQualifier =</span>
+<span class="source-line-no">173</span><span id="line-173">        defaultQualifier == null ?</span>
+<span class="source-line-no">174</span><span id="line-174">        new SyntheticAnnotationMirror(new SyntheticAnnotationTypeElement(metaAnnotations, "Default")) :</span>
+<span class="source-line-no">175</span><span id="line-175">        defaultQualifier;</span>
+<span class="source-line-no">176</span><span id="line-176">    } else {</span>
+<span class="source-line-no">177</span><span id="line-177">      this.anyQualifier = anyQualifier;</span>
+<span class="source-line-no">178</span><span id="line-178">      this.defaultQualifier = defaultQualifier;</span>
+<span class="source-line-no">179</span><span id="line-179">    }</span>
+<span class="source-line-no">180</span><span id="line-180">    this.anyQualifiers = List.of(this.anyQualifier);</span>
+<span class="source-line-no">181</span><span id="line-181">    this.defaultQualifiers = List.of(this.defaultQualifier);</span>
+<span class="source-line-no">182</span><span id="line-182">    this.anyAndDefaultQualifiers = List.of(this.anyQualifier, this.defaultQualifier);</span>
+<span class="source-line-no">183</span><span id="line-183">  }</span>
+<span class="source-line-no">184</span><span id="line-184"></span>
+<span class="source-line-no">185</span><span id="line-185"></span>
+<span class="source-line-no">186</span><span id="line-186">  /*</span>
+<span class="source-line-no">187</span><span id="line-187">   * Instance methods.</span>
 <span class="source-line-no">188</span><span id="line-188">   */</span>
-<span class="source-line-no">189</span><span id="line-189">  public List&lt;Attributes&gt; normalize(final List&lt;Attributes&gt; list) {</span>
-<span class="source-line-no">190</span><span id="line-190">    return switch (list.size()) {</span>
-<span class="source-line-no">191</span><span id="line-191">    case 0 -&gt; List.of();</span>
-<span class="source-line-no">192</span><span id="line-192">    case 1 -&gt; list.equals(this.defaultQualifiers()) ? this.defaultQualifiers() : List.copyOf(list);</span>
-<span class="source-line-no">193</span><span id="line-193">    default -&gt; super.normalize(list);</span>
-<span class="source-line-no">194</span><span id="line-194">    };</span>
-<span class="source-line-no">195</span><span id="line-195">  }</span>
-<span class="source-line-no">196</span><span id="line-196"></span>
-<span class="source-line-no">197</span><span id="line-197">  /**</span>
-<span class="source-line-no">198</span><span id="line-198">   * Returns the &lt;dfn&gt;primordial qualifier&lt;/dfn&gt;.</span>
-<span class="source-line-no">199</span><span id="line-199">   *</span>
-<span class="source-line-no">200</span><span id="line-200">   * @return the &lt;dfn&gt;primordial qualifier&lt;/dfn&gt;; never {@code null}</span>
-<span class="source-line-no">201</span><span id="line-201">   *</span>
-<span class="source-line-no">202</span><span id="line-202">   * @see #primordialQualifiers()</span>
-<span class="source-line-no">203</span><span id="line-203">   */</span>
-<span class="source-line-no">204</span><span id="line-204">  public Attributes primordialQualifier() {</span>
-<span class="source-line-no">205</span><span id="line-205">    return PRIMORDIAL_QUALIFIER;</span>
-<span class="source-line-no">206</span><span id="line-206">  }</span>
-<span class="source-line-no">207</span><span id="line-207"></span>
-<span class="source-line-no">208</span><span id="line-208">  /**</span>
-<span class="source-line-no">209</span><span id="line-209">   * Returns {@code true} if and only if the supplied {@link Attributes} {@linkplain</span>
-<span class="source-line-no">210</span><span id="line-210">   * Attributes#equals(Object) is equal to} the {@linkplain #primordialQualifier() primordial qualifier}.</span>
-<span class="source-line-no">211</span><span id="line-211">   *</span>
-<span class="source-line-no">212</span><span id="line-212">   * @param a an {@link Attributes}; must not be {@code null}</span>
-<span class="source-line-no">213</span><span id="line-213">   *</span>
-<span class="source-line-no">214</span><span id="line-214">   * @return {@code true} if and only if the supplied {@link Attributes} {@linkplain</span>
-<span class="source-line-no">215</span><span id="line-215">   * Attributes#equals(Object) is equal to} the {@linkplain #primordialQualifier() primordial qualifier}</span>
-<span class="source-line-no">216</span><span id="line-216">   *</span>
-<span class="source-line-no">217</span><span id="line-217">   * @exception NullPointerException if {@code a} is {@code null}</span>
-<span class="source-line-no">218</span><span id="line-218">   */</span>
-<span class="source-line-no">219</span><span id="line-219">  public boolean primordialQualifier(final Attributes a) {</span>
-<span class="source-line-no">220</span><span id="line-220">    return this.primordialQualifier() == a || this.primordialQualifier().equals(a) &amp;&amp; this.qualifier(a);</span>
-<span class="source-line-no">221</span><span id="line-221">  }</span>
-<span class="source-line-no">222</span><span id="line-222"></span>
-<span class="source-line-no">223</span><span id="line-223">  /**</span>
-<span class="source-line-no">224</span><span id="line-224">   * Returns an immutable {@link List} consisting solely of the &lt;dfn&gt;primordial qualifier&lt;/dfn&gt;.</span>
-<span class="source-line-no">225</span><span id="line-225">   *</span>
-<span class="source-line-no">226</span><span id="line-226">   * @return an immutable {@link List}; never {@code null}</span>
-<span class="source-line-no">227</span><span id="line-227">   *</span>
-<span class="source-line-no">228</span><span id="line-228">   * @see #primordialQualifier()</span>
-<span class="source-line-no">229</span><span id="line-229">   */</span>
-<span class="source-line-no">230</span><span id="line-230">  public List&lt;Attributes&gt; primordialQualifiers() {</span>
-<span class="source-line-no">231</span><span id="line-231">    return PRIMORDIAL_QUALIFIERS;</span>
-<span class="source-line-no">232</span><span id="line-232">  }</span>
-<span class="source-line-no">233</span><span id="line-233"></span>
-<span class="source-line-no">234</span><span id="line-234">  /**</span>
-<span class="source-line-no">235</span><span id="line-235">   * Returns an unmodifiable {@link List} consisting only of those {@link Attributes} in the supplied {@link</span>
-<span class="source-line-no">236</span><span id="line-236">   * Collection} that {@linkplain #qualifier(Attributes) are qualifiers}.</span>
-<span class="source-line-no">237</span><span id="line-237">   *</span>
-<span class="source-line-no">238</span><span id="line-238">   * @param c a {@link Collection} of {@link Attributes}s; must not be {@code null}</span>
-<span class="source-line-no">239</span><span id="line-239">   *</span>
-<span class="source-line-no">240</span><span id="line-240">   * @return an unmodifiable {@link List} consisting only of those {@link Attributes}s in the supplied {@link</span>
-<span class="source-line-no">241</span><span id="line-241">   * Collection} that {@linkplain #qualifier(Attributes) are qualifiers}; never {@code null}</span>
-<span class="source-line-no">242</span><span id="line-242">   *</span>
-<span class="source-line-no">243</span><span id="line-243">   * @exception NullPointerException if {@code c} is {@code null}</span>
-<span class="source-line-no">244</span><span id="line-244">   */</span>
-<span class="source-line-no">245</span><span id="line-245">  public List&lt;Attributes&gt; qualifiers(final Collection&lt;? extends Attributes&gt; c) {</span>
-<span class="source-line-no">246</span><span id="line-246">    return switch (c) {</span>
-<span class="source-line-no">247</span><span id="line-247">    case Collection&lt;?&gt; c0 when c0.isEmpty() -&gt; List.of();</span>
-<span class="source-line-no">248</span><span id="line-248">    case Collection&lt;?&gt; c0 when c0.equals(defaultQualifiers()) -&gt; defaultQualifiers();</span>
-<span class="source-line-no">249</span><span id="line-249">    case Collection&lt;?&gt; c0 when c0.equals(anyAndDefaultQualifiers()) -&gt; anyAndDefaultQualifiers();</span>
-<span class="source-line-no">250</span><span id="line-250">    default -&gt; super.qualifiers(c);</span>
-<span class="source-line-no">251</span><span id="line-251">    };</span>
-<span class="source-line-no">252</span><span id="line-252">  }</span>
-<span class="source-line-no">253</span><span id="line-253"></span>
-<span class="source-line-no">254</span><span id="line-254">}</span>
+<span class="source-line-no">189</span><span id="line-189"></span>
+<span class="source-line-no">190</span><span id="line-190"></span>
+<span class="source-line-no">191</span><span id="line-191">  /**</span>
+<span class="source-line-no">192</span><span id="line-192">   * Returns a non-{@code null}, determinate, immutable {@link List} housing only the {@linkplain #anyQualifier()</span>
+<span class="source-line-no">193</span><span id="line-193">   * &lt;dfn&gt;any qualifier&lt;/dfn&gt;} and {@link #defaultQualifier() &lt;dfn&gt;default qualifier&lt;/dfn&gt;}.</span>
+<span class="source-line-no">194</span><span id="line-194">   *</span>
+<span class="source-line-no">195</span><span id="line-195">   * @return a non-{@code null}, determinate, immutable {@link List} housing only the {@linkplain #anyQualifier()</span>
+<span class="source-line-no">196</span><span id="line-196">   * &lt;dfn&gt;any qualifier&lt;/dfn&gt;} and {@linkplain #defaultQualifier() &lt;dfn&gt;default qualifier&lt;/dfn&gt;}</span>
+<span class="source-line-no">197</span><span id="line-197">   */</span>
+<span class="source-line-no">198</span><span id="line-198">  public final List&lt;AnnotationMirror&gt; anyAndDefaultQualifiers() {</span>
+<span class="source-line-no">199</span><span id="line-199">    return this.anyAndDefaultQualifiers;</span>
+<span class="source-line-no">200</span><span id="line-200">  }</span>
+<span class="source-line-no">201</span><span id="line-201"></span>
+<span class="source-line-no">202</span><span id="line-202">  /**</span>
+<span class="source-line-no">203</span><span id="line-203">   * Returns the non-{@code null}, determinate {@link AnnotationMirror} representing the &lt;dfn&gt;any qualifier&lt;/dfn&gt;.</span>
+<span class="source-line-no">204</span><span id="line-204">   *</span>
+<span class="source-line-no">205</span><span id="line-205">   * @return the non-{@code null}, determinate {@link AnnotationMirror} representing the &lt;dfn&gt;any qualifier&lt;/dfn&gt;</span>
+<span class="source-line-no">206</span><span id="line-206">   */</span>
+<span class="source-line-no">207</span><span id="line-207">  public final AnnotationMirror anyQualifier() {</span>
+<span class="source-line-no">208</span><span id="line-208">    return this.anyQualifier;</span>
+<span class="source-line-no">209</span><span id="line-209">  }</span>
+<span class="source-line-no">210</span><span id="line-210"></span>
+<span class="source-line-no">211</span><span id="line-211">  /**</span>
+<span class="source-line-no">212</span><span id="line-212">   * Returns a non-{@code null}, determinate, immutable {@link List} housing only the {@linkplain #anyQualifier()</span>
+<span class="source-line-no">213</span><span id="line-213">   * &lt;dfn&gt;any qualifier&lt;/dfn&gt;}.</span>
+<span class="source-line-no">214</span><span id="line-214">   *</span>
+<span class="source-line-no">215</span><span id="line-215">   * @return a non-{@code null}, determinate, immutable {@link List} housing only the {@linkplain #anyQualifier()</span>
+<span class="source-line-no">216</span><span id="line-216">   * &lt;dfn&gt;any qualifier&lt;/dfn&gt;}</span>
+<span class="source-line-no">217</span><span id="line-217">   */</span>
+<span class="source-line-no">218</span><span id="line-218">  public final List&lt;AnnotationMirror&gt; anyQualifiers() {</span>
+<span class="source-line-no">219</span><span id="line-219">    return this.anyQualifiers;</span>
+<span class="source-line-no">220</span><span id="line-220">  }</span>
+<span class="source-line-no">221</span><span id="line-221"></span>
+<span class="source-line-no">222</span><span id="line-222">  /**</span>
+<span class="source-line-no">223</span><span id="line-223">   * Returns {@code true} if and only if the supplied {@link AnnotationMirror} is {@linkplain</span>
+<span class="source-line-no">224</span><span id="line-224">   * org.microbean.assign.Qualifiers#sameAnnotation(AnnotationMirror, AnnotationMirror) the same} as the {@linkplain</span>
+<span class="source-line-no">225</span><span id="line-225">   * #anyQualifier() &lt;dfn&gt;any qualifier&lt;/dfn&gt;}.</span>
+<span class="source-line-no">226</span><span id="line-226">   *</span>
+<span class="source-line-no">227</span><span id="line-227">   * @param a a non-{@code null} {@link AnnotationMirror}</span>
+<span class="source-line-no">228</span><span id="line-228">   *</span>
+<span class="source-line-no">229</span><span id="line-229">   * @return {@code true} if and only if the supplied {@link AnnotationMirror} is {@linkplain</span>
+<span class="source-line-no">230</span><span id="line-230">   * org.microbean.assign.Qualifiers#sameAnnotation(AnnotationMirror, AnnotationMirror) the same} as the {@linkplain</span>
+<span class="source-line-no">231</span><span id="line-231">   * #anyQualifier() &lt;dfn&gt;any qualifier&lt;/dfn&gt;}</span>
+<span class="source-line-no">232</span><span id="line-232">   *</span>
+<span class="source-line-no">233</span><span id="line-233">   * @exception NullPointerException if {@code a} is {@code null}</span>
+<span class="source-line-no">234</span><span id="line-234">   *</span>
+<span class="source-line-no">235</span><span id="line-235">   * @see #anyQualifier()</span>
+<span class="source-line-no">236</span><span id="line-236">   *</span>
+<span class="source-line-no">237</span><span id="line-237">   * @see org.microbean.assign.Qualifiers#sameAnnotation(AnnotationMirror, AnnotationMirror)</span>
+<span class="source-line-no">238</span><span id="line-238">   */</span>
+<span class="source-line-no">239</span><span id="line-239">  public final boolean anyQualifier(final AnnotationMirror a) {</span>
+<span class="source-line-no">240</span><span id="line-240">    return this.aq.sameAnnotation(this.anyQualifier, a);</span>
+<span class="source-line-no">241</span><span id="line-241">  }</span>
+<span class="source-line-no">242</span><span id="line-242"></span>
+<span class="source-line-no">243</span><span id="line-243">  /**</span>
+<span class="source-line-no">244</span><span id="line-244">   * Returns the non-{@code null}, determinate {@link AnnotationMirror} representing the &lt;dfn&gt;default qualifier&lt;/dfn&gt;.</span>
+<span class="source-line-no">245</span><span id="line-245">   *</span>
+<span class="source-line-no">246</span><span id="line-246">   * @return the non-{@code null}, determinate {@link AnnotationMirror} representing the &lt;dfn&gt;default qualifier&lt;/dfn&gt;</span>
+<span class="source-line-no">247</span><span id="line-247">   */</span>
+<span class="source-line-no">248</span><span id="line-248">  public final AnnotationMirror defaultQualifier() {</span>
+<span class="source-line-no">249</span><span id="line-249">    return this.defaultQualifier;</span>
+<span class="source-line-no">250</span><span id="line-250">  }</span>
+<span class="source-line-no">251</span><span id="line-251"></span>
+<span class="source-line-no">252</span><span id="line-252">  /**</span>
+<span class="source-line-no">253</span><span id="line-253">   * Returns a non-{@code null}, determinate, immutable {@link List} housing only the {@linkplain #defaultQualifier()</span>
+<span class="source-line-no">254</span><span id="line-254">   * &lt;dfn&gt;default qualifier&lt;/dfn&gt;}.</span>
+<span class="source-line-no">255</span><span id="line-255">   *</span>
+<span class="source-line-no">256</span><span id="line-256">   * @return a non-{@code null}, determinate, immutable {@link List} housing only the {@linkplain #defaultQualifier()</span>
+<span class="source-line-no">257</span><span id="line-257">   * &lt;dfn&gt;default qualifier&lt;/dfn&gt;}</span>
+<span class="source-line-no">258</span><span id="line-258">   */</span>
+<span class="source-line-no">259</span><span id="line-259">  public final List&lt;AnnotationMirror&gt; defaultQualifiers() {</span>
+<span class="source-line-no">260</span><span id="line-260">    return this.defaultQualifiers;</span>
+<span class="source-line-no">261</span><span id="line-261">  }</span>
+<span class="source-line-no">262</span><span id="line-262"></span>
+<span class="source-line-no">263</span><span id="line-263">  /**</span>
+<span class="source-line-no">264</span><span id="line-264">   * Returns {@code true} if and only if the supplied {@link AnnotationMirror} is {@linkplain</span>
+<span class="source-line-no">265</span><span id="line-265">   * org.microbean.assign.Qualifiers#sameAnnotation(AnnotationMirror, AnnotationMirror) the same} as the {@linkplain</span>
+<span class="source-line-no">266</span><span id="line-266">   * #defaultQualifier() &lt;dfn&gt;default qualifier&lt;/dfn&gt;}.</span>
+<span class="source-line-no">267</span><span id="line-267">   *</span>
+<span class="source-line-no">268</span><span id="line-268">   * @param a a non-{@code null} {@link AnnotationMirror}</span>
+<span class="source-line-no">269</span><span id="line-269">   *</span>
+<span class="source-line-no">270</span><span id="line-270">   * @return {@code true} if and only if the supplied {@link AnnotationMirror} is {@linkplain</span>
+<span class="source-line-no">271</span><span id="line-271">   * org.microbean.assign.Qualifiers#sameAnnotation(AnnotationMirror, AnnotationMirror) the same} as the {@linkplain</span>
+<span class="source-line-no">272</span><span id="line-272">   * #defaultQualifier() &lt;dfn&gt;default qualifier&lt;/dfn&gt;}</span>
+<span class="source-line-no">273</span><span id="line-273">   *</span>
+<span class="source-line-no">274</span><span id="line-274">   * @exception NullPointerException if {@code a} is {@code null}</span>
+<span class="source-line-no">275</span><span id="line-275">   *</span>
+<span class="source-line-no">276</span><span id="line-276">   * @see #defaultQualifier()</span>
+<span class="source-line-no">277</span><span id="line-277">   *</span>
+<span class="source-line-no">278</span><span id="line-278">   * @see org.microbean.assign.Qualifiers#sameAnnotation(AnnotationMirror, AnnotationMirror)</span>
+<span class="source-line-no">279</span><span id="line-279">   */</span>
+<span class="source-line-no">280</span><span id="line-280">  public final boolean defaultQualifier(final AnnotationMirror a) {</span>
+<span class="source-line-no">281</span><span id="line-281">    return this.aq.sameAnnotation(this.defaultQualifier, a);</span>
+<span class="source-line-no">282</span><span id="line-282">  }</span>
+<span class="source-line-no">283</span><span id="line-283"></span>
+<span class="source-line-no">284</span><span id="line-284">  @Override // Constable</span>
+<span class="source-line-no">285</span><span id="line-285">  public Optional&lt;? extends ConstantDesc&gt; describeConstable() {</span>
+<span class="source-line-no">286</span><span id="line-286">    final ClassDesc cdAnnotationMirror = AnnotationMirror.class.describeConstable().orElseThrow();</span>
+<span class="source-line-no">287</span><span id="line-287">    return this.aq.describeConstable()</span>
+<span class="source-line-no">288</span><span id="line-288">      .flatMap(aqDesc -&gt; (this.anyQualifier instanceof Constable c ? c.describeConstable() : Optional.&lt;ConstantDesc&gt;empty())</span>
+<span class="source-line-no">289</span><span id="line-289">               .flatMap(anyQualifierDesc -&gt; (this.defaultQualifier instanceof Constable c ? c.describeConstable() : Optional.&lt;ConstantDesc&gt;empty())</span>
+<span class="source-line-no">290</span><span id="line-290">                        .map(defaultQualifierDesc -&gt; DynamicConstantDesc.of(BSM_INVOKE,</span>
+<span class="source-line-no">291</span><span id="line-291">                                                                            ofConstructor(this.getClass().describeConstable().orElseThrow(),</span>
+<span class="source-line-no">292</span><span id="line-292">                                                                                          Domain.class.describeConstable().orElseThrow(),</span>
+<span class="source-line-no">293</span><span id="line-293">                                                                                          org.microbean.assign.Qualifiers.class.describeConstable().orElseThrow(),</span>
+<span class="source-line-no">294</span><span id="line-294">                                                                                          cdAnnotationMirror,</span>
+<span class="source-line-no">295</span><span id="line-295">                                                                                          cdAnnotationMirror),</span>
+<span class="source-line-no">296</span><span id="line-296">                                                                            NULL,</span>
+<span class="source-line-no">297</span><span id="line-297">                                                                            aqDesc,</span>
+<span class="source-line-no">298</span><span id="line-298">                                                                            anyQualifierDesc,</span>
+<span class="source-line-no">299</span><span id="line-299">                                                                            defaultQualifierDesc))));</span>
+<span class="source-line-no">300</span><span id="line-300">  }</span>
+<span class="source-line-no">301</span><span id="line-301"></span>
+<span class="source-line-no">302</span><span id="line-302">}</span>
 
 
 

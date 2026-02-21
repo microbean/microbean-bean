@@ -13,7 +13,7 @@
 <div class="source-container">
 <pre><span class="source-line-no">001</span><span id="line-1">/* -*- mode: Java; c-basic-offset: 2; indent-tabs-mode: nil; coding: utf-8-unix -*-</span>
 <span class="source-line-no">002</span><span id="line-2"> *</span>
-<span class="source-line-no">003</span><span id="line-3"> * Copyright © 2024–2025 microBean™.</span>
+<span class="source-line-no">003</span><span id="line-3"> * Copyright © 2024–2026 microBean™.</span>
 <span class="source-line-no">004</span><span id="line-4"> *</span>
 <span class="source-line-no">005</span><span id="line-5"> * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with</span>
 <span class="source-line-no">006</span><span id="line-6"> * the License. You may obtain a copy of the License at</span>
@@ -31,98 +31,372 @@
 <span class="source-line-no">018</span><span id="line-18">import java.util.ArrayList;</span>
 <span class="source-line-no">019</span><span id="line-19">import java.util.Collection;</span>
 <span class="source-line-no">020</span><span id="line-20">import java.util.Comparator;</span>
-<span class="source-line-no">021</span><span id="line-21">import java.util.List;</span>
-<span class="source-line-no">022</span><span id="line-22">import java.util.Set;</span>
-<span class="source-line-no">023</span><span id="line-23"></span>
-<span class="source-line-no">024</span><span id="line-24">import static java.lang.System.getLogger;</span>
-<span class="source-line-no">025</span><span id="line-25">import static java.util.Collections.sort;</span>
-<span class="source-line-no">026</span><span id="line-26">import static java.util.HashSet.newHashSet;</span>
-<span class="source-line-no">027</span><span id="line-27"></span>
-<span class="source-line-no">028</span><span id="line-28">/**</span>
-<span class="source-line-no">029</span><span id="line-29"> * Utility methods for working with {@link Bean}s.</span>
-<span class="source-line-no">030</span><span id="line-30"> *</span>
-<span class="source-line-no">031</span><span id="line-31"> * @author &lt;a href="https://about.me/lairdnelson" target="_top"&gt;Laird Nelson&lt;/a&gt;</span>
-<span class="source-line-no">032</span><span id="line-32"> *</span>
-<span class="source-line-no">033</span><span id="line-33"> * @see #normalize(Collection)</span>
-<span class="source-line-no">034</span><span id="line-34"> *</span>
-<span class="source-line-no">035</span><span id="line-35"> * @see Bean</span>
-<span class="source-line-no">036</span><span id="line-36"> */</span>
-<span class="source-line-no">037</span><span id="line-37">public final class Beans {</span>
+<span class="source-line-no">021</span><span id="line-21">import java.util.HashSet;</span>
+<span class="source-line-no">022</span><span id="line-22">import java.util.List;</span>
+<span class="source-line-no">023</span><span id="line-23">import java.util.Set;</span>
+<span class="source-line-no">024</span><span id="line-24"></span>
+<span class="source-line-no">025</span><span id="line-25">import javax.lang.model.AnnotatedConstruct;</span>
+<span class="source-line-no">026</span><span id="line-26"></span>
+<span class="source-line-no">027</span><span id="line-27">import javax.lang.model.element.AnnotationMirror;</span>
+<span class="source-line-no">028</span><span id="line-28">import javax.lang.model.element.Element;</span>
+<span class="source-line-no">029</span><span id="line-29">import javax.lang.model.element.QualifiedNameable;</span>
+<span class="source-line-no">030</span><span id="line-30">import javax.lang.model.element.TypeElement;</span>
+<span class="source-line-no">031</span><span id="line-31"></span>
+<span class="source-line-no">032</span><span id="line-32">import javax.lang.model.type.DeclaredType;</span>
+<span class="source-line-no">033</span><span id="line-33">import javax.lang.model.type.TypeMirror;</span>
+<span class="source-line-no">034</span><span id="line-34"></span>
+<span class="source-line-no">035</span><span id="line-35">import org.microbean.assign.Annotated;</span>
+<span class="source-line-no">036</span><span id="line-36">import org.microbean.assign.Matcher;</span>
+<span class="source-line-no">037</span><span id="line-37">import org.microbean.assign.Selectable;</span>
 <span class="source-line-no">038</span><span id="line-38"></span>
-<span class="source-line-no">039</span><span id="line-39"></span>
-<span class="source-line-no">040</span><span id="line-40">  /*</span>
-<span class="source-line-no">041</span><span id="line-41">   * Static fields.</span>
-<span class="source-line-no">042</span><span id="line-42">   */</span>
-<span class="source-line-no">043</span><span id="line-43"></span>
-<span class="source-line-no">044</span><span id="line-44"></span>
-<span class="source-line-no">045</span><span id="line-45">  private static final Logger LOGGER = getLogger(Beans.class.getName());</span>
+<span class="source-line-no">039</span><span id="line-39">import org.microbean.construct.Domain;</span>
+<span class="source-line-no">040</span><span id="line-40"></span>
+<span class="source-line-no">041</span><span id="line-41">import org.microbean.construct.element.SyntheticAnnotationMirror;</span>
+<span class="source-line-no">042</span><span id="line-42">import org.microbean.construct.element.SyntheticAnnotationTypeElement;</span>
+<span class="source-line-no">043</span><span id="line-43">import org.microbean.construct.element.SyntheticAnnotationTypeElement.SyntheticAnnotationElement;</span>
+<span class="source-line-no">044</span><span id="line-44">import org.microbean.construct.element.SyntheticAnnotationValue;</span>
+<span class="source-line-no">045</span><span id="line-45">import org.microbean.construct.element.SyntheticName;</span>
 <span class="source-line-no">046</span><span id="line-46"></span>
-<span class="source-line-no">047</span><span id="line-47">  private static final Comparator&lt;Bean&lt;?&gt;&gt; byRankComparator = Comparator</span>
-<span class="source-line-no">048</span><span id="line-48">    .&lt;Bean&lt;?&gt;&gt;comparingInt(Ranked::rank)</span>
-<span class="source-line-no">049</span><span id="line-49">    .reversed();</span>
-<span class="source-line-no">050</span><span id="line-50"></span>
-<span class="source-line-no">051</span><span id="line-51">  private static final Comparator&lt;Bean&lt;?&gt;&gt; byAlternateThenByRankComparator = Comparator</span>
-<span class="source-line-no">052</span><span id="line-52">    .&lt;Bean&lt;?&gt;, Boolean&gt;comparing(Ranked::alternate)</span>
-<span class="source-line-no">053</span><span id="line-53">    .reversed()</span>
-<span class="source-line-no">054</span><span id="line-54">    .thenComparing(byRankComparator);</span>
+<span class="source-line-no">047</span><span id="line-47">import static java.lang.System.getLogger;</span>
+<span class="source-line-no">048</span><span id="line-48"></span>
+<span class="source-line-no">049</span><span id="line-49">import static java.util.Collections.sort;</span>
+<span class="source-line-no">050</span><span id="line-50">import static java.util.Objects.requireNonNull;</span>
+<span class="source-line-no">051</span><span id="line-51"></span>
+<span class="source-line-no">052</span><span id="line-52">import static javax.lang.model.type.TypeKind.BOOLEAN;</span>
+<span class="source-line-no">053</span><span id="line-53">import static javax.lang.model.type.TypeKind.DECLARED;</span>
+<span class="source-line-no">054</span><span id="line-54">import static javax.lang.model.type.TypeKind.INT;</span>
 <span class="source-line-no">055</span><span id="line-55"></span>
-<span class="source-line-no">056</span><span id="line-56"></span>
-<span class="source-line-no">057</span><span id="line-57">  /*</span>
-<span class="source-line-no">058</span><span id="line-58">   * Constructors.</span>
-<span class="source-line-no">059</span><span id="line-59">   */</span>
-<span class="source-line-no">060</span><span id="line-60"></span>
-<span class="source-line-no">061</span><span id="line-61"></span>
-<span class="source-line-no">062</span><span id="line-62">  private Beans() {</span>
-<span class="source-line-no">063</span><span id="line-63">    super();</span>
-<span class="source-line-no">064</span><span id="line-64">  }</span>
-<span class="source-line-no">065</span><span id="line-65"></span>
-<span class="source-line-no">066</span><span id="line-66"></span>
-<span class="source-line-no">067</span><span id="line-67">  /*</span>
-<span class="source-line-no">068</span><span id="line-68">   * Static methods.</span>
-<span class="source-line-no">069</span><span id="line-69">   */</span>
+<span class="source-line-no">056</span><span id="line-56">import static org.microbean.construct.element.AnnotationMirrors.sameAnnotation;</span>
+<span class="source-line-no">057</span><span id="line-57">import static org.microbean.construct.element.AnnotationMirrors.get;</span>
+<span class="source-line-no">058</span><span id="line-58"></span>
+<span class="source-line-no">059</span><span id="line-59">/**</span>
+<span class="source-line-no">060</span><span id="line-60"> * Utility methods for working with {@link Bean}s.</span>
+<span class="source-line-no">061</span><span id="line-61"> *</span>
+<span class="source-line-no">062</span><span id="line-62"> * @author &lt;a href="https://about.me/lairdnelson" target="_top"&gt;Laird Nelson&lt;/a&gt;</span>
+<span class="source-line-no">063</span><span id="line-63"> *</span>
+<span class="source-line-no">064</span><span id="line-64"> * @see #normalize(Collection)</span>
+<span class="source-line-no">065</span><span id="line-65"> *</span>
+<span class="source-line-no">066</span><span id="line-66"> * @see Bean</span>
+<span class="source-line-no">067</span><span id="line-67"> */</span>
+<span class="source-line-no">068</span><span id="line-68">public final class Beans {</span>
+<span class="source-line-no">069</span><span id="line-69"></span>
 <span class="source-line-no">070</span><span id="line-70"></span>
-<span class="source-line-no">071</span><span id="line-71"></span>
-<span class="source-line-no">072</span><span id="line-72">  /**</span>
-<span class="source-line-no">073</span><span id="line-73">   * Returns an immutable {@link List} containing a subset of {@linkplain Bean#equals(Object) distinct elements}</span>
-<span class="source-line-no">074</span><span id="line-74">   * contained in the supplied {@link Collection}, sorted in a deliberately unspecified fashion.</span>
-<span class="source-line-no">075</span><span id="line-75">   *</span>
-<span class="source-line-no">076</span><span id="line-76">   * @param beans a {@link Collection} of {@link Bean}s; must not be {@code null}</span>
-<span class="source-line-no">077</span><span id="line-77">   *</span>
-<span class="source-line-no">078</span><span id="line-78">   * @return a non-{@code null} immutable {@link List}</span>
-<span class="source-line-no">079</span><span id="line-79">   *</span>
-<span class="source-line-no">080</span><span id="line-80">   * @exception NullPointerException if {@code beans} is {@code null}</span>
-<span class="source-line-no">081</span><span id="line-81">   *</span>
-<span class="source-line-no">082</span><span id="line-82">   * @see Bean#equals(Object)</span>
-<span class="source-line-no">083</span><span id="line-83">   */</span>
-<span class="source-line-no">084</span><span id="line-84">  public static List&lt;Bean&lt;?&gt;&gt; normalize(final Collection&lt;? extends Bean&lt;?&gt;&gt; beans) {</span>
-<span class="source-line-no">085</span><span id="line-85">    if (beans.isEmpty()) {</span>
-<span class="source-line-no">086</span><span id="line-86">      return List.of();</span>
-<span class="source-line-no">087</span><span id="line-87">    } else if (beans.size() == 1) {</span>
-<span class="source-line-no">088</span><span id="line-88">      // no duplicate weeding or sorting needed</span>
-<span class="source-line-no">089</span><span id="line-89">      return List.copyOf(beans);</span>
-<span class="source-line-no">090</span><span id="line-90">    }</span>
-<span class="source-line-no">091</span><span id="line-91">    final ArrayList&lt;Bean&lt;?&gt;&gt; newBeans = new ArrayList&lt;&gt;(beans.size());</span>
-<span class="source-line-no">092</span><span id="line-92">    if (beans instanceof Set) {</span>
-<span class="source-line-no">093</span><span id="line-93">      newBeans.addAll(beans);</span>
-<span class="source-line-no">094</span><span id="line-94">    } else {</span>
-<span class="source-line-no">095</span><span id="line-95">      final Set&lt;Bean&lt;?&gt;&gt; newBeansSet = newHashSet(beans.size());</span>
-<span class="source-line-no">096</span><span id="line-96">      for (final Bean&lt;?&gt; bean : beans) {</span>
-<span class="source-line-no">097</span><span id="line-97">        if (newBeansSet.add(bean)) {</span>
-<span class="source-line-no">098</span><span id="line-98">          newBeans.add(bean);</span>
-<span class="source-line-no">099</span><span id="line-99">        }</span>
-<span class="source-line-no">100</span><span id="line-100">      }</span>
-<span class="source-line-no">101</span><span id="line-101">      if (newBeans.isEmpty()) {</span>
-<span class="source-line-no">102</span><span id="line-102">        return List.of();</span>
-<span class="source-line-no">103</span><span id="line-103">      }</span>
-<span class="source-line-no">104</span><span id="line-104">    }</span>
-<span class="source-line-no">105</span><span id="line-105">    assert !newBeans.isEmpty();</span>
-<span class="source-line-no">106</span><span id="line-106">    if (newBeans.size() &gt; 1) {</span>
-<span class="source-line-no">107</span><span id="line-107">      sort(newBeans, byAlternateThenByRankComparator);</span>
-<span class="source-line-no">108</span><span id="line-108">    }</span>
-<span class="source-line-no">109</span><span id="line-109">    return List.copyOf(newBeans);</span>
-<span class="source-line-no">110</span><span id="line-110">  }</span>
-<span class="source-line-no">111</span><span id="line-111"></span>
-<span class="source-line-no">112</span><span id="line-112">}</span>
+<span class="source-line-no">071</span><span id="line-71">  /*</span>
+<span class="source-line-no">072</span><span id="line-72">   * Static fields.</span>
+<span class="source-line-no">073</span><span id="line-73">   */</span>
+<span class="source-line-no">074</span><span id="line-74"></span>
+<span class="source-line-no">075</span><span id="line-75"></span>
+<span class="source-line-no">076</span><span id="line-76">  private static final Logger LOGGER = getLogger(Beans.class.getName());</span>
+<span class="source-line-no">077</span><span id="line-77"></span>
+<span class="source-line-no">078</span><span id="line-78"></span>
+<span class="source-line-no">079</span><span id="line-79">  /*</span>
+<span class="source-line-no">080</span><span id="line-80">   * Instance fields.</span>
+<span class="source-line-no">081</span><span id="line-81">   */</span>
+<span class="source-line-no">082</span><span id="line-82"></span>
+<span class="source-line-no">083</span><span id="line-83"></span>
+<span class="source-line-no">084</span><span id="line-84">  private final AnnotationMirror alternate;</span>
+<span class="source-line-no">085</span><span id="line-85"></span>
+<span class="source-line-no">086</span><span id="line-86">  private final AnnotationMirror rank;</span>
+<span class="source-line-no">087</span><span id="line-87"></span>
+<span class="source-line-no">088</span><span id="line-88">  private final Comparator&lt;Bean&lt;?&gt;&gt; byAlternateThenByRankComparator;</span>
+<span class="source-line-no">089</span><span id="line-89"></span>
+<span class="source-line-no">090</span><span id="line-90"></span>
+<span class="source-line-no">091</span><span id="line-91">  /*</span>
+<span class="source-line-no">092</span><span id="line-92">   * Constructors.</span>
+<span class="source-line-no">093</span><span id="line-93">   */</span>
+<span class="source-line-no">094</span><span id="line-94"></span>
+<span class="source-line-no">095</span><span id="line-95">  /**</span>
+<span class="source-line-no">096</span><span id="line-96">   * Creates a new {@link Beans}.</span>
+<span class="source-line-no">097</span><span id="line-97">   *</span>
+<span class="source-line-no">098</span><span id="line-98">   * @param d a non-{@code null} {@link Domain}</span>
+<span class="source-line-no">099</span><span id="line-99">   *</span>
+<span class="source-line-no">100</span><span id="line-100">   * @see #Beans(Domain, AnnotationMirror, AnnotationMirror)</span>
+<span class="source-line-no">101</span><span id="line-101">   */</span>
+<span class="source-line-no">102</span><span id="line-102">  public Beans(final Domain d) {</span>
+<span class="source-line-no">103</span><span id="line-103">    this(d, null, null);</span>
+<span class="source-line-no">104</span><span id="line-104">  }</span>
+<span class="source-line-no">105</span><span id="line-105">  </span>
+<span class="source-line-no">106</span><span id="line-106">  /**</span>
+<span class="source-line-no">107</span><span id="line-107">   * Creates a new {@link Beans}.</span>
+<span class="source-line-no">108</span><span id="line-108">   *</span>
+<span class="source-line-no">109</span><span id="line-109">   * @param alternate a non-{@code null} {@link AnnotationMirror} that will designate a {@link Bean} as being an</span>
+<span class="source-line-no">110</span><span id="line-110">   * alternate</span>
+<span class="source-line-no">111</span><span id="line-111">   *</span>
+<span class="source-line-no">112</span><span id="line-112">   * @param rank a non-{@code null} {@link AnnotationMirror} that can be examined to determine the &lt;dfn&gt;rank&lt;/dfn&gt; of a {@link Bean}</span>
+<span class="source-line-no">113</span><span id="line-113">   * that has been deemed to be an alternate</span>
+<span class="source-line-no">114</span><span id="line-114">   *</span>
+<span class="source-line-no">115</span><span id="line-115">   * @exception NullPointerException if any argument is {@code null}</span>
+<span class="source-line-no">116</span><span id="line-116">   *</span>
+<span class="source-line-no">117</span><span id="line-117">   * @see #Beans(Domain, AnnotationMirror, AnnotationMirror)</span>
+<span class="source-line-no">118</span><span id="line-118">   */</span>
+<span class="source-line-no">119</span><span id="line-119">  public Beans(final AnnotationMirror alternate, final AnnotationMirror rank) {</span>
+<span class="source-line-no">120</span><span id="line-120">    this(null, alternate, rank);</span>
+<span class="source-line-no">121</span><span id="line-121">  }</span>
+<span class="source-line-no">122</span><span id="line-122">  </span>
+<span class="source-line-no">123</span><span id="line-123">  /**</span>
+<span class="source-line-no">124</span><span id="line-124">   * Creates a new {@link Beans}.</span>
+<span class="source-line-no">125</span><span id="line-125">   *</span>
+<span class="source-line-no">126</span><span id="line-126">   * @param d a non-{@code null} {@link Domain}</span>
+<span class="source-line-no">127</span><span id="line-127">   *</span>
+<span class="source-line-no">128</span><span id="line-128">   * @param alternate an {@link AnnotationMirror} that will designate a {@link Bean} as being an alternate; may be</span>
+<span class="source-line-no">129</span><span id="line-129">   * {@code null}; if non-{@code null} must have a {@code boolean}-typed {@code value} element</span>
+<span class="source-line-no">130</span><span id="line-130">   *</span>
+<span class="source-line-no">131</span><span id="line-131">   * @param rank an {@link AnnotationMirror} that can be examined to determine the &lt;dfn&gt;rank&lt;/dfn&gt; of a {@link Bean}</span>
+<span class="source-line-no">132</span><span id="line-132">   * that has been deemed to be an alternate; may be {@code null}; if non-{@code null} must have an {@code int}-typed</span>
+<span class="source-line-no">133</span><span id="line-133">   * {@code value} element</span>
+<span class="source-line-no">134</span><span id="line-134">   */</span>
+<span class="source-line-no">135</span><span id="line-135">  public Beans(final Domain d,</span>
+<span class="source-line-no">136</span><span id="line-136">               final AnnotationMirror alternate,</span>
+<span class="source-line-no">137</span><span id="line-137">               final AnnotationMirror rank) {</span>
+<span class="source-line-no">138</span><span id="line-138">    super();</span>
+<span class="source-line-no">139</span><span id="line-139">    if (alternate == null) {</span>
+<span class="source-line-no">140</span><span id="line-140">      if (d == null) {</span>
+<span class="source-line-no">141</span><span id="line-141">        this.alternate = null;</span>
+<span class="source-line-no">142</span><span id="line-142">      } else {</span>
+<span class="source-line-no">143</span><span id="line-143">        this.alternate =</span>
+<span class="source-line-no">144</span><span id="line-144">          new SyntheticAnnotationMirror(new SyntheticAnnotationTypeElement(List.of(),</span>
+<span class="source-line-no">145</span><span id="line-145">                                                                           new SyntheticName("Alternate"),</span>
+<span class="source-line-no">146</span><span id="line-146">                                                                           List.of(new SyntheticAnnotationElement(d.primitiveType(BOOLEAN),</span>
+<span class="source-line-no">147</span><span id="line-147">                                                                                                                  new SyntheticName("value"),</span>
+<span class="source-line-no">148</span><span id="line-148">                                                                                                                  new SyntheticAnnotationValue(false)))));</span>
+<span class="source-line-no">149</span><span id="line-149">      }</span>
+<span class="source-line-no">150</span><span id="line-150">    } else {</span>
+<span class="source-line-no">151</span><span id="line-151">      this.alternate = alternate;</span>
+<span class="source-line-no">152</span><span id="line-152">    }</span>
+<span class="source-line-no">153</span><span id="line-153">    if (rank == null) {</span>
+<span class="source-line-no">154</span><span id="line-154">      if (d == null || this.alternate == null) {</span>
+<span class="source-line-no">155</span><span id="line-155">        this.rank = null;</span>
+<span class="source-line-no">156</span><span id="line-156">      } else {</span>
+<span class="source-line-no">157</span><span id="line-157">        this.rank =</span>
+<span class="source-line-no">158</span><span id="line-158">          new SyntheticAnnotationMirror(new SyntheticAnnotationTypeElement(List.of(),</span>
+<span class="source-line-no">159</span><span id="line-159">                                                                           new SyntheticName("Rank"),</span>
+<span class="source-line-no">160</span><span id="line-160">                                                                           List.of(new SyntheticAnnotationElement(d.primitiveType(INT),</span>
+<span class="source-line-no">161</span><span id="line-161">                                                                                                                  new SyntheticName("value"),</span>
+<span class="source-line-no">162</span><span id="line-162">                                                                                                                  new SyntheticAnnotationValue(0)))));</span>
+<span class="source-line-no">163</span><span id="line-163">      }</span>
+<span class="source-line-no">164</span><span id="line-164">    } else {</span>
+<span class="source-line-no">165</span><span id="line-165">      this.rank = rank;</span>
+<span class="source-line-no">166</span><span id="line-166">    }</span>
+<span class="source-line-no">167</span><span id="line-167">    this.byAlternateThenByRankComparator =</span>
+<span class="source-line-no">168</span><span id="line-168">      Comparator.&lt;Bean&lt;?&gt;, Boolean&gt;comparing(this::alternate).reversed()</span>
+<span class="source-line-no">169</span><span id="line-169">      .thenComparing(Comparator.&lt;Bean&lt;?&gt;, Integer&gt;comparing(this::rank).reversed());</span>
+<span class="source-line-no">170</span><span id="line-170">  }</span>
+<span class="source-line-no">171</span><span id="line-171"></span>
+<span class="source-line-no">172</span><span id="line-172">  /**</span>
+<span class="source-line-no">173</span><span id="line-173">   * Returns a non-{@code null}, determinate, immutable {@link List} containing a subset of {@linkplain</span>
+<span class="source-line-no">174</span><span id="line-174">   * Bean#equals(Object) distinct elements} contained in the supplied {@link Collection}, sorted in a deliberately</span>
+<span class="source-line-no">175</span><span id="line-175">   * unspecified fashion.</span>
+<span class="source-line-no">176</span><span id="line-176">   *</span>
+<span class="source-line-no">177</span><span id="line-177">   * @param beans a {@link Collection} of {@link Bean}s; must not be {@code null}</span>
+<span class="source-line-no">178</span><span id="line-178">   *</span>
+<span class="source-line-no">179</span><span id="line-179">   * @return a non-{@code null}, determinate, immutable {@link List}</span>
+<span class="source-line-no">180</span><span id="line-180">   *</span>
+<span class="source-line-no">181</span><span id="line-181">   * @exception NullPointerException if {@code beans} is {@code null}</span>
+<span class="source-line-no">182</span><span id="line-182">   *</span>
+<span class="source-line-no">183</span><span id="line-183">   * @see Bean#equals(Object)</span>
+<span class="source-line-no">184</span><span id="line-184">   */</span>
+<span class="source-line-no">185</span><span id="line-185">  public final List&lt;Bean&lt;?&gt;&gt; normalize(final Collection&lt;? extends Bean&lt;?&gt;&gt; beans) {</span>
+<span class="source-line-no">186</span><span id="line-186">    return beans.isEmpty() ? List.of() : switch (beans.size()) {</span>
+<span class="source-line-no">187</span><span id="line-187">    case 1 -&gt; List.copyOf(beans);</span>
+<span class="source-line-no">188</span><span id="line-188">    default -&gt; {</span>
+<span class="source-line-no">189</span><span id="line-189">      final List&lt;Bean&lt;?&gt;&gt; newBeans = new ArrayList&lt;&gt;(beans instanceof Set&lt;? extends Bean&lt;?&gt;&gt; s ? s : new HashSet&lt;&gt;(beans));</span>
+<span class="source-line-no">190</span><span id="line-190">      yield newBeans.isEmpty() ? List.of() : switch (newBeans.size()) {</span>
+<span class="source-line-no">191</span><span id="line-191">      case 1 -&gt; List.of(newBeans.get(0));</span>
+<span class="source-line-no">192</span><span id="line-192">      default -&gt; {</span>
+<span class="source-line-no">193</span><span id="line-193">        sort(newBeans, this.byAlternateThenByRankComparator);</span>
+<span class="source-line-no">194</span><span id="line-194">        yield List.copyOf(newBeans);</span>
+<span class="source-line-no">195</span><span id="line-195">      }</span>
+<span class="source-line-no">196</span><span id="line-196">      };</span>
+<span class="source-line-no">197</span><span id="line-197">    }</span>
+<span class="source-line-no">198</span><span id="line-198">    };</span>
+<span class="source-line-no">199</span><span id="line-199">  }</span>
+<span class="source-line-no">200</span><span id="line-200">  </span>
+<span class="source-line-no">201</span><span id="line-201">  /**</span>
+<span class="source-line-no">202</span><span id="line-202">   * {@linkplain #normalize(Collection) Normalizes} the supplied {@link Collection} of {@link Bean}s and returns a</span>
+<span class="source-line-no">203</span><span id="line-203">   * {@link Selectable} suitable for it and the supplied {@link Matcher}, using the {@link</span>
+<span class="source-line-no">204</span><span id="line-204">   * org.microbean.assign.Selectables#filtering(Collection, BiPredicate)} method internally.</span>
+<span class="source-line-no">205</span><span id="line-205">   *</span>
+<span class="source-line-no">206</span><span id="line-206">   * &lt;p&gt;The returned {@link Selectable} does not cache its results or resolve ambiguities.&lt;/p&gt;</span>
+<span class="source-line-no">207</span><span id="line-207">   *</span>
+<span class="source-line-no">208</span><span id="line-208">   * @param beanCollection a {@link Collection} of {@link Bean}s; must not be {@code null}</span>
+<span class="source-line-no">209</span><span id="line-209">   *</span>
+<span class="source-line-no">210</span><span id="line-210">   * @param m a {@link Matcher}; must not be {@code null}</span>
+<span class="source-line-no">211</span><span id="line-211">   *</span>
+<span class="source-line-no">212</span><span id="line-212">   * @return a non-{@code null}, determinate {@link Selectable}</span>
+<span class="source-line-no">213</span><span id="line-213">   *</span>
+<span class="source-line-no">214</span><span id="line-214">   * @exception NullPointerException if any argument is {@code null}</span>
+<span class="source-line-no">215</span><span id="line-215">   *</span>
+<span class="source-line-no">216</span><span id="line-216">   * @see Matcher#test(Object, Object)</span>
+<span class="source-line-no">217</span><span id="line-217">   *</span>
+<span class="source-line-no">218</span><span id="line-218">   * @see org.microbean.assign.Selectables#filtering(Collection, java.util.function.BiPredicate)</span>
+<span class="source-line-no">219</span><span id="line-219">   *</span>
+<span class="source-line-no">220</span><span id="line-220">   * @see Selectables#ambiguityReducing(Selectable, Predicate, ToIntFunction)</span>
+<span class="source-line-no">221</span><span id="line-221">   *</span>
+<span class="source-line-no">222</span><span id="line-222">   * @see #normalize(Collection)</span>
+<span class="source-line-no">223</span><span id="line-223">   */</span>
+<span class="source-line-no">224</span><span id="line-224">  public final Selectable&lt;Annotated&lt;? extends AnnotatedConstruct&gt;, Bean&lt;?&gt;&gt; typesafeFilteringSelectable(final Collection&lt;? extends Bean&lt;?&gt;&gt; beanCollection,</span>
+<span class="source-line-no">225</span><span id="line-225">                                                                                                        final Matcher&lt;? super Annotated&lt;? extends AnnotatedConstruct&gt;, ? super Id&gt; m) {</span>
+<span class="source-line-no">226</span><span id="line-226">    requireNonNull(m, "m"); // often an IdMatcher; need to overhaul this</span>
+<span class="source-line-no">227</span><span id="line-227">    return</span>
+<span class="source-line-no">228</span><span id="line-228">      beanCollection.isEmpty() ?</span>
+<span class="source-line-no">229</span><span id="line-229">      org.microbean.assign.Selectables.empty() :</span>
+<span class="source-line-no">230</span><span id="line-230">      org.microbean.assign.Selectables.filtering(this.normalize(beanCollection), (b, aac) -&gt; m.test(aac, b.id()));</span>
+<span class="source-line-no">231</span><span id="line-231">  }</span>
+<span class="source-line-no">232</span><span id="line-232"></span>
+<span class="source-line-no">233</span><span id="line-233">  /**</span>
+<span class="source-line-no">234</span><span id="line-234">   * Returns {@code true} if and only if the supplied {@link Bean} {@linkplain Bean#id() has an &lt;code&gt;Id&lt;/code&gt;} for which</span>
+<span class="source-line-no">235</span><span id="line-235">   * {@link #alternate(Id)} returns {@code true}.</span>
+<span class="source-line-no">236</span><span id="line-236">   *</span>
+<span class="source-line-no">237</span><span id="line-237">   * @param b a non-{@code null} {@link Bean}</span>
+<span class="source-line-no">238</span><span id="line-238">   *</span>
+<span class="source-line-no">239</span><span id="line-239">   * @return {@code true} if and only if the supplied {@link Bean} {@linkplain Bean#id() has an &lt;code&gt;Id&lt;/code&gt;} for which</span>
+<span class="source-line-no">240</span><span id="line-240">   * {@link #alternate(Id)} returns {@code true}</span>
+<span class="source-line-no">241</span><span id="line-241">   *</span>
+<span class="source-line-no">242</span><span id="line-242">   * @exception NullPointerException if {@code b} is {@code null}</span>
+<span class="source-line-no">243</span><span id="line-243">   *</span>
+<span class="source-line-no">244</span><span id="line-244">   * @see #alternate(Id)</span>
+<span class="source-line-no">245</span><span id="line-245">   */</span>
+<span class="source-line-no">246</span><span id="line-246">  public final boolean alternate(final Bean&lt;?&gt; b) {</span>
+<span class="source-line-no">247</span><span id="line-247">    return this.alternate(b.id());</span>
+<span class="source-line-no">248</span><span id="line-248">  }</span>
+<span class="source-line-no">249</span><span id="line-249"></span>
+<span class="source-line-no">250</span><span id="line-250">  /**</span>
+<span class="source-line-no">251</span><span id="line-251">   * Returns {@code true} if and only if the supplied {@link Id} {@linkplain Id#annotations() has annotations} for which</span>
+<span class="source-line-no">252</span><span id="line-252">   * {@link #alternate(Collection)} returns {@code true}.</span>
+<span class="source-line-no">253</span><span id="line-253">   *</span>
+<span class="source-line-no">254</span><span id="line-254">   * @param id a non-{@code null} {@link Id}</span>
+<span class="source-line-no">255</span><span id="line-255">   *</span>
+<span class="source-line-no">256</span><span id="line-256">   * @return {@code true} if and only if the supplied {@link Id} {@linkplain Id#annotations() has annotations} for which</span>
+<span class="source-line-no">257</span><span id="line-257">   * {@link #alternate(Collection)} returns {@code true}</span>
+<span class="source-line-no">258</span><span id="line-258">   *</span>
+<span class="source-line-no">259</span><span id="line-259">   * @exception NullPointerException if {@code id} is {@code null}</span>
+<span class="source-line-no">260</span><span id="line-260">   *</span>
+<span class="source-line-no">261</span><span id="line-261">   * @see #alternate(Collection)</span>
+<span class="source-line-no">262</span><span id="line-262">   */</span>
+<span class="source-line-no">263</span><span id="line-263">  public final boolean alternate(final Id id) {</span>
+<span class="source-line-no">264</span><span id="line-264">    return this.alternate(id.annotations());</span>
+<span class="source-line-no">265</span><span id="line-265">  }</span>
+<span class="source-line-no">266</span><span id="line-266"></span>
+<span class="source-line-no">267</span><span id="line-267">  /**</span>
+<span class="source-line-no">268</span><span id="line-268">   * Returns {@code true} if and only if the supplied {@link Collection} of {@link AnnotationMirror}s contains at least</span>
+<span class="source-line-no">269</span><span id="line-269">   * one {@link AnnotationMirror} for which {@link #alternate(AnnotationMirror)} returns {@code true}.</span>
+<span class="source-line-no">270</span><span id="line-270">   *</span>
+<span class="source-line-no">271</span><span id="line-271">   * @param as a non-{@code null} {@link Collection} of {@link AnnotationMirror}s</span>
+<span class="source-line-no">272</span><span id="line-272">   *</span>
+<span class="source-line-no">273</span><span id="line-273">   * @return {@code true} if and only if the supplied {@link Collection} of {@link AnnotationMirror}s contains at least</span>
+<span class="source-line-no">274</span><span id="line-274">   * one {@link AnnotationMirror} for which {@link #alternate(AnnotationMirror)} returns {@code true}</span>
+<span class="source-line-no">275</span><span id="line-275">   *</span>
+<span class="source-line-no">276</span><span id="line-276">   * @exception NullPointerException if {@code as} is {@code null}</span>
+<span class="source-line-no">277</span><span id="line-277">   *</span>
+<span class="source-line-no">278</span><span id="line-278">   * @see #alternate(AnnotationMirror)</span>
+<span class="source-line-no">279</span><span id="line-279">   */</span>
+<span class="source-line-no">280</span><span id="line-280">  public final boolean alternate(final Collection&lt;? extends AnnotationMirror&gt; as) {</span>
+<span class="source-line-no">281</span><span id="line-281">    for (final AnnotationMirror a : as) {</span>
+<span class="source-line-no">282</span><span id="line-282">      if (this.alternate(a)) {</span>
+<span class="source-line-no">283</span><span id="line-283">        return true;</span>
+<span class="source-line-no">284</span><span id="line-284">      }</span>
+<span class="source-line-no">285</span><span id="line-285">    }</span>
+<span class="source-line-no">286</span><span id="line-286">    return false;</span>
+<span class="source-line-no">287</span><span id="line-287">  }</span>
+<span class="source-line-no">288</span><span id="line-288"></span>
+<span class="source-line-no">289</span><span id="line-289">  /**</span>
+<span class="source-line-no">290</span><span id="line-290">   * Returns {@code true} if and only if the supplied {@link AnnotationMirror} designates whatever it annotates as being</span>
+<span class="source-line-no">291</span><span id="line-291">   * an &lt;dfn&gt;alternate&lt;/dfn&gt;.</span>
+<span class="source-line-no">292</span><span id="line-292">   *</span>
+<span class="source-line-no">293</span><span id="line-293">   * @param a a non-{@code null} {@link AnnotationMirror}</span>
+<span class="source-line-no">294</span><span id="line-294">   *</span>
+<span class="source-line-no">295</span><span id="line-295">   * @return {@code true} if and only if the supplied {@link AnnotationMirror} designates whatever it annotates as being</span>
+<span class="source-line-no">296</span><span id="line-296">   * an &lt;dfn&gt;alternate&lt;/dfn&gt;</span>
+<span class="source-line-no">297</span><span id="line-297">   *</span>
+<span class="source-line-no">298</span><span id="line-298">   * @exception NullPointerException if {@code a} is {@code null}</span>
+<span class="source-line-no">299</span><span id="line-299">   *</span>
+<span class="source-line-no">300</span><span id="line-300">   * @see #Beans(Domain, AnnotationMirror, AnnotationMirror)</span>
+<span class="source-line-no">301</span><span id="line-301">   */</span>
+<span class="source-line-no">302</span><span id="line-302">  public final boolean alternate(final AnnotationMirror a) {</span>
+<span class="source-line-no">303</span><span id="line-303">    return</span>
+<span class="source-line-no">304</span><span id="line-304">      this.alternate != null &amp;&amp;</span>
+<span class="source-line-no">305</span><span id="line-305">      ((QualifiedNameable)this.alternate.getAnnotationType().asElement()).getQualifiedName().contentEquals(((QualifiedNameable)a.getAnnotationType().asElement()).getQualifiedName()) &amp;&amp;</span>
+<span class="source-line-no">306</span><span id="line-306">      get(a, "value") instanceof Boolean b &amp;&amp;</span>
+<span class="source-line-no">307</span><span id="line-307">      b.booleanValue();</span>
+<span class="source-line-no">308</span><span id="line-308">  }</span>
+<span class="source-line-no">309</span><span id="line-309"></span>
+<span class="source-line-no">310</span><span id="line-310">  /**</span>
+<span class="source-line-no">311</span><span id="line-311">   * Returns the result of invoking the {@link #rank(Id)} method with the supplied {@link Bean}'s {@link Bean#id() Id}.</span>
+<span class="source-line-no">312</span><span id="line-312">   *</span>
+<span class="source-line-no">313</span><span id="line-313">   * @param b a non-{@code null} {@link Bean}</span>
+<span class="source-line-no">314</span><span id="line-314">   *</span>
+<span class="source-line-no">315</span><span id="line-315">   * @return a rank, which may be {@code 0}</span>
+<span class="source-line-no">316</span><span id="line-316">   *</span>
+<span class="source-line-no">317</span><span id="line-317">   * @exception NullPointerException if {@code b} is {@code null}</span>
+<span class="source-line-no">318</span><span id="line-318">   *</span>
+<span class="source-line-no">319</span><span id="line-319">   * @see #rank(Id)</span>
+<span class="source-line-no">320</span><span id="line-320">   */</span>
+<span class="source-line-no">321</span><span id="line-321">  public final int rank(final Bean&lt;?&gt; b) {</span>
+<span class="source-line-no">322</span><span id="line-322">    return this.rank(b.id());</span>
+<span class="source-line-no">323</span><span id="line-323">  }</span>
+<span class="source-line-no">324</span><span id="line-324"></span>
+<span class="source-line-no">325</span><span id="line-325">  /**</span>
+<span class="source-line-no">326</span><span id="line-326">   * Returns the result of invoking the {@link #rank(Collection)} method with the supplied {@link Id}'s {@linkplain</span>
+<span class="source-line-no">327</span><span id="line-327">   * Id#annotations() annotations}.</span>
+<span class="source-line-no">328</span><span id="line-328">   *</span>
+<span class="source-line-no">329</span><span id="line-329">   * @param id a non-{@code null} {@link Id}</span>
+<span class="source-line-no">330</span><span id="line-330">   *</span>
+<span class="source-line-no">331</span><span id="line-331">   * @return a rank, which may be {@code 0}</span>
+<span class="source-line-no">332</span><span id="line-332">   *</span>
+<span class="source-line-no">333</span><span id="line-333">   * @exception NullPointerException if {@code id} is {@code null}</span>
+<span class="source-line-no">334</span><span id="line-334">   *</span>
+<span class="source-line-no">335</span><span id="line-335">   * @see #rank(Collection)</span>
+<span class="source-line-no">336</span><span id="line-336">   */</span>
+<span class="source-line-no">337</span><span id="line-337">  public final int rank(final Id id) {</span>
+<span class="source-line-no">338</span><span id="line-338">    return this.alternate(id) ? this.rank(id.annotations()) : 0;</span>
+<span class="source-line-no">339</span><span id="line-339">  }</span>
+<span class="source-line-no">340</span><span id="line-340"></span>
+<span class="source-line-no">341</span><span id="line-341">  /**</span>
+<span class="source-line-no">342</span><span id="line-342">   * Iterates over the supplied {@link Collection} of {@link AnnotationMirror}s and invokes the {@link</span>
+<span class="source-line-no">343</span><span id="line-343">   * #rank(AnnotationMirror)} method on each one until a non-zero result is found and returns that result, or {@code 0}</span>
+<span class="source-line-no">344</span><span id="line-344">   * in all other cases.</span>
+<span class="source-line-no">345</span><span id="line-345">   *</span>
+<span class="source-line-no">346</span><span id="line-346">   * @param as a non-{@code null} {@link Collection} of {@link AnnotationMirror}s</span>
+<span class="source-line-no">347</span><span id="line-347">   *</span>
+<span class="source-line-no">348</span><span id="line-348">   * @return a rank, which may be {@code 0}</span>
+<span class="source-line-no">349</span><span id="line-349">   *</span>
+<span class="source-line-no">350</span><span id="line-350">   * @exception NullPointerException if {@code as} is {@code null}</span>
+<span class="source-line-no">351</span><span id="line-351">   *</span>
+<span class="source-line-no">352</span><span id="line-352">   * @see #rank(AnnotationMirror)</span>
+<span class="source-line-no">353</span><span id="line-353">   */</span>
+<span class="source-line-no">354</span><span id="line-354">  public final int rank(final Collection&lt;? extends AnnotationMirror&gt; as) {</span>
+<span class="source-line-no">355</span><span id="line-355">    for (final AnnotationMirror a : as) {</span>
+<span class="source-line-no">356</span><span id="line-356">      final int rank = this.rank(a);</span>
+<span class="source-line-no">357</span><span id="line-357">      if (rank != 0) {</span>
+<span class="source-line-no">358</span><span id="line-358">        return rank;</span>
+<span class="source-line-no">359</span><span id="line-359">      }</span>
+<span class="source-line-no">360</span><span id="line-360">    }</span>
+<span class="source-line-no">361</span><span id="line-361">    return 0;</span>
+<span class="source-line-no">362</span><span id="line-362">  }</span>
+<span class="source-line-no">363</span><span id="line-363"></span>
+<span class="source-line-no">364</span><span id="line-364">  /**</span>
+<span class="source-line-no">365</span><span id="line-365">   * Returns an {@code int} representing the &lt;dfn&gt;rank&lt;/dfn&gt; derivable from the supplied {@link AnnotationMirror}, which</span>
+<span class="source-line-no">366</span><span id="line-366">   * may be {@code 0}, or {@code 0} if the supplied {@link AnnotationMirror} does not or cannot supply a rank.</span>
+<span class="source-line-no">367</span><span id="line-367">   *</span>
+<span class="source-line-no">368</span><span id="line-368">   * @param a a non-{@code null} {@link AnnotationMirror}</span>
+<span class="source-line-no">369</span><span id="line-369">   *</span>
+<span class="source-line-no">370</span><span id="line-370">   * @return an {@code int} representing the &lt;dfn&gt;rank&lt;/dfn&gt; derivable from the supplied {@link AnnotationMirror}, which</span>
+<span class="source-line-no">371</span><span id="line-371">   * may be {@code 0}, or {@code 0} if the supplied {@link AnnotationMirror} does not or cannot supply a rank</span>
+<span class="source-line-no">372</span><span id="line-372">   *</span>
+<span class="source-line-no">373</span><span id="line-373">   * @exception NullPointerException if {@code a} is {@code null}</span>
+<span class="source-line-no">374</span><span id="line-374">   *</span>
+<span class="source-line-no">375</span><span id="line-375">   * @see #Beans(Domain, AnnotationMirror, AnnotationMirror)</span>
+<span class="source-line-no">376</span><span id="line-376">   */</span>
+<span class="source-line-no">377</span><span id="line-377">  public final int rank(final AnnotationMirror a) {</span>
+<span class="source-line-no">378</span><span id="line-378">    return</span>
+<span class="source-line-no">379</span><span id="line-379">      this.rank != null &amp;&amp;</span>
+<span class="source-line-no">380</span><span id="line-380">      ((QualifiedNameable)this.rank.getAnnotationType().asElement()).getQualifiedName().contentEquals(((QualifiedNameable)a.getAnnotationType().asElement()).getQualifiedName()) &amp;&amp;</span>
+<span class="source-line-no">381</span><span id="line-381">      get(a, "value") instanceof Integer i ?</span>
+<span class="source-line-no">382</span><span id="line-382">      i.intValue() :</span>
+<span class="source-line-no">383</span><span id="line-383">      0;</span>
+<span class="source-line-no">384</span><span id="line-384">  }</span>
+<span class="source-line-no">385</span><span id="line-385"></span>
+<span class="source-line-no">386</span><span id="line-386">}</span>
 
 
 

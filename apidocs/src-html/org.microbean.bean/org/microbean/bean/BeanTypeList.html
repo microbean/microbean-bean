@@ -77,146 +77,162 @@
 <span class="source-line-no">064</span><span id="line-64"> */</span>
 <span class="source-line-no">065</span><span id="line-65">public final class BeanTypeList extends AbstractList&lt;TypeMirror&gt; implements Constable {</span>
 <span class="source-line-no">066</span><span id="line-66"></span>
-<span class="source-line-no">067</span><span id="line-67">  private static final BeanTypeList EMPTY_LIST = new BeanTypeList();</span>
-<span class="source-line-no">068</span><span id="line-68"></span>
-<span class="source-line-no">069</span><span id="line-69">  private final BeanTypes beanTypes; // needed only for Constable purposes. This is dumb.</span>
-<span class="source-line-no">070</span><span id="line-70">  </span>
-<span class="source-line-no">071</span><span id="line-71">  private final List&lt;TypeMirror&gt; types;</span>
+<span class="source-line-no">067</span><span id="line-67"></span>
+<span class="source-line-no">068</span><span id="line-68">  /*</span>
+<span class="source-line-no">069</span><span id="line-69">   * Static fields.</span>
+<span class="source-line-no">070</span><span id="line-70">   */</span>
+<span class="source-line-no">071</span><span id="line-71"></span>
 <span class="source-line-no">072</span><span id="line-72"></span>
-<span class="source-line-no">073</span><span id="line-73">  private final int interfaceIndex;</span>
+<span class="source-line-no">073</span><span id="line-73">  private static final BeanTypeList EMPTY_LIST = new BeanTypeList();</span>
 <span class="source-line-no">074</span><span id="line-74"></span>
-<span class="source-line-no">075</span><span id="line-75">  private final boolean proxiable;</span>
-<span class="source-line-no">076</span><span id="line-76"></span>
-<span class="source-line-no">077</span><span id="line-77">  private BeanTypeList() {</span>
-<span class="source-line-no">078</span><span id="line-78">    this.beanTypes = null;</span>
-<span class="source-line-no">079</span><span id="line-79">    this.types = List.of();</span>
-<span class="source-line-no">080</span><span id="line-80">    this.interfaceIndex = -1;</span>
-<span class="source-line-no">081</span><span id="line-81">    this.proxiable = false;</span>
-<span class="source-line-no">082</span><span id="line-82">  }</span>
+<span class="source-line-no">075</span><span id="line-75"></span>
+<span class="source-line-no">076</span><span id="line-76">  /*</span>
+<span class="source-line-no">077</span><span id="line-77">   * Instance fields.</span>
+<span class="source-line-no">078</span><span id="line-78">   */</span>
+<span class="source-line-no">079</span><span id="line-79"></span>
+<span class="source-line-no">080</span><span id="line-80"></span>
+<span class="source-line-no">081</span><span id="line-81">  // (We are effectively an inner class of BeanTypes.)</span>
+<span class="source-line-no">082</span><span id="line-82">  private final BeanTypes beanTypes; // needed only for Constable purposes</span>
 <span class="source-line-no">083</span><span id="line-83"></span>
-<span class="source-line-no">084</span><span id="line-84">  private BeanTypeList(final BeanTypes beanTypes,</span>
-<span class="source-line-no">085</span><span id="line-85">                       final Collection&lt;? extends TypeMirror&gt; types,</span>
-<span class="source-line-no">086</span><span id="line-86">                       final int interfaceIndex,</span>
-<span class="source-line-no">087</span><span id="line-87">                       final boolean proxiable) {</span>
-<span class="source-line-no">088</span><span id="line-88">    super();</span>
-<span class="source-line-no">089</span><span id="line-89">    this.beanTypes = requireNonNull(beanTypes, "beanTypes");</span>
-<span class="source-line-no">090</span><span id="line-90">    if (types.isEmpty()) {</span>
-<span class="source-line-no">091</span><span id="line-91">      this.types = List.of();</span>
-<span class="source-line-no">092</span><span id="line-92">      this.interfaceIndex = -1;</span>
-<span class="source-line-no">093</span><span id="line-93">      this.proxiable = proxiable;</span>
-<span class="source-line-no">094</span><span id="line-94">    } else if (types instanceof BeanTypeList btl) {</span>
-<span class="source-line-no">095</span><span id="line-95">      this.types = btl;</span>
-<span class="source-line-no">096</span><span id="line-96">      this.interfaceIndex = btl.interfaceIndex;</span>
-<span class="source-line-no">097</span><span id="line-97">      this.proxiable = btl.proxiable;</span>
-<span class="source-line-no">098</span><span id="line-98">    } else if (types instanceof SupertypeList stl) {</span>
-<span class="source-line-no">099</span><span id="line-99">      this.types = stl;</span>
-<span class="source-line-no">100</span><span id="line-100">      this.interfaceIndex = stl.interfaceIndex();</span>
-<span class="source-line-no">101</span><span id="line-101">      this.proxiable = proxiable;</span>
-<span class="source-line-no">102</span><span id="line-102">    } else {</span>
-<span class="source-line-no">103</span><span id="line-103">      this.types = List.copyOf(types);</span>
-<span class="source-line-no">104</span><span id="line-104">      this.interfaceIndex = interfaceIndex;</span>
-<span class="source-line-no">105</span><span id="line-105">      this.proxiable = proxiable;</span>
-<span class="source-line-no">106</span><span id="line-106">    }</span>
-<span class="source-line-no">107</span><span id="line-107">  }</span>
-<span class="source-line-no">108</span><span id="line-108"></span>
-<span class="source-line-no">109</span><span id="line-109">  @Override // Constable</span>
-<span class="source-line-no">110</span><span id="line-110">  public final Optional&lt;? extends ConstantDesc&gt; describeConstable() {</span>
-<span class="source-line-no">111</span><span id="line-111">    if (this.beanTypes == null) {</span>
-<span class="source-line-no">112</span><span id="line-112">      assert this.isEmpty();</span>
-<span class="source-line-no">113</span><span id="line-113">      return Optional.of(DynamicConstantDesc.of(BSM_INVOKE,</span>
-<span class="source-line-no">114</span><span id="line-114">                                                MethodHandleDesc.ofMethod(STATIC,</span>
-<span class="source-line-no">115</span><span id="line-115">                                                                          ClassDesc.of(this.getClass().getName()),</span>
-<span class="source-line-no">116</span><span id="line-116">                                                                          "of",</span>
-<span class="source-line-no">117</span><span id="line-117">                                                                          MethodTypeDesc.of(ClassDesc.of(this.getClass().getName())))));</span>
-<span class="source-line-no">118</span><span id="line-118">    }</span>
-<span class="source-line-no">119</span><span id="line-119">    return Constables.describeConstable(this.types)</span>
-<span class="source-line-no">120</span><span id="line-120">      .flatMap(typesDesc -&gt; this.beanTypes.describeConstable()</span>
-<span class="source-line-no">121</span><span id="line-121">               .map(beanTypesDesc -&gt; DynamicConstantDesc.of(BSM_INVOKE,</span>
-<span class="source-line-no">122</span><span id="line-122">                                                            MethodHandleDesc.ofMethod(VIRTUAL,</span>
-<span class="source-line-no">123</span><span id="line-123">                                                                                      ClassDesc.of(this.beanTypes.getClass().getName()),</span>
-<span class="source-line-no">124</span><span id="line-124">                                                                                      "beanTypes",</span>
-<span class="source-line-no">125</span><span id="line-125">                                                                                      MethodTypeDesc.of(ClassDesc.of(this.getClass().getName()),</span>
-<span class="source-line-no">126</span><span id="line-126">                                                                                                        CD_Collection)),</span>
-<span class="source-line-no">127</span><span id="line-127">                                                            beanTypesDesc,</span>
-<span class="source-line-no">128</span><span id="line-128">                                                            typesDesc)));</span>
-<span class="source-line-no">129</span><span id="line-129">  }</span>
-<span class="source-line-no">130</span><span id="line-130"></span>
-<span class="source-line-no">131</span><span id="line-131">  @Override // AbstractList&lt;TypeMirror&gt;</span>
-<span class="source-line-no">132</span><span id="line-132">  public final TypeMirror get(final int index) {</span>
-<span class="source-line-no">133</span><span id="line-133">    return this.types.get(index);</span>
-<span class="source-line-no">134</span><span id="line-134">  }</span>
-<span class="source-line-no">135</span><span id="line-135"></span>
-<span class="source-line-no">136</span><span id="line-136">  /**</span>
-<span class="source-line-no">137</span><span id="line-137">   * Returns a non-{@code null}, immutable {@link List} containing only interface types.</span>
-<span class="source-line-no">138</span><span id="line-138">   *</span>
-<span class="source-line-no">139</span><span id="line-139">   * &lt;p&gt;The returned {@link List} may be {@linkplain List#isEmpty() empty}.&lt;/p&gt;</span>
-<span class="source-line-no">140</span><span id="line-140">   *</span>
-<span class="source-line-no">141</span><span id="line-141">   * @return a non-{@code null}, immutable {@link List} containing only interface types</span>
-<span class="source-line-no">142</span><span id="line-142">   */</span>
-<span class="source-line-no">143</span><span id="line-143">  public final List&lt;TypeMirror&gt; interfaces() {</span>
-<span class="source-line-no">144</span><span id="line-144">    final int i = this.interfaceIndex;</span>
-<span class="source-line-no">145</span><span id="line-145">    return i &lt; 0 ? List.of() : this.subList(i, this.size());</span>
-<span class="source-line-no">146</span><span id="line-146">  }</span>
-<span class="source-line-no">147</span><span id="line-147"></span>
-<span class="source-line-no">148</span><span id="line-148">  /**</span>
-<span class="source-line-no">149</span><span id="line-149">   * Returns {@code true} if and only if this {@link BeanTypeList} is &lt;dfn&gt;proxiable&lt;/dfn&gt;.</span>
-<span class="source-line-no">150</span><span id="line-150">   *</span>
-<span class="source-line-no">151</span><span id="line-151">   * @return {@code true} if and only if this {@link BeanTypeList} is &lt;dfn&gt;proxiable&lt;/dfn&gt;</span>
-<span class="source-line-no">152</span><span id="line-152">   *</span>
-<span class="source-line-no">153</span><span id="line-153">   * @see BeanTypes#proxiableElement(Element)</span>
-<span class="source-line-no">154</span><span id="line-154">   *</span>
-<span class="source-line-no">155</span><span id="line-155">   * @spec https://jakarta.ee/specifications/cdi/4.0/jakarta-cdi-spec-4.0#unproxyable CDI Specification, version 4.0,</span>
-<span class="source-line-no">156</span><span id="line-156">   * section 2.2.10</span>
-<span class="source-line-no">157</span><span id="line-157">   */</span>
-<span class="source-line-no">158</span><span id="line-158">  public final boolean proxiable() {</span>
-<span class="source-line-no">159</span><span id="line-159">    return this.proxiable;</span>
+<span class="source-line-no">084</span><span id="line-84">  private final List&lt;TypeMirror&gt; types;</span>
+<span class="source-line-no">085</span><span id="line-85"></span>
+<span class="source-line-no">086</span><span id="line-86">  private final int interfaceIndex;</span>
+<span class="source-line-no">087</span><span id="line-87"></span>
+<span class="source-line-no">088</span><span id="line-88">  private final boolean proxiable;</span>
+<span class="source-line-no">089</span><span id="line-89"></span>
+<span class="source-line-no">090</span><span id="line-90"></span>
+<span class="source-line-no">091</span><span id="line-91">  /*</span>
+<span class="source-line-no">092</span><span id="line-92">   * Constructors.</span>
+<span class="source-line-no">093</span><span id="line-93">   */</span>
+<span class="source-line-no">094</span><span id="line-94"></span>
+<span class="source-line-no">095</span><span id="line-95"></span>
+<span class="source-line-no">096</span><span id="line-96">  private BeanTypeList() {</span>
+<span class="source-line-no">097</span><span id="line-97">    super();</span>
+<span class="source-line-no">098</span><span id="line-98">    this.beanTypes = null;</span>
+<span class="source-line-no">099</span><span id="line-99">    this.types = List.of();</span>
+<span class="source-line-no">100</span><span id="line-100">    this.interfaceIndex = -1;</span>
+<span class="source-line-no">101</span><span id="line-101">    this.proxiable = false;</span>
+<span class="source-line-no">102</span><span id="line-102">  }</span>
+<span class="source-line-no">103</span><span id="line-103"></span>
+<span class="source-line-no">104</span><span id="line-104">  private BeanTypeList(final BeanTypes beanTypes,</span>
+<span class="source-line-no">105</span><span id="line-105">                       final Collection&lt;? extends TypeMirror&gt; types,</span>
+<span class="source-line-no">106</span><span id="line-106">                       final int interfaceIndex,</span>
+<span class="source-line-no">107</span><span id="line-107">                       final boolean proxiable) {</span>
+<span class="source-line-no">108</span><span id="line-108">    super();</span>
+<span class="source-line-no">109</span><span id="line-109">    this.beanTypes = requireNonNull(beanTypes, "beanTypes");</span>
+<span class="source-line-no">110</span><span id="line-110">    switch (types) {</span>
+<span class="source-line-no">111</span><span id="line-111">    case Collection&lt;?&gt; c when c.isEmpty() -&gt; {</span>
+<span class="source-line-no">112</span><span id="line-112">      this.types = List.of();</span>
+<span class="source-line-no">113</span><span id="line-113">      this.interfaceIndex = -1;</span>
+<span class="source-line-no">114</span><span id="line-114">      this.proxiable = proxiable;</span>
+<span class="source-line-no">115</span><span id="line-115">    }</span>
+<span class="source-line-no">116</span><span id="line-116">    case BeanTypeList btl -&gt; {</span>
+<span class="source-line-no">117</span><span id="line-117">      this.types = btl;</span>
+<span class="source-line-no">118</span><span id="line-118">      this.interfaceIndex = btl.interfaceIndex;</span>
+<span class="source-line-no">119</span><span id="line-119">      this.proxiable = btl.proxiable;</span>
+<span class="source-line-no">120</span><span id="line-120">    }</span>
+<span class="source-line-no">121</span><span id="line-121">    case SupertypeList stl -&gt; {</span>
+<span class="source-line-no">122</span><span id="line-122">      this.types = stl;</span>
+<span class="source-line-no">123</span><span id="line-123">      this.interfaceIndex = stl.interfaceIndex();</span>
+<span class="source-line-no">124</span><span id="line-124">      this.proxiable = proxiable;</span>
+<span class="source-line-no">125</span><span id="line-125">    }</span>
+<span class="source-line-no">126</span><span id="line-126">    default -&gt; {</span>
+<span class="source-line-no">127</span><span id="line-127">      this.types = List.copyOf(types);</span>
+<span class="source-line-no">128</span><span id="line-128">      this.interfaceIndex = interfaceIndex;</span>
+<span class="source-line-no">129</span><span id="line-129">      this.proxiable = proxiable;</span>
+<span class="source-line-no">130</span><span id="line-130">    }</span>
+<span class="source-line-no">131</span><span id="line-131">    }</span>
+<span class="source-line-no">132</span><span id="line-132">  }</span>
+<span class="source-line-no">133</span><span id="line-133"></span>
+<span class="source-line-no">134</span><span id="line-134"></span>
+<span class="source-line-no">135</span><span id="line-135">  /*</span>
+<span class="source-line-no">136</span><span id="line-136">   * Instance methods.</span>
+<span class="source-line-no">137</span><span id="line-137">   */</span>
+<span class="source-line-no">138</span><span id="line-138"></span>
+<span class="source-line-no">139</span><span id="line-139"></span>
+<span class="source-line-no">140</span><span id="line-140">  @Override // Constable</span>
+<span class="source-line-no">141</span><span id="line-141">  public final Optional&lt;? extends ConstantDesc&gt; describeConstable() {</span>
+<span class="source-line-no">142</span><span id="line-142">    if (this.beanTypes == null) {</span>
+<span class="source-line-no">143</span><span id="line-143">      assert this.isEmpty();</span>
+<span class="source-line-no">144</span><span id="line-144">      return Optional.of(DynamicConstantDesc.of(BSM_INVOKE,</span>
+<span class="source-line-no">145</span><span id="line-145">                                                MethodHandleDesc.ofMethod(STATIC,</span>
+<span class="source-line-no">146</span><span id="line-146">                                                                          BeanTypeList.class.describeConstable().orElseThrow(),</span>
+<span class="source-line-no">147</span><span id="line-147">                                                                          "of",</span>
+<span class="source-line-no">148</span><span id="line-148">                                                                          MethodTypeDesc.of(BeanTypeList.class.describeConstable().orElseThrow()))));</span>
+<span class="source-line-no">149</span><span id="line-149">    }</span>
+<span class="source-line-no">150</span><span id="line-150">    return Constables.describeConstable(this.types)</span>
+<span class="source-line-no">151</span><span id="line-151">      .flatMap(typesDesc -&gt; this.beanTypes.describeConstable()</span>
+<span class="source-line-no">152</span><span id="line-152">               .map(beanTypesDesc -&gt; DynamicConstantDesc.of(BSM_INVOKE,</span>
+<span class="source-line-no">153</span><span id="line-153">                                                            MethodHandleDesc.ofMethod(VIRTUAL,</span>
+<span class="source-line-no">154</span><span id="line-154">                                                                                      this.beanTypes.getClass().describeConstable().orElseThrow(),</span>
+<span class="source-line-no">155</span><span id="line-155">                                                                                      "beanTypes",</span>
+<span class="source-line-no">156</span><span id="line-156">                                                                                      MethodTypeDesc.of(this.getClass().describeConstable().orElseThrow(),</span>
+<span class="source-line-no">157</span><span id="line-157">                                                                                                        CD_Collection)),</span>
+<span class="source-line-no">158</span><span id="line-158">                                                            beanTypesDesc,</span>
+<span class="source-line-no">159</span><span id="line-159">                                                            typesDesc)));</span>
 <span class="source-line-no">160</span><span id="line-160">  }</span>
 <span class="source-line-no">161</span><span id="line-161"></span>
 <span class="source-line-no">162</span><span id="line-162">  @Override // AbstractList&lt;TypeMirror&gt;</span>
-<span class="source-line-no">163</span><span id="line-163">  public final int size() {</span>
-<span class="source-line-no">164</span><span id="line-164">    return this.types.size();</span>
+<span class="source-line-no">163</span><span id="line-163">  public final TypeMirror get(final int index) {</span>
+<span class="source-line-no">164</span><span id="line-164">    return this.types.get(index);</span>
 <span class="source-line-no">165</span><span id="line-165">  }</span>
 <span class="source-line-no">166</span><span id="line-166"></span>
-<span class="source-line-no">167</span><span id="line-167"></span>
-<span class="source-line-no">168</span><span id="line-168">  /*</span>
-<span class="source-line-no">169</span><span id="line-169">   * Static methods.</span>
-<span class="source-line-no">170</span><span id="line-170">   */</span>
-<span class="source-line-no">171</span><span id="line-171"></span>
-<span class="source-line-no">172</span><span id="line-172"></span>
-<span class="source-line-no">173</span><span id="line-173">  /**</span>
-<span class="source-line-no">174</span><span id="line-174">   * Returns a non-{@code null} {@link BeanTypeList} that {@linkplain #isEmpty() is empty}.</span>
-<span class="source-line-no">175</span><span id="line-175">   *</span>
-<span class="source-line-no">176</span><span id="line-176">   * @return a non-{@code null} {@link BeanTypeList} that {@linkplain #isEmpty() is empty}</span>
-<span class="source-line-no">177</span><span id="line-177">   *</span>
-<span class="source-line-no">178</span><span id="line-178">   * @see BeanTypes#beanTypes(Collection)</span>
-<span class="source-line-no">179</span><span id="line-179">   */</span>
-<span class="source-line-no">180</span><span id="line-180">  public static final BeanTypeList of() {</span>
-<span class="source-line-no">181</span><span id="line-181">    return EMPTY_LIST;</span>
-<span class="source-line-no">182</span><span id="line-182">  }</span>
-<span class="source-line-no">183</span><span id="line-183"></span>
-<span class="source-line-no">184</span><span id="line-184">  static final BeanTypeList of(final BeanTypes beanTypes, final Collection&lt;? extends TypeMirror&gt; types) {</span>
-<span class="source-line-no">185</span><span id="line-185">    return of(beanTypes, types, -1, false);</span>
-<span class="source-line-no">186</span><span id="line-186">  }</span>
-<span class="source-line-no">187</span><span id="line-187"></span>
-<span class="source-line-no">188</span><span id="line-188">  static final BeanTypeList of(final BeanTypes beanTypes, final Collection&lt;? extends TypeMirror&gt; types, final boolean proxiable) {</span>
-<span class="source-line-no">189</span><span id="line-189">    return of(beanTypes, types, -1, proxiable);</span>
-<span class="source-line-no">190</span><span id="line-190">  }</span>
-<span class="source-line-no">191</span><span id="line-191"></span>
-<span class="source-line-no">192</span><span id="line-192">  // Called only by BeanTypes. No validation is performed.</span>
-<span class="source-line-no">193</span><span id="line-193">  static final BeanTypeList of(final BeanTypes beanTypes,</span>
-<span class="source-line-no">194</span><span id="line-194">                               final Collection&lt;? extends TypeMirror&gt; types,</span>
-<span class="source-line-no">195</span><span id="line-195">                               final int interfaceIndex,</span>
-<span class="source-line-no">196</span><span id="line-196">                               final boolean proxiable) {</span>
-<span class="source-line-no">197</span><span id="line-197">    return switch (types) {</span>
-<span class="source-line-no">198</span><span id="line-198">    case null -&gt; throw new NullPointerException("types");</span>
-<span class="source-line-no">199</span><span id="line-199">    case Collection&lt;?&gt; c when c.isEmpty() -&gt; EMPTY_LIST;</span>
-<span class="source-line-no">200</span><span id="line-200">    case BeanTypeList btl -&gt; btl;</span>
-<span class="source-line-no">201</span><span id="line-201">    case SupertypeList stl -&gt; new BeanTypeList(beanTypes, stl, stl.interfaceIndex(), proxiable);</span>
-<span class="source-line-no">202</span><span id="line-202">    default -&gt; new BeanTypeList(beanTypes, types, interfaceIndex, proxiable);</span>
-<span class="source-line-no">203</span><span id="line-203">    };</span>
-<span class="source-line-no">204</span><span id="line-204">  }</span>
-<span class="source-line-no">205</span><span id="line-205"></span>
-<span class="source-line-no">206</span><span id="line-206">}</span>
+<span class="source-line-no">167</span><span id="line-167">  /**</span>
+<span class="source-line-no">168</span><span id="line-168">   * Returns a non-{@code null}, immutable, determinate {@link List} containing only interface types.</span>
+<span class="source-line-no">169</span><span id="line-169">   *</span>
+<span class="source-line-no">170</span><span id="line-170">   * &lt;p&gt;The returned {@link List} may be {@linkplain List#isEmpty() empty}.&lt;/p&gt;</span>
+<span class="source-line-no">171</span><span id="line-171">   *</span>
+<span class="source-line-no">172</span><span id="line-172">   * @return a non-{@code null}, immutable, determinate {@link List} containing only interface types</span>
+<span class="source-line-no">173</span><span id="line-173">   */</span>
+<span class="source-line-no">174</span><span id="line-174">  public final List&lt;TypeMirror&gt; interfaces() {</span>
+<span class="source-line-no">175</span><span id="line-175">    final int i = this.interfaceIndex;</span>
+<span class="source-line-no">176</span><span id="line-176">    return i &lt; 0 ? List.of() : this.subList(i, this.size());</span>
+<span class="source-line-no">177</span><span id="line-177">  }</span>
+<span class="source-line-no">178</span><span id="line-178"></span>
+<span class="source-line-no">179</span><span id="line-179">  /**</span>
+<span class="source-line-no">180</span><span id="line-180">   * Returns {@code true} if and only if this {@link BeanTypeList} is &lt;dfn&gt;proxiable&lt;/dfn&gt;.</span>
+<span class="source-line-no">181</span><span id="line-181">   *</span>
+<span class="source-line-no">182</span><span id="line-182">   * @return {@code true} if and only if this {@link BeanTypeList} is &lt;dfn&gt;proxiable&lt;/dfn&gt;</span>
+<span class="source-line-no">183</span><span id="line-183">   *</span>
+<span class="source-line-no">184</span><span id="line-184">   * @see BeanTypes#proxiableElement(Element)</span>
+<span class="source-line-no">185</span><span id="line-185">   *</span>
+<span class="source-line-no">186</span><span id="line-186">   * @spec https://jakarta.ee/specifications/cdi/4.0/jakarta-cdi-spec-4.0#unproxyable CDI Specification, version 4.0,</span>
+<span class="source-line-no">187</span><span id="line-187">   * section 2.2.10</span>
+<span class="source-line-no">188</span><span id="line-188">   */</span>
+<span class="source-line-no">189</span><span id="line-189">  public final boolean proxiable() {</span>
+<span class="source-line-no">190</span><span id="line-190">    return this.proxiable;</span>
+<span class="source-line-no">191</span><span id="line-191">  }</span>
+<span class="source-line-no">192</span><span id="line-192"></span>
+<span class="source-line-no">193</span><span id="line-193">  @Override // AbstractList&lt;TypeMirror&gt;</span>
+<span class="source-line-no">194</span><span id="line-194">  public final int size() {</span>
+<span class="source-line-no">195</span><span id="line-195">    return this.types.size();</span>
+<span class="source-line-no">196</span><span id="line-196">  }</span>
+<span class="source-line-no">197</span><span id="line-197"></span>
+<span class="source-line-no">198</span><span id="line-198"></span>
+<span class="source-line-no">199</span><span id="line-199">  /*</span>
+<span class="source-line-no">200</span><span id="line-200">   * Static methods.</span>
+<span class="source-line-no">201</span><span id="line-201">   */</span>
+<span class="source-line-no">202</span><span id="line-202"></span>
+<span class="source-line-no">203</span><span id="line-203"></span>
+<span class="source-line-no">204</span><span id="line-204">  static final BeanTypeList of() {</span>
+<span class="source-line-no">205</span><span id="line-205">    return EMPTY_LIST;</span>
+<span class="source-line-no">206</span><span id="line-206">  }</span>
+<span class="source-line-no">207</span><span id="line-207"></span>
+<span class="source-line-no">208</span><span id="line-208">  // Called only by BeanTypes. No validation is performed.</span>
+<span class="source-line-no">209</span><span id="line-209">  // Really could be located in BeanTypes if our constructor were package-private.</span>
+<span class="source-line-no">210</span><span id="line-210">  static final BeanTypeList of(final BeanTypes beanTypes,</span>
+<span class="source-line-no">211</span><span id="line-211">                               final Collection&lt;? extends TypeMirror&gt; types,</span>
+<span class="source-line-no">212</span><span id="line-212">                               final int interfaceIndex,</span>
+<span class="source-line-no">213</span><span id="line-213">                               final boolean proxiable) {</span>
+<span class="source-line-no">214</span><span id="line-214">    return switch (types) {</span>
+<span class="source-line-no">215</span><span id="line-215">    case Collection&lt;?&gt; c when c.isEmpty() -&gt; EMPTY_LIST;</span>
+<span class="source-line-no">216</span><span id="line-216">    case BeanTypeList btl -&gt; btl;</span>
+<span class="source-line-no">217</span><span id="line-217">    case SupertypeList stl -&gt; new BeanTypeList(beanTypes, stl, stl.interfaceIndex(), proxiable);</span>
+<span class="source-line-no">218</span><span id="line-218">    default -&gt; new BeanTypeList(beanTypes, types, interfaceIndex, proxiable);</span>
+<span class="source-line-no">219</span><span id="line-219">    };</span>
+<span class="source-line-no">220</span><span id="line-220">  }</span>
+<span class="source-line-no">221</span><span id="line-221"></span>
+<span class="source-line-no">222</span><span id="line-222">}</span>
 
 
 
