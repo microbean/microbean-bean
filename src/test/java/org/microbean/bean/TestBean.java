@@ -1,6 +1,6 @@
 /* -*- mode: Java; c-basic-offset: 2; indent-tabs-mode: nil; coding: utf-8-unix -*-
  *
- * Copyright © 2023–2025 microBean™.
+ * Copyright © 2023–2026 microBean™.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
  * the License. You may obtain a copy of the License at
@@ -17,6 +17,8 @@ import java.lang.constant.Constable;
 
 import java.util.List;
 
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import org.microbean.constant.Constables;
@@ -29,16 +31,24 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 final class TestBean {
 
-  private static final Domain domain = new DefaultDomain();
+  private Domain domain;
 
-  private static final BeanTypes beanTypes = new BeanTypes(domain);
+  private BeanTypes beanTypes;
 
-  private static final Qualifiers qualifiers = new Qualifiers();
+  private Qualifiers qualifiers;
 
   private TestBean() {
     super();
   }
 
+  @BeforeEach
+  final void setup() {
+    this.domain = new DefaultDomain();
+    this.beanTypes = new BeanTypes(domain);
+    this.qualifiers = new Qualifiers(domain, new org.microbean.assign.Qualifiers(domain));
+  }
+  
+  @Disabled // see https://github.com/microbean/microbean-construct/issues/39
   @Test
   final void testConstableStuff() {
     final Factory<String> f = new Constant<>("Hello");
@@ -51,6 +61,7 @@ final class TestBean {
     assertFalse(id.describeConstable().isEmpty());
   }
 
+  @Disabled // see https://github.com/microbean/microbean-construct/issues/39
   @Test
   final void testAnyAndDefaultQualifiersCanBeConstable() {
     assertFalse(Constables.describeConstable(qualifiers.anyAndDefaultQualifiers()).isEmpty());

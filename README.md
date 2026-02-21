@@ -2,6 +2,8 @@
 
 [![Maven Central](https://img.shields.io/maven-central/v/org.microbean/microbean-bean.svg?label=Maven%20Central)](https://search.maven.org/artifact/org.microbean/microbean-bean)
 
+![0% AI](https://img.shields.io/badge/%F0%9F%A4%96_AI-0%25_%F0%9F%8C%BC-brightgreen)
+
 The microBean™ Bean project provides classes and interfaces assisting with implementing dependency injection beans.
 
 # Status
@@ -28,7 +30,7 @@ dependency:
   <groupId>org.microbean</groupId>
   <artifactId>microbean-bean</artifactId>
   <!-- Always check https://central.sonatype.com/artifact/org.microbean/microbean-bean for up-to-date available versions. -->
-  <version>0.0.22</version>
+  <version>0.0.23</version>
 </dependency>
 ```
 

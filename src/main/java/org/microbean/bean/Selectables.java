@@ -1,6 +1,6 @@
 /* -*- mode: Java; c-basic-offset: 2; indent-tabs-mode: nil; coding: utf-8-unix -*-
  *
- * Copyright © 2025 microBean™.
+ * Copyright © 2025–2026 microBean™.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
  * the License. You may obtain a copy of the License at
@@ -23,13 +23,12 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Predicate;
 import java.util.function.ToIntFunction;
 
-import org.microbean.assign.AttributedType;
+import javax.lang.model.type.TypeMirror;
+
 import org.microbean.assign.Matcher;
 import org.microbean.assign.Selectable;
 
 import static java.util.Objects.requireNonNull;
-
-import static org.microbean.bean.Beans.normalize;
 
 /**
  * Utility methods for working with {@link Selectable}s.
@@ -48,7 +47,7 @@ public final class Selectables {
 
   /**
    * Returns a {@link Selectable} that reduces any ambiguity in the results returned by another {@link Selectable},
-   * considering alternate status and rank.
+   * considering notional alternate status and rank.
    *
    * @param <C> the criteria type
    *
@@ -56,10 +55,11 @@ public final class Selectables {
    *
    * @param s a {@link Selectable}; must not be {@code null}
    *
-   * @param p a {@link Predicate} that tests whether an element is an <dfn>alternate</dfn>; must not be {@code null}
+   * @param p a {@link Predicate} that tests whether an element is an <dfn>alternate</dfn>; may be
+   * {@code null} in which case it will be as if {@code e -> false} were supplied
    *
-   * @param ranker a {@link ToIntFunction} that returns a <dfn>rank</dfn> for an alternate; a rank of {@code 0}
-   * indicates no particular rank; must not be {@code null}
+   * @param rankingFunction a {@link ToIntFunction} that returns a <dfn>rank</dfn> for an alternate; a rank of {@code 0}
+   * indicates no particular rank; may be {@code null} in which case it will be as if {@code e -> 0} were supplied
    *
    * @return a non-{@code null} {@link Selectable}
    *
@@ -67,10 +67,13 @@ public final class Selectables {
    */
   public static final <C, E> Selectable<C, E> ambiguityReducing(final Selectable<C, E> s,
                                                                 final Predicate<? super E> p, // are you an alternate?
-                                                                final ToIntFunction<? super E> ranker) { // rank?
+                                                                final ToIntFunction<? super E> rankingFunction) { // rank?
     requireNonNull(s, "s");
-    requireNonNull(p, "p");
-    requireNonNull(ranker, "ranker");
+    if (p == null) {
+      // If there's no way to tell if something is an alternate, then it also has no rank
+      return s;
+    }
+    final ToIntFunction<? super E> ranker = rankingFunction == null ? e -> 0 : rankingFunction;
 
     // Relevant bits:
     //
@@ -153,37 +156,6 @@ public final class Selectables {
       default -> List.copyOf(reductionList);
       };
     };
-  }
-
-  /**
-   * {@linkplain Beans#normalize(Collection) Normalizes} the supplied {@link Collection} of {@link Bean}s and returns a
-   * {@link Selectable} suitable for it and the supplied {@link Matcher}.
-   *
-   * <p>The returned {@link Selectable} does not cache its results.</p>
-   *
-   * @param beans a {@link Collection} of {@link Bean}s; must not be {@code null}
-   *
-   * @param m a {@link Matcher}; must not be {@code null}
-   *
-   * @return a non-{@code null} {@link Selectable}
-   *
-   * @exception NullPointerException if any argument is {@code null}
-   *
-   * @see org.microbean.assign.Selectables#filtering(Collection, java.util.function.BiPredicate)
-   *
-   * @see #ambiguityReducing(Selectable, Predicate, ToIntFunction)
-   *
-   * @see Beans#normalize(Collection)
-   */
-  public static final Selectable<AttributedType, Bean<?>> typesafeFiltering(final Collection<? extends Bean<?>> beans,
-                                                                            final Matcher<? super AttributedType, ? super Id> m) {
-    requireNonNull(m, "m");
-    if (beans.isEmpty()) {
-      return org.microbean.assign.Selectables.empty();
-    }
-    final List<Bean<?>> normalizedBeans = normalize(beans);
-    return
-      org.microbean.assign.Selectables.filtering(normalizedBeans, (b, c) -> m.test(c, b.id()));
   }
 
 }

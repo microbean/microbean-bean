@@ -1,6 +1,6 @@
 /* -*- mode: Java; c-basic-offset: 2; indent-tabs-mode: nil; coding: utf-8-unix -*-
  *
- * Copyright © 2024 microBean™.
+ * Copyright © 2024–2026 microBean™.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
  * the License. You may obtain a copy of the License at
@@ -21,6 +21,7 @@ import java.util.stream.Stream;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ExecutableElement;
 
+// Experimental and possibly incomplete.
 final class Elements {
 
   private Elements() {

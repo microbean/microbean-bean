@@ -64,17 +64,37 @@ import static java.util.Objects.requireNonNull;
  */
 public final class BeanTypeList extends AbstractList<TypeMirror> implements Constable {
 
+
+  /*
+   * Static fields.
+   */
+
+
   private static final BeanTypeList EMPTY_LIST = new BeanTypeList();
 
-  private final BeanTypes beanTypes; // needed only for Constable purposes. This is dumb.
-  
+
+  /*
+   * Instance fields.
+   */
+
+
+  // (We are effectively an inner class of BeanTypes.)
+  private final BeanTypes beanTypes; // needed only for Constable purposes
+
   private final List<TypeMirror> types;
 
   private final int interfaceIndex;
 
   private final boolean proxiable;
 
+
+  /*
+   * Constructors.
+   */
+
+
   private BeanTypeList() {
+    super();
     this.beanTypes = null;
     this.types = List.of();
     this.interfaceIndex = -1;
@@ -87,24 +107,35 @@ public final class BeanTypeList extends AbstractList<TypeMirror> implements Cons
                        final boolean proxiable) {
     super();
     this.beanTypes = requireNonNull(beanTypes, "beanTypes");
-    if (types.isEmpty()) {
+    switch (types) {
+    case Collection<?> c when c.isEmpty() -> {
       this.types = List.of();
       this.interfaceIndex = -1;
       this.proxiable = proxiable;
-    } else if (types instanceof BeanTypeList btl) {
+    }
+    case BeanTypeList btl -> {
       this.types = btl;
       this.interfaceIndex = btl.interfaceIndex;
       this.proxiable = btl.proxiable;
-    } else if (types instanceof SupertypeList stl) {
+    }
+    case SupertypeList stl -> {
       this.types = stl;
       this.interfaceIndex = stl.interfaceIndex();
       this.proxiable = proxiable;
-    } else {
+    }
+    default -> {
       this.types = List.copyOf(types);
       this.interfaceIndex = interfaceIndex;
       this.proxiable = proxiable;
     }
+    }
   }
+
+
+  /*
+   * Instance methods.
+   */
+
 
   @Override // Constable
   public final Optional<? extends ConstantDesc> describeConstable() {
@@ -112,17 +143,17 @@ public final class BeanTypeList extends AbstractList<TypeMirror> implements Cons
       assert this.isEmpty();
       return Optional.of(DynamicConstantDesc.of(BSM_INVOKE,
                                                 MethodHandleDesc.ofMethod(STATIC,
-                                                                          ClassDesc.of(this.getClass().getName()),
+                                                                          BeanTypeList.class.describeConstable().orElseThrow(),
                                                                           "of",
-                                                                          MethodTypeDesc.of(ClassDesc.of(this.getClass().getName())))));
+                                                                          MethodTypeDesc.of(BeanTypeList.class.describeConstable().orElseThrow()))));
     }
     return Constables.describeConstable(this.types)
       .flatMap(typesDesc -> this.beanTypes.describeConstable()
                .map(beanTypesDesc -> DynamicConstantDesc.of(BSM_INVOKE,
                                                             MethodHandleDesc.ofMethod(VIRTUAL,
-                                                                                      ClassDesc.of(this.beanTypes.getClass().getName()),
+                                                                                      this.beanTypes.getClass().describeConstable().orElseThrow(),
                                                                                       "beanTypes",
-                                                                                      MethodTypeDesc.of(ClassDesc.of(this.getClass().getName()),
+                                                                                      MethodTypeDesc.of(this.getClass().describeConstable().orElseThrow(),
                                                                                                         CD_Collection)),
                                                             beanTypesDesc,
                                                             typesDesc)));
@@ -134,11 +165,11 @@ public final class BeanTypeList extends AbstractList<TypeMirror> implements Cons
   }
 
   /**
-   * Returns a non-{@code null}, immutable {@link List} containing only interface types.
+   * Returns a non-{@code null}, immutable, determinate {@link List} containing only interface types.
    *
    * <p>The returned {@link List} may be {@linkplain List#isEmpty() empty}.</p>
    *
-   * @return a non-{@code null}, immutable {@link List} containing only interface types
+   * @return a non-{@code null}, immutable, determinate {@link List} containing only interface types
    */
   public final List<TypeMirror> interfaces() {
     final int i = this.interfaceIndex;
@@ -170,32 +201,17 @@ public final class BeanTypeList extends AbstractList<TypeMirror> implements Cons
    */
 
 
-  /**
-   * Returns a non-{@code null} {@link BeanTypeList} that {@linkplain #isEmpty() is empty}.
-   *
-   * @return a non-{@code null} {@link BeanTypeList} that {@linkplain #isEmpty() is empty}
-   *
-   * @see BeanTypes#beanTypes(Collection)
-   */
-  public static final BeanTypeList of() {
+  static final BeanTypeList of() {
     return EMPTY_LIST;
   }
 
-  static final BeanTypeList of(final BeanTypes beanTypes, final Collection<? extends TypeMirror> types) {
-    return of(beanTypes, types, -1, false);
-  }
-
-  static final BeanTypeList of(final BeanTypes beanTypes, final Collection<? extends TypeMirror> types, final boolean proxiable) {
-    return of(beanTypes, types, -1, proxiable);
-  }
-
   // Called only by BeanTypes. No validation is performed.
+  // Really could be located in BeanTypes if our constructor were package-private.
   static final BeanTypeList of(final BeanTypes beanTypes,
                                final Collection<? extends TypeMirror> types,
                                final int interfaceIndex,
                                final boolean proxiable) {
     return switch (types) {
-    case null -> throw new NullPointerException("types");
     case Collection<?> c when c.isEmpty() -> EMPTY_LIST;
     case BeanTypeList btl -> btl;
     case SupertypeList stl -> new BeanTypeList(beanTypes, stl, stl.interfaceIndex(), proxiable);

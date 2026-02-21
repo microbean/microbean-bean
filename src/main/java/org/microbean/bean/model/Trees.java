@@ -1,6 +1,6 @@
 /* -*- mode: Java; c-basic-offset: 2; indent-tabs-mode: nil; coding: utf-8-unix -*-
  *
- * Copyright © 2024–2025 microBean™.
+ * Copyright © 2024–2026 microBean™.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
  * the License. You may obtain a copy of the License at
@@ -22,6 +22,10 @@ import java.util.function.Function;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
+import static java.util.Objects.requireNonNull;
+
+import static java.util.function.Predicate.not;
+
 final class Trees {
 
   private Trees() {
@@ -35,7 +39,7 @@ final class Trees {
    * <p>No checks are performed for cycles in the resulting graph which means that if the supplied {@link Function} is
    * not well-behaved undefined behavior can result, including infinite loops.</p>
    *
-   * @param element the root node of a notional tree; must not be {@code null}
+   * @param node the root node of a notional tree; must not be {@code null}
    *
    * @param f a {@link Function} that accepts a node in the notional tree and returns a non-{@code null} {@link
    * Iterable} that can {@linkplain Iterable#forEach(Object) iterate over} its immediate children; must not return
@@ -43,17 +47,17 @@ final class Trees {
    *
    * @return a {@link Stream} of nodes in breadth-first order; never {@code null}
    *
-   * @exception NullPointerException if {@code element} or {@code f} is {@code null} or if the return value of an
+   * @exception NullPointerException if {@code node} or {@code f} is {@code null} or if the return value of an
    * invocation of the supplied {@link Function} is {@code null} or notionally contains a {@code null} value
    */
-  // f's output is not checked for cycles or containment of element
-  static final <N> Stream<N> streamBreadthFirst(final N element, final Function<? super N, ? extends Iterable<? extends N>> f) {
+  // f's output is not checked for cycles or containment of node
+  static final <N> Stream<N> streamBreadthFirst(final N node, final Function<? super N, ? extends Iterable<? extends N>> f) {
     final Queue<N> q = new ArrayDeque<>();
     return
-      Stream.iterate(Objects.requireNonNull(element, "element"),
-                     Trees::isNonNull,
-                     e -> {
-                       f.apply(e).forEach(q::add);
+      Stream.iterate(requireNonNull(node, "node"),
+                     not(Objects::isNull),
+                     n -> {
+                       f.apply(n).forEach(q::add);
                        return q.poll();
                      });
   }
@@ -65,7 +69,7 @@ final class Trees {
    * <p>No checks are performed for cycles in the resulting graph which means that if the supplied {@link Function} is
    * not well-behaved undefined behavior can result, including infinite loops.</p>
    *
-   * @param element the root node of a notional tree; must not be {@code null}
+   * @param node the root node of a notional tree; must not be {@code null}
    *
    * @param f a {@link Function} that accepts a node in the notional tree and returns a non-{@code null} {@link
    * Iterable} that can {@linkplain Iterable#forEach(Object) iterate over} its immediate children; must not return
@@ -73,21 +77,17 @@ final class Trees {
    *
    * @return a {@link Stream} of nodes in depth-first order; never {@code null}
    *
-   * @exception NullPointerException if {@code element} or {@code f} is {@code null} or if the return value of an
+   * @exception NullPointerException if {@code node} or {@code f} is {@code null} or if the return value of an
    * invocation of the supplied {@link Function} is {@code null} or notionally contains a {@code null} value
    */
-  static final <N> Stream<N> streamDepthFirst(final N element, final Function<? super N, ? extends Iterable<? extends N>> f) {
+  static final <N> Stream<N> streamDepthFirst(final N node, final Function<? super N, ? extends Iterable<? extends N>> f) {
     // See https://www.techempower.com/blog/2016/10/19/efficient-multiple-stream-concatenation-in-java/
-    // return Stream.concat(Stream.of(element), f.apply(element).stream().flatMap(e -> streamDepthFirst(e, f)));
+    // return Stream.concat(Stream.of(node), f.apply(node).stream().flatMap(e -> streamDepthFirst(e, f)));
     return
-      Stream.of(Stream.of(element),
-                StreamSupport.stream(f.apply(element).spliterator(), false)
+      Stream.of(Stream.of(node),
+                StreamSupport.stream(f.apply(node).spliterator(), false)
                 .flatMap(e -> streamDepthFirst(e, f))) // note recursion
       .flatMap(Function.identity()); // flatMap here also has the nice side effect of imposing order
-  }
-
-  private static final boolean isNonNull(final Object x) {
-    return x != null;
   }
 
 }

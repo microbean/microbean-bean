@@ -1,6 +1,6 @@
 /* -*- mode: Java; c-basic-offset: 2; indent-tabs-mode: nil; coding: utf-8-unix -*-
  *
- * Copyright © 2025 microBean™.
+ * Copyright © 2025–2026 microBean™.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
  * the License. You may obtain a copy of the License at
@@ -16,9 +16,11 @@ package org.microbean.bean;
 import java.util.Iterator;
 import java.util.List;
 
+import javax.lang.model.AnnotatedConstruct;
+
 import org.junit.jupiter.api.Test;
 
-import org.microbean.assign.AttributedType;
+import org.microbean.assign.Annotated;
 
 import org.microbean.construct.Domain;
 
@@ -53,9 +55,9 @@ final class TestReferences {
     public <R> R reference(final Bean<R> bean) {
       throw new IllegalArgumentException();
     }
-    
+
     @Override
-    public <S> DummyReferences<S> references(final AttributedType t) {
+    public <S> DummyReferences<S> references(final Annotated<? extends AnnotatedConstruct> t) {
       return new DummyReferences<>();
     }
 
@@ -68,7 +70,7 @@ final class TestReferences {
     public final int size() {
       return 0;
     }
-    
+
   }
-  
+
 }

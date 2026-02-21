@@ -1,6 +1,6 @@
 /* -*- mode: Java; c-basic-offset: 2; indent-tabs-mode: nil; coding: utf-8-unix -*-
  *
- * Copyright © 2024–2025 microBean™.
+ * Copyright © 2024–2026 microBean™.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
  * the License. You may obtain a copy of the License at
@@ -15,7 +15,6 @@ package org.microbean.bean;
 
 import java.util.List;
 
-import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -23,6 +22,8 @@ import org.junit.jupiter.api.Test;
 
 import org.microbean.construct.DefaultDomain;
 import org.microbean.construct.Domain;
+
+import static javax.lang.model.type.TypeKind.INT;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertSame;
@@ -49,20 +50,20 @@ final class TestBeanTypes {
 
   @Test
   final void testDirectSupertypesOfintAreEmpty() {
-    final List<? extends TypeMirror> ts = domain.directSupertypes(domain.primitiveType(TypeKind.INT));
+    final List<? extends TypeMirror> ts = domain.directSupertypes(domain.primitiveType(INT));
     assertTrue(ts.isEmpty()); // although note JLS 4.10.1; oh well
   }
 
   @Test
   final void testSupertypesOfint() {
-    final List<? extends TypeMirror> ts = beanTypes.supertypes(domain.primitiveType(TypeKind.INT));
+    final List<? extends TypeMirror> ts = beanTypes.supertypes(domain.primitiveType(INT));
     assertEquals(1, ts.size());
     assertEquals("int", erasedName(ts.get(0)));
   }
 
   @Test
   final void testBeanTypesOfint() {
-    final List<? extends TypeMirror> ts = beanTypes.beanTypes(domain.primitiveType(TypeKind.INT));
+    final List<? extends TypeMirror> ts = beanTypes.beanTypes(domain.primitiveType(INT));
     assertEquals(2, ts.size());
     assertEquals("int", erasedName(ts.get(0)));
     assertEquals("java.lang.Object", erasedName(ts.get(1))); // per CDI specification

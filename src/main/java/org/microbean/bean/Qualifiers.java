@@ -1,6 +1,6 @@
 /* -*- mode: Java; c-basic-offset: 2; indent-tabs-mode: nil; coding: utf-8-unix -*-
  *
- * Copyright © 2025 microBean™.
+ * Copyright © 2025–2026 microBean™.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
  * the License. You may obtain a copy of the License at
@@ -13,242 +13,290 @@
  */
 package org.microbean.bean;
 
+import java.lang.constant.ClassDesc;
+import java.lang.constant.Constable;
+import java.lang.constant.ConstantDesc;
+import java.lang.constant.DynamicConstantDesc;
+
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 
-import org.microbean.attributes.Attributes;
+import java.util.function.Predicate;
+
+import javax.lang.model.element.AnnotationMirror;
+import javax.lang.model.element.Element;
+import javax.lang.model.element.ExecutableElement;
+import javax.lang.model.element.Name;
+import javax.lang.model.element.QualifiedNameable;
+import javax.lang.model.element.TypeElement;
+import javax.lang.model.element.VariableElement;
+
+import org.microbean.construct.Domain;
+
+import org.microbean.construct.element.SyntheticAnnotationMirror;
+import org.microbean.construct.element.SyntheticAnnotationTypeElement;
+import org.microbean.construct.element.SyntheticAnnotationValue;
+import org.microbean.construct.element.SyntheticName;
+import org.microbean.construct.element.UniversalElement;
+
+import static java.lang.constant.ConstantDescs.BSM_INVOKE;
+import static java.lang.constant.ConstantDescs.NULL;
+
+import static java.lang.constant.MethodHandleDesc.ofConstructor;
+
+import static java.util.Collections.unmodifiableList;
+
+import static java.util.Objects.requireNonNull;
+
+import static javax.lang.model.element.ElementKind.ANNOTATION_TYPE;
+import static javax.lang.model.element.ElementKind.ENUM_CONSTANT;
 
 /**
- * A {@link org.microbean.assign.Qualifiers} extended to work with commonly-used {@linkplain #anyQualifier() any},
- * {@linkplain #defaultQualifier() default}, and {@linkplain #primordialQualifier() primordial} qualifiers.
+ * A utility class for working with <dfn>qualifiers</dfn>.
  *
  * @author <a href="https://about.me/lairdnelson" target="_top">Laird Nelson</a>
  *
  * @see org.microbean.assign.Qualifiers
- * 
- * @see Attributes
  */
-public class Qualifiers extends org.microbean.assign.Qualifiers {
+// Experimental. First foray into replacing Attributes with (synthetic) AnnotationMirrors.
+public class Qualifiers implements Constable {
 
-  private final Attributes ANY_QUALIFIER;
 
-  private final List<Attributes> ANY_QUALIFIERS;
+  /*
+   * Instance fields.
+   */
 
-  private final Attributes DEFAULT_QUALIFIER;
 
-  private final List<Attributes> DEFAULT_QUALIFIERS;
+  private final org.microbean.assign.Qualifiers aq;
 
-  private final List<Attributes> ANY_AND_DEFAULT_QUALIFIERS;
+  private final AnnotationMirror anyQualifier;
 
-  private final Attributes PRIMORDIAL_QUALIFIER;
+  private final List<AnnotationMirror> anyQualifiers;
 
-  private final List<Attributes> PRIMORDIAL_QUALIFIERS;
+  private final AnnotationMirror defaultQualifier;
+
+  private final List<AnnotationMirror> defaultQualifiers;
+
+  private final List<AnnotationMirror> anyAndDefaultQualifiers;
+
+
+  /*
+   * Constructors.
+   */
+
 
   /**
    * Creates a new {@link Qualifiers}.
+   *
+   * @param d a non-{@code null} {@link Domain}
+   *
+   * @param aq a non-{@code null} {@link org.microbean.assign.Qualifiers}
+   *
+   * @exception NullPointerException if {@code aq} is {@code null}
+   *
+   * @see #Qualifiers(Domain, org.microbean.assign.Qualifiers, AnnotationMirror, AnnotationMirror)
    */
-  public Qualifiers() {
+  public Qualifiers(final Domain d, final org.microbean.assign.Qualifiers aq) {
+    this(d, aq, null, null);
+  }
+
+  /**
+   * Creates a new {@link Qualifiers}.
+   *
+   * @param aq a non-{@code null} {@link org.microbean.assign.Qualifiers}
+   *
+   * @param anyQualifier a non-{@code null} {@link AnnotationMirror} representing the <dfn>any qualifier</dfn>
+   *
+   * @param defaultQualifier a non-{@code null} {@link AnnotationMirror} representing the <dfn>default qualifier</dfn>
+   *
+   * @exception NullPointerException if any argument is {@code null}
+   *
+   * @see org.microbean.assign.Qualifiers
+   */
+  public Qualifiers(final org.microbean.assign.Qualifiers aq,
+                    final AnnotationMirror anyQualifier,
+                    final AnnotationMirror defaultQualifier) {
+    this(null, aq, requireNonNull(anyQualifier, "anyQualifier"), requireNonNull(defaultQualifier, "defaultQualifier"));
+  }
+
+  /**
+   * Creates a new {@link Qualifiers}.
+   *
+   * @param d a {@link Domain}; may be {@code null} if both {@code anyQualifier} and {@code defaultQualifier} are
+   * non-{@code null}
+   *
+   * @param aq a non-{@code null} {@link org.microbean.assign.Qualifiers}
+   *
+   * @param anyQualifier a (possibly {@code null}) {@link AnnotationMirror} representing the <dfn>any qualifier</dfn>;
+   * if {@code null}, then {@code d} must be non-{@code null}
+   *
+   * @param defaultQualifier a (possibly {@code null}) {@link AnnotationMirror} representing the <dfn>default
+   * qualifier</dfn>; if {@code null}, then {@code d} must be non-{@code null}
+   *
+   * @exception NullPointerException if {@code aq} is {@code null} or if {@code d} is {@code null} in certain situations
+   *
+   * @see org.microbean.assign.Qualifiers
+   */
+  public Qualifiers(final Domain d,
+                    final org.microbean.assign.Qualifiers aq,
+                    final AnnotationMirror anyQualifier,
+                    final AnnotationMirror defaultQualifier) {
     super();
-    this.ANY_QUALIFIER = Attributes.of("Any", this.qualifiers());
-    this.ANY_QUALIFIERS = List.of(this.ANY_QUALIFIER);
+    this.aq = requireNonNull(aq, "aq");
+    if (anyQualifier == null || defaultQualifier == null) {
+      final List<? extends AnnotationMirror> as = d.typeElement("java.lang.annotation.Documented").getAnnotationMirrors();
+      assert as.size() == 3; // @Documented, @Retention, @Target, in that order, all annotated in turn with each other
+      final List<SyntheticAnnotationValue> savs = new ArrayList<>(4);
+      for (final Element e : d.typeElement("java.lang.annotation.ElementType").getEnclosedElements()) {
+        if (e.getKind() == ENUM_CONSTANT && e instanceof VariableElement ve) {
+          final Name n = e.getSimpleName();
+          if (n.contentEquals("TYPE") || n.contentEquals("METHOD") || n.contentEquals("FIELD") || n.contentEquals("PARAMETER")) {
+            savs.add(new SyntheticAnnotationValue(ve));
+          }
+        }
+      }
+      final AnnotationMirror targetAnnotation =
+        new SyntheticAnnotationMirror(d.typeElement("java.lang.annotation.Target"), Map.of("value", savs));
+      final List<AnnotationMirror> metaAnnotations =
+        List.of(aq.metaQualifier(),
+                as.get(1), // @Retention
+                targetAnnotation, // @Target
+                as.get(0)); // @Documented
+      this.anyQualifier =
+        anyQualifier == null ?
+        new SyntheticAnnotationMirror(new SyntheticAnnotationTypeElement(metaAnnotations, "Any")) :
+        anyQualifier;
+      this.defaultQualifier =
+        defaultQualifier == null ?
+        new SyntheticAnnotationMirror(new SyntheticAnnotationTypeElement(metaAnnotations, "Default")) :
+        defaultQualifier;
+    } else {
+      this.anyQualifier = anyQualifier;
+      this.defaultQualifier = defaultQualifier;
+    }
+    this.anyQualifiers = List.of(this.anyQualifier);
+    this.defaultQualifiers = List.of(this.defaultQualifier);
+    this.anyAndDefaultQualifiers = List.of(this.anyQualifier, this.defaultQualifier);
+  }
 
-    this.DEFAULT_QUALIFIER = Attributes.of("Default", this.qualifiers());
-    this.DEFAULT_QUALIFIERS = List.of(this.DEFAULT_QUALIFIER);
 
-    this.ANY_AND_DEFAULT_QUALIFIERS = List.of(ANY_QUALIFIER, DEFAULT_QUALIFIER);
+  /*
+   * Instance methods.
+   */
 
-    this.PRIMORDIAL_QUALIFIER = Attributes.of("Primordial", this.qualifiers());
-    this.PRIMORDIAL_QUALIFIERS = List.of(PRIMORDIAL_QUALIFIER);
+
+  /**
+   * Returns a non-{@code null}, determinate, immutable {@link List} housing only the {@linkplain #anyQualifier()
+   * <dfn>any qualifier</dfn>} and {@link #defaultQualifier() <dfn>default qualifier</dfn>}.
+   *
+   * @return a non-{@code null}, determinate, immutable {@link List} housing only the {@linkplain #anyQualifier()
+   * <dfn>any qualifier</dfn>} and {@linkplain #defaultQualifier() <dfn>default qualifier</dfn>}
+   */
+  public final List<AnnotationMirror> anyAndDefaultQualifiers() {
+    return this.anyAndDefaultQualifiers;
   }
 
   /**
-   * Returns an unmodifiable {@link List} consisting solely of the unattributed <dfn>any qualifier</dfn> and the
-   * <dfn>default qualifier</dfn>.
+   * Returns the non-{@code null}, determinate {@link AnnotationMirror} representing the <dfn>any qualifier</dfn>.
    *
-   * @return an unmodifiable {@link List} consisting solely of the unattributed any qualifier and the default qualifier;
-   * never {@code null}
+   * @return the non-{@code null}, determinate {@link AnnotationMirror} representing the <dfn>any qualifier</dfn>
+   */
+  public final AnnotationMirror anyQualifier() {
+    return this.anyQualifier;
+  }
+
+  /**
+   * Returns a non-{@code null}, determinate, immutable {@link List} housing only the {@linkplain #anyQualifier()
+   * <dfn>any qualifier</dfn>}.
+   *
+   * @return a non-{@code null}, determinate, immutable {@link List} housing only the {@linkplain #anyQualifier()
+   * <dfn>any qualifier</dfn>}
+   */
+  public final List<AnnotationMirror> anyQualifiers() {
+    return this.anyQualifiers;
+  }
+
+  /**
+   * Returns {@code true} if and only if the supplied {@link AnnotationMirror} is {@linkplain
+   * org.microbean.assign.Qualifiers#sameAnnotation(AnnotationMirror, AnnotationMirror) the same} as the {@linkplain
+   * #anyQualifier() <dfn>any qualifier</dfn>}.
+   *
+   * @param a a non-{@code null} {@link AnnotationMirror}
+   *
+   * @return {@code true} if and only if the supplied {@link AnnotationMirror} is {@linkplain
+   * org.microbean.assign.Qualifiers#sameAnnotation(AnnotationMirror, AnnotationMirror) the same} as the {@linkplain
+   * #anyQualifier() <dfn>any qualifier</dfn>}
+   *
+   * @exception NullPointerException if {@code a} is {@code null}
    *
    * @see #anyQualifier()
    *
-   * @see #defaultQualifier()
+   * @see org.microbean.assign.Qualifiers#sameAnnotation(AnnotationMirror, AnnotationMirror)
    */
-  public List<Attributes> anyAndDefaultQualifiers() {
-    return ANY_AND_DEFAULT_QUALIFIERS;
+  public final boolean anyQualifier(final AnnotationMirror a) {
+    return this.aq.sameAnnotation(this.anyQualifier, a);
   }
 
   /**
-   * Returns the unattributed <dfn>any qualifier</dfn>.
+   * Returns the non-{@code null}, determinate {@link AnnotationMirror} representing the <dfn>default qualifier</dfn>.
    *
-   * @return the <dfn>any qualifier</dfn>; never {@code null}
-   *
-   * @see #anyQualifiers()
+   * @return the non-{@code null}, determinate {@link AnnotationMirror} representing the <dfn>default qualifier</dfn>
    */
-  public Attributes anyQualifier() {
-    return ANY_QUALIFIER;
+  public final AnnotationMirror defaultQualifier() {
+    return this.defaultQualifier;
   }
 
   /**
-   * Returns {@code true} if and only if the supplied {@link Attributes} {@linkplain Attributes#equals(Object) is equal
-   * to} the unattributed {@linkplain #anyQualifier() any qualifier}.
+   * Returns a non-{@code null}, determinate, immutable {@link List} housing only the {@linkplain #defaultQualifier()
+   * <dfn>default qualifier</dfn>}.
    *
-   * @param a an {@link Attributes}; must not be {@code null}
+   * @return a non-{@code null}, determinate, immutable {@link List} housing only the {@linkplain #defaultQualifier()
+   * <dfn>default qualifier</dfn>}
+   */
+  public final List<AnnotationMirror> defaultQualifiers() {
+    return this.defaultQualifiers;
+  }
+
+  /**
+   * Returns {@code true} if and only if the supplied {@link AnnotationMirror} is {@linkplain
+   * org.microbean.assign.Qualifiers#sameAnnotation(AnnotationMirror, AnnotationMirror) the same} as the {@linkplain
+   * #defaultQualifier() <dfn>default qualifier</dfn>}.
    *
-   * @return {@code true} if and only if the supplied {@link Attributes} {@linkplain Attributes#equals(Object) is equal
-   * to} the unattributed {@linkplain #anyQualifier() any qualifier}
+   * @param a a non-{@code null} {@link AnnotationMirror}
+   *
+   * @return {@code true} if and only if the supplied {@link AnnotationMirror} is {@linkplain
+   * org.microbean.assign.Qualifiers#sameAnnotation(AnnotationMirror, AnnotationMirror) the same} as the {@linkplain
+   * #defaultQualifier() <dfn>default qualifier</dfn>}
    *
    * @exception NullPointerException if {@code a} is {@code null}
-   */
-  public boolean anyQualifier(final Attributes a) {
-    return this.anyQualifier() == a || this.anyQualifier().equals(a) && this.qualifier(a);
-  }
-
-  /**
-   * Returns an immutable {@link List} consisting solely of the unattributed <dfn>any qualifier</dfn>.
-   *
-   * @return an immutable {@link List}; never {@code null}
-   *
-   * @see #anyQualifier()
-   */
-  public List<Attributes> anyQualifiers() {
-    return ANY_QUALIFIERS;
-  }
-
-  /**
-   * Returns the <dfn>default qualifier</dfn>.
-   *
-   * @return the <dfn>default qualifier</dfn>; never {@code null}
-   *
-   * @see #defaultQualifiers()
-   */
-  public Attributes defaultQualifier() {
-    return DEFAULT_QUALIFIER;
-  }
-
-  /**
-   * Returns {@code true} if and only if the supplied {@link Attributes} {@linkplain
-   * Attributes#equals(Object) is equal to} the {@linkplain #defaultQualifier() default qualifier}.
-   *
-   * @param a an {@link Attributes}; must not be {@code null}
-   *
-   * @return {@code true} if and only if the supplied {@link Attributes} {@linkplain
-   * Attributes#equals(Object) is equal to} the {@linkplain #defaultQualifier() default qualifier}
-   *
-   * @exception NullPointerException if {@code a} is {@code null}
-   */
-  public boolean defaultQualifier(final Attributes a) {
-    return this.defaultQualifier() == a || this.defaultQualifier().equals(a) && qualifier(a);
-  }
-
-  /**
-   * Returns an immutable {@link List} consisting solely of the <dfn>default qualifier</dfn>.
-   *
-   * @return an immutable {@link List}; never {@code null}
    *
    * @see #defaultQualifier()
+   *
+   * @see org.microbean.assign.Qualifiers#sameAnnotation(AnnotationMirror, AnnotationMirror)
    */
-  public List<Attributes> defaultQualifiers() {
-    return DEFAULT_QUALIFIERS;
+  public final boolean defaultQualifier(final AnnotationMirror a) {
+    return this.aq.sameAnnotation(this.defaultQualifier, a);
   }
 
-  /**
-   * Returns an {@link Attributes} that is {@linkplain Attributes#equals(Object) equal to} the supplied {@link
-   * Attributes}.
-   *
-   * <p>The returned {@link Attributes} may be the supplied {@link Attributes} or a different instance.</p>
-   *
-   * @param a an {@link Attributes}; must not be {@code null}
-   *
-   * @return an {@link Attributes} that is {@linkplain Attributes#equals(Object) equal to} the supplied {@link
-   * Attributes}; never {@code null}
-   *
-   * @exception NullPointerException if {@code a} is {@code null}
-   */
-  public Attributes normalize(final Attributes a) {
-    return switch (a) {
-    case null -> throw new NullPointerException("a");
-    case Attributes q when this.defaultQualifier(q) -> this.defaultQualifier();
-    default -> super.normalize(a);
-    };
-  }
-
-  /**
-   * Returns an immutable {@link List} of {@link Attributes}s that is {@linkplain List#equals(Object) equal to} the
-   * supplied {@link List}.
-   *
-   * <p>The returned {@link List} may be the supplied {@link List} or a different instance.</p>
-   *
-   * @param list a {@link List} of {@link Attributes}s; must not be {@code null}
-   *
-   * @return an immutable {@link List} of {@link Attributes}s that is {@linkplain List#equals(Object) equal to} the
-   * supplied {@link List}; never {@code null}
-   *
-   * @exception NullPointerException if {@code list} is {@code null}
-   */
-  public List<Attributes> normalize(final List<Attributes> list) {
-    return switch (list.size()) {
-    case 0 -> List.of();
-    case 1 -> list.equals(this.defaultQualifiers()) ? this.defaultQualifiers() : List.copyOf(list);
-    default -> super.normalize(list);
-    };
-  }
-
-  /**
-   * Returns the <dfn>primordial qualifier</dfn>.
-   *
-   * @return the <dfn>primordial qualifier</dfn>; never {@code null}
-   *
-   * @see #primordialQualifiers()
-   */
-  public Attributes primordialQualifier() {
-    return PRIMORDIAL_QUALIFIER;
-  }
-
-  /**
-   * Returns {@code true} if and only if the supplied {@link Attributes} {@linkplain
-   * Attributes#equals(Object) is equal to} the {@linkplain #primordialQualifier() primordial qualifier}.
-   *
-   * @param a an {@link Attributes}; must not be {@code null}
-   *
-   * @return {@code true} if and only if the supplied {@link Attributes} {@linkplain
-   * Attributes#equals(Object) is equal to} the {@linkplain #primordialQualifier() primordial qualifier}
-   *
-   * @exception NullPointerException if {@code a} is {@code null}
-   */
-  public boolean primordialQualifier(final Attributes a) {
-    return this.primordialQualifier() == a || this.primordialQualifier().equals(a) && this.qualifier(a);
-  }
-
-  /**
-   * Returns an immutable {@link List} consisting solely of the <dfn>primordial qualifier</dfn>.
-   *
-   * @return an immutable {@link List}; never {@code null}
-   *
-   * @see #primordialQualifier()
-   */
-  public List<Attributes> primordialQualifiers() {
-    return PRIMORDIAL_QUALIFIERS;
-  }
-
-  /**
-   * Returns an unmodifiable {@link List} consisting only of those {@link Attributes} in the supplied {@link
-   * Collection} that {@linkplain #qualifier(Attributes) are qualifiers}.
-   *
-   * @param c a {@link Collection} of {@link Attributes}s; must not be {@code null}
-   *
-   * @return an unmodifiable {@link List} consisting only of those {@link Attributes}s in the supplied {@link
-   * Collection} that {@linkplain #qualifier(Attributes) are qualifiers}; never {@code null}
-   *
-   * @exception NullPointerException if {@code c} is {@code null}
-   */
-  public List<Attributes> qualifiers(final Collection<? extends Attributes> c) {
-    return switch (c) {
-    case Collection<?> c0 when c0.isEmpty() -> List.of();
-    case Collection<?> c0 when c0.equals(defaultQualifiers()) -> defaultQualifiers();
-    case Collection<?> c0 when c0.equals(anyAndDefaultQualifiers()) -> anyAndDefaultQualifiers();
-    default -> super.qualifiers(c);
-    };
+  @Override // Constable
+  public Optional<? extends ConstantDesc> describeConstable() {
+    final ClassDesc cdAnnotationMirror = AnnotationMirror.class.describeConstable().orElseThrow();
+    return this.aq.describeConstable()
+      .flatMap(aqDesc -> (this.anyQualifier instanceof Constable c ? c.describeConstable() : Optional.<ConstantDesc>empty())
+               .flatMap(anyQualifierDesc -> (this.defaultQualifier instanceof Constable c ? c.describeConstable() : Optional.<ConstantDesc>empty())
+                        .map(defaultQualifierDesc -> DynamicConstantDesc.of(BSM_INVOKE,
+                                                                            ofConstructor(this.getClass().describeConstable().orElseThrow(),
+                                                                                          Domain.class.describeConstable().orElseThrow(),
+                                                                                          org.microbean.assign.Qualifiers.class.describeConstable().orElseThrow(),
+                                                                                          cdAnnotationMirror,
+                                                                                          cdAnnotationMirror),
+                                                                            NULL,
+                                                                            aqDesc,
+                                                                            anyQualifierDesc,
+                                                                            defaultQualifierDesc))));
   }
 
 }

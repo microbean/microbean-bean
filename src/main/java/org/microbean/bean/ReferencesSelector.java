@@ -1,6 +1,6 @@
 /* -*- mode: Java; c-basic-offset: 2; indent-tabs-mode: nil; coding: utf-8-unix -*-
  *
- * Copyright © 2025 microBean™.
+ * Copyright © 2025–2026 microBean™.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
  * the License. You may obtain a copy of the License at
@@ -13,7 +13,9 @@
  */
 package org.microbean.bean;
 
-import org.microbean.assign.AttributedType;
+import javax.lang.model.AnnotatedConstruct;
+
+import org.microbean.assign.Annotated;
 
 import org.microbean.construct.Domain;
 
@@ -22,9 +24,9 @@ import org.microbean.construct.Domain;
  *
  * @author <a href="https://about.me/lairdnelson" target="_top">Laird Nelson</a>
  *
- * @see #references(AttributedType)
+ * @see #references(Annotated)
  *
- * @see #reference(AttributedType)
+ * @see #reference(Annotated)
  *
  * @see References
  */
@@ -42,45 +44,42 @@ public interface ReferencesSelector {
    */
   public boolean destroy(final Object r); // e.g. CDI's Instance#destroy(Object); works only on normal- and @Dependent-scoped objects
 
-  // I don't like this at all. But you need something that can make, e.g., TypeMirrors, so that you can create
-  // AttributedTypes, which you need to call the other methods in this interface. Every other type can be acquired at
-  // runtime via a ReferencesSelector, but you need a Domain to kick start the process.
+  // I don't like this at all. But you need something that can make, e.g., AnnotatedConstructs, so that you can call the other
+  // methods in this interface. Every other type can be acquired at runtime via a ReferencesSelector, but you need a
+  // Domain to kick start the process.
   /**
-   * Returns a {@link Domain} that can be used to produce {@link javax.lang.model.type.TypeMirror}s so that {@link
-   * AttributedType} instances used by the {@link #references(AttributedType)} and {@link #reference(AttributedType)}
-   * methods may be created.
-   *
-   * <p>Implementations of this method must not return {@code null}.</p>
+   * Returns a non-{@code null} {@link Domain} that can be used to furnish {@link javax.lang.model.AnnotatedConstruct}s.
    *
    * <p>Implementations of this method must be safe for concurrent use by multiple threads.</p>
-   *
-   * <p>Implementations of this method must return a determinate value.</p>
    *
    * <h4>Design Note</h4>
    *
    * <p>Without this method, componenents using a {@link ReferencesSelector} will have to arrange to have their own
    * {@link Domain} somehow. Inconveniently, this is the only type in the system that cannot be acquired by an
-   * invocation of the {@link #references(AttributedType)} method, since you need a {@link Domain} to make an {@link
-   * AttributedType}.</p>
+   * invocation of the {@link #references(Annotated)} method, since you need a {@link Domain} to make an {@link
+   * Annotated Annotated&lt;? extends AnnotatedConstruct&gt;}.</p>
    *
    * @return a non-{@code null} {@link Domain}
+   *
+   * @see Domain
    */
   public Domain domain();
 
   /**
-   * Returns a contextual reference of the relevant type appropriate for the supplied {@link Bean}.
+   * Returns a non-{@code null}, determinate, contextual reference appropriate for the supplied {@link Bean}.
    *
    * <p>Implementations of this method must be safe for concurrent use by multiple threads.</p>
    *
-   * <p>Implementations of this method must, directly or indirectly, use the supplied {@link Bean}'s {@linkplain
-   * Bean#factory() affiliated <code>Factory</code>} to {@linkplain Factory#create(Creation) create} any contextual
-   * instance underlying the contextual reference to be returned.</p>
+   * <p>Implementations of this method must, directly or indirectly, must ensure that ultimately the supplied {@link
+   * Bean}'s {@linkplain Bean#factory() affiliated <code>Factory</code>} is the mechanism used, and no other is used, to
+   * {@linkplain Factory#create(Creation) create} any contextual instance underlying the contextual reference to be
+   * returned.</p>
    *
    * @param <R> the contextual reference type
    *
-   * @param bean a {@link Bean}; must not be {@code null}
+   * @param bean a non-{@code null} {@link Bean}
    *
-   * @return a non-{@code null} contextual reference
+   * @return a non-{@code null}, determinate, contextual reference appropriate for the supplied {@link Bean}
    *
    * @exception NullPointerException if {@code bean} is {@code null}
    *
@@ -96,44 +95,105 @@ public interface ReferencesSelector {
   public <R> R reference(final Bean<R> bean);
 
   /**
-   * Returns a {@link References} capable of locating contextual references of the relevant type.
+   * Returns a non-{@code null}, determinate {@link References} capable of locating contextual references compatible
+   * with the supplied {@link Annotated Annotated&lt;? extends AnnotatedConstruct&gt;}.
    *
    * @param <R> the contextual reference type
    *
-   * @param t an {@link AttributedType} describing the contextual reference type; must not be {@code null}
+   * @param aac a non-{@code null} {@link Annotated Annotated&lt;? extends AnnotatedConstruct&gt;} describing the
+   * putative contextual reference; must represent {@code <R>}
    *
-   * @return a non-{@code null} {@link References}
+   * @return a non-{@code null}, determinate {@link References}
    *
-   * @exception NullPointerException if {@code t} is {@code null}
+   * @exception NullPointerException if {@code aac} is {@code null}
    *
-   * @exception IllegalArgumentException if {@code t} is unsuitable in any way
+   * @exception IllegalArgumentException if {@code aac} is unsuitable in any way
    *
    * @see References
+   *
+   * @see Annotated#of(AnnotatedConstruct)
    */
-  public <R> References<R> references(final AttributedType t);
+  public <R> References<R> references(final Annotated<? extends AnnotatedConstruct> aac);
+
+  /**
+   * Returns a non-{@code null}, determinate {@link References} capable of locating contextual references compatible
+   * with the supplied {@link AnnotatedConstruct}.
+   *
+   * @param <R> the contextual reference type
+   *
+   * @param ac a non-{@code null} {@link AnnotatedConstruct} describing the putative contextual reference; must represent
+   * {@code <R>}
+   *
+   * @return a non-{@code null}, determinate {@link References}
+   *
+   * @exception NullPointerException if {@code ac} is {@code null}
+   *
+   * @exception IllegalArgumentException if {@code ac} is unsuitable in any way
+   *
+   * @see References
+   *
+   * @see Annotated#of(AnnotatedConstruct)
+   *
+   * @deprecated Please use the {@link #references(Annotated)} method instead.
+   */
+  @Deprecated
+  public default <R> References<R> references(final AnnotatedConstruct ac) {
+    return references(Annotated.of(ac));
+  }
 
   /**
    * A convenience method that acquires and returns what is presumed, possibly incorrectly, to be the sole contextual
-   * reference of the relevant type.
+   * reference compatible with the supplied {@link AnnotatedConstruct}.
    *
    * @param <R> the contextual reference type
    *
-   * @param t an {@link AttributedType} describing the contextual reference type; must not be {@code null}
+   * @param ac a non-{@code null} {@link AnnotatedConstruct} describing the putative contextual reference; must
+   * represent {@code <R>}
    *
-   * @return a non-{@code null} contextual reference
+   * @return a non-{@code null}, determinate contextual reference
    *
-   * @exception NullPointerException if {@code t} is {@code null}
+   * @exception NullPointerException if {@code ac} is {@code null}
    *
-   * @exception UnsatisfiedResolutionException if there is no contextual reference for the relevant type
+   * @exception UnsatisfiedResolutionException if there is no compatible contextual reference
    *
-   * @exception AmbiguousResolutionException if there is more than one contextual reference for the relevant type
+   * @exception AmbiguousResolutionException if there is more than one compatible contextual reference
    *
-   * @see #references(AttributedType)
+   * @see #references(Annotated)
+   *
+   * @see Annotated#of(AnnotatedConstruct)
+   *
+   * @see References#get()
+   *
+   * @deprecated Please use the {@link #reference(Annotated)} method instead.
+   */
+  @Deprecated
+  public default <R> R reference(final AnnotatedConstruct ac) {
+    return this.<R>reference(Annotated.of(ac));
+  }
+
+  /**
+   * A convenience method that acquires and returns what is presumed, possibly incorrectly, to be the sole contextual
+   * reference compatible with the supplied {@link Annotated Annotated&lt;? extends AnnotatedConstruct&gt;}.
+   *
+   * @param <R> the contextual reference type
+   *
+   * @param aac a non-{@code null} {@link Annotated Annotated&lt;? extends AnnotatedConstruct&gt;} describing the
+   * putative contextual reference; must represent {@code <R>}
+   *
+   * @return a non-{@code null}, determinate contextual reference
+   *
+   * @exception NullPointerException if {@code aac} is {@code null}
+   *
+   * @exception UnsatisfiedResolutionException if there is no compatible contextual reference
+   *
+   * @exception AmbiguousResolutionException if there is more than one compatible contextual reference
+   *
+   * @see #references(Annotated)
    *
    * @see References#get()
    */
-  public default <R> R reference(final AttributedType t) {
-    return this.<R>references(t).get();
+  public default <R> R reference(final Annotated<? extends AnnotatedConstruct> aac) {
+    return this.<R>references(aac).get();
   }
 
 }

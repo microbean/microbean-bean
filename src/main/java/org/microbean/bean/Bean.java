@@ -1,6 +1,6 @@
 /* -*- mode: Java; c-basic-offset: 2; indent-tabs-mode: nil; coding: utf-8-unix -*-
  *
- * Copyright © 2025 microBean™.
+ * Copyright © 2025–2026 microBean™.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
  * the License. You may obtain a copy of the License at
@@ -23,10 +23,13 @@ import java.util.SequencedSet;
 
 import java.util.function.Function;
 
+import javax.lang.model.AnnotatedConstruct;
+
+import javax.lang.model.element.Element;
+
 import org.microbean.assign.Aggregate;
+import org.microbean.assign.Annotated;
 import org.microbean.assign.Assignment;
-import org.microbean.assign.AttributedElement;
-import org.microbean.assign.AttributedType;
 
 import static java.lang.constant.ConstantDescs.BSM_INVOKE;
 
@@ -49,7 +52,7 @@ import static java.util.Objects.requireNonNull;
  *
  * @see Id
  */
-public final record Bean<I>(Id id, Factory<I> factory) implements Aggregate, Constable, Ranked {
+public final record Bean<I>(Id id, Factory<I> factory) implements Aggregate, Constable {
 
   /**
    * Creates a new {@link Bean}.
@@ -65,15 +68,9 @@ public final record Bean<I>(Id id, Factory<I> factory) implements Aggregate, Con
     requireNonNull(factory, "factory");
   }
 
-  @Deprecated(forRemoval = true)
-  @Override // Ranked
-  public final boolean alternate() {
-    return this.id.alternate();
-  }
-
   // (Convenience.)
   @Override // Aggregate
-  public final SequencedSet<? extends Assignment<?>> assign(final Function<? super AttributedType, ?> r) {
+  public final SequencedSet<? extends Assignment<?>> assign(final Function<? super Annotated<? extends AnnotatedConstruct>, ?> r) {
     return this.factory.assign(r);
   }
 
@@ -93,7 +90,7 @@ public final record Bean<I>(Id id, Factory<I> factory) implements Aggregate, Con
 
   // (Convenience.)
   @Override // Aggregate
-  public final SequencedSet<AttributedElement> dependencies() {
+  public final SequencedSet<? extends Annotated<? extends Element>> dependencies() {
     return this.factory.dependencies();
   }
 
@@ -121,13 +118,6 @@ public final record Bean<I>(Id id, Factory<I> factory) implements Aggregate, Con
   @Override // Record (Object)
   public final int hashCode() {
     return this.id.hashCode();
-  }
-
-  // (Convenience.)
-  @Deprecated(forRemoval = true)
-  @Override // Ranked
-  public final int rank() {
-    return this.id.rank();
   }
 
 }
